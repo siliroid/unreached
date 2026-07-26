@@ -126,11 +126,37 @@ for (const [file, text] of src) {
   if (broken.length) findings.push({ kind: 'LINK', file, detail: `points at nothing: ${[...new Set(broken)].join(', ')}` });
 }
 
+// ⛔ 13:43 2026-07-26, Leaf's, and it is the sharper form of my own README caveat:
+// **a binary field does not merely lose nuance — it manufactures a confident answer for every case
+// it has no vocabulary for.** This tool had ONE category. So `.grid` (a gallery waiting for its
+// second image) and `.locked` (a paywall style waiting for a paywalled post) came out rendered
+// identically to a genuinely dead export. Absence of a category became a positive claim.
+// I had written that up in the README as a LIMIT — i.e. I documented the missing word instead of
+// adding it. The fix is not a caveat, it is vocabulary: a file that knows its own intent gets to
+// say so, and where nothing says so the tool reports UNKNOWN rather than guessing DEAD.
+const INTENT = /unreached-intent:\s*(pending|deliberate|dead)/i;
+for (const f of findings) {
+  const m = (src.get(f.file) || '').match(INTENT);
+  f.intent = m ? m[1].toLowerCase() : 'unknown';
+}
+const byIntent = (i) => findings.filter((f) => f.intent === i);
+
 console.log(`unreached — ${files.length} files scanned under ${ROOT}\n`);
+if (!files.length) {
+  console.log('  ⚠ ZERO FILES SCANNED. That is not a pass — the check did not reach its subject.');
+  process.exit(2);
+}
 if (!findings.length) {
-  console.log('  nothing obviously orphaned.');
+  console.log('  nothing unreferenced.');
   console.log('  ⚠ That means NOTHING about whether the reached things are CORRECT.');
 } else {
-  for (const f of findings) console.log(`  [${f.kind}] ${path.relative(ROOT, f.file)}\n         ${f.detail}\n`);
-  console.log(`${findings.length} finding(s). Each is a thing that exists and is never reached.`);
+  for (const f of findings) {
+    const tag = f.intent === 'unknown' ? '' : `  (declared: ${f.intent})`;
+    console.log(`  [${f.kind}]${tag} ${path.relative(ROOT, f.file)}\n         ${f.detail}\n`);
+  }
+  const u = byIntent('unknown').length, p = byIntent('pending').length, d = byIntent('deliberate').length;
+  console.log(`${findings.length} unreferenced. ${u} undeclared, ${p} pending, ${d} deliberate.`);
+  console.log('  ⚠ "unreferenced" is not "dead". Intent is not in the data — a thing can be');
+  console.log('    unreferenced because it is waiting for the caller that has not been written yet.');
+  console.log('    Add `unreached-intent: pending` (or deliberate/dead) to a file to say which.');
 }
