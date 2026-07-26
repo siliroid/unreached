@@ -118,8 +118,14 @@ for (const [file, text] of src) {
   if (!/\.(html|css)$/i.test(file)) continue;
   const defined = [...text.matchAll(/^\s*\.([a-zA-Z][\w-]*)\s*[,{]/gm)].map((x) => x[1]);
   if (!defined.length) continue;
-  const html = [...src.entries()].filter(([f]) => /\.html$/i.test(f)).map(([, t]) => t).join('\n');
-  const unused = [...new Set(defined)].filter((c) => !new RegExp(`class="[^"]*\\b${c}\\b`).test(html));
+  // ⛔ 13:50 2026-07-26. This only ever looked at `class="..."` in HTML — so every class a script
+  // adds at runtime (classList.add, className=, a template literal, a React className) read as
+  // "never worn". Against a real app that is not a finding, it is a THREE HUNDRED item dump, and a
+  // tool that reports mostly noise is identical to a tool that does not exist. ⇒ Look in the JS too,
+  // and match the bare token anywhere rather than only inside a static class attribute.
+  const consumers = [...src.entries()].filter(([f]) => !/\.css$/i.test(f)).map(([, t]) => t).join('\n');
+  const unused = [...new Set(defined)].filter((c) =>
+    !new RegExp(`class="[^"]*\\b${c}\\b`).test(consumers) && !new RegExp(`['"\`\\s.]${c}\\b`).test(consumers));
   if (unused.length) findings.push({ kind: 'CSS', file, detail: `defined, never worn: ${unused.join(', ')}` });
 }
 
@@ -128,8 +134,13 @@ for (const [file, text] of src) {
   if (!/\.html$/i.test(file)) continue;
   const links = [...text.matchAll(/(?:href|src)="([^"#:]+?)"/g)].map((x) => x[1])
     .filter((h) => !h.startsWith('//') && !h.startsWith('mailto'));
+  // ⛔ 13:49 2026-07-26. Ran this against a real foreign codebase for the first time and 4 of its
+  // 11 findings were MINE: `/ui/styles.css` is ROOT-absolute, and I resolved it against the file's
+  // own dirname, so it went hunting for `ui/ui/styles.css` and reported a live stylesheet missing.
+  // A leading slash means "from the server root", never "from here".
   const broken = links.filter((h) => {
-    const t = path.resolve(path.dirname(file), h);
+    const base = h.startsWith('/') ? ROOT : path.dirname(file);
+    const t = path.resolve(base, h.replace(/^\//, ''));
     return !fs.existsSync(t) && !fs.existsSync(path.join(t, 'index.html'));
   });
   if (broken.length) findings.push({ kind: 'LINK', file, detail: `points at nothing: ${[...new Set(broken)].join(', ')}` });
