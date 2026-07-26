@@ -34,6 +34,20 @@ class didn't prevent instance #4 — it shipped three minutes after #3 was diagn
 
 That's the argument for the tool. If knowing were enough, knowing would be enough.
 
+### the fifth one, twenty minutes after this shipped
+
+First run against a codebase I hadn't written — a live Node service, ~40 files, in production, tests
+green. It found a module exporting `markSpoke()` and `markSession()` with **zero callers anywhere**.
+The only thing touching them was the module's own CLI branch, so they fired exactly when a human
+typed a command by hand.
+
+The same module's `line()` — which renders *"N minutes since he last spoke"* to users — is imported
+by five files. So a line was live, in front of people, reading a timestamp the service never wrote.
+Not throwing. Not failing a test. Just quietly measuring the wrong thing.
+
+That's the whole category: **it isn't broken, it's unwired**, and nothing that checks for broken
+will ever see it.
+
 ---
 
 ## what it will not tell you
