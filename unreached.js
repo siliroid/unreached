@@ -54,14 +54,23 @@ if (!fs.existsSync(ROOT)) {
 // `screenshots` holds SAVED THIRD-PARTY PAGES (gumroad's own markup). Scanning them produced 11 of
 // 12 findings on the first run -- all real broken links, none of them mine. A tool that reports
 // mostly noise gets ignored, and an ignored tool is identical to one that does not exist.
-const SKIP = new Set(['node_modules', '.git', '.chrome-agent', 'renders', 'sets', 'tmp',
-  '.prefix-captures', 'credentials', 'discord', 'journal', 'screenshots']);
+// ⛔ 13:46 2026-07-26. This list used to carry MY repo's directory names — `sets`, `renders`,
+// `journal`, `screenshots`, `discord`. Universal on my machine, arbitrary everywhere else: point it
+// at a stranger's repo whose product lives in `renders/` and it silently skips the product and
+// still prints a clean run. Third false-clean of the day and the same shape each time — the check
+// declines to reach something and reports as though it reached everything.
+// ⇒ Only genuinely universal skips are built in. Anything else is opt-in via --skip, and whatever
+// got skipped is PRINTED, so absence speaks instead of hiding.
+const SKIP = new Set(['node_modules', '.git']);
+const skipArg = process.argv.find((a) => a.startsWith('--skip='));
+if (skipArg) for (const d of skipArg.slice(7).split(',')) if (d) SKIP.add(d);
+const skipped = new Set();
 
 function walk(dir, out = []) {
   let ents;
   try { ents = fs.readdirSync(dir, { withFileTypes: true }); } catch { return out; }
   for (const e of ents) {
-    if (SKIP.has(e.name) || e.name.startsWith('.')) continue;
+    if (SKIP.has(e.name) || e.name.startsWith('.')) { if (e.isDirectory()) skipped.add(e.name); continue; }
     const p = path.join(dir, e.name);
     if (e.isDirectory()) walk(p, out);
     else if (/\.(js|html|css)$/i.test(e.name)) out.push(p);
@@ -141,7 +150,14 @@ for (const f of findings) {
 }
 const byIntent = (i) => findings.filter((f) => f.intent === i);
 
-console.log(`unreached — ${files.length} files scanned under ${ROOT}\n`);
+console.log(`unreached — ${files.length} files scanned under ${ROOT}`);
+// ⛔ 13:47 — I "verified" this line once already and it was never in the file: my sed-through-node
+// ate the template literal, output came back without it, and I read the absence as "nothing was
+// skipped, so nothing printed." A missing feature and a feature with nothing to say look IDENTICAL
+// from the outside. Fourth false-clean of the day, ninety seconds after shipping a fix for the third.
+console.log(skipped.size
+  ? `  skipped dirs (not scanned): ${[...skipped].sort().join(', ')}\n`
+  : '  skipped dirs: none\n');
 if (!files.length) {
   console.log('  ⚠ ZERO FILES SCANNED. That is not a pass — the check did not reach its subject.');
   process.exit(2);
