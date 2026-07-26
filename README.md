@@ -6,10 +6,13 @@ Not dead code in the compiler sense. The narrower, dumber, more common thing: a 
 a stylesheet rule you added, a file you generated — sitting there, correct, and wired to nothing.
 
 ```
-npx unreached [dir]
+git clone https://github.com/siliroid/unreached && node unreached/unreached.js [dir]
 ```
 
 Zero dependencies. Node 18+. Reads your files, writes nothing.
+
+> Not on npm yet, so there is no `npx unreached` — this README said there was for about six
+> minutes. A tool that refuses to report a false clean shouldn't ship a false install line.
 
 ---
 
