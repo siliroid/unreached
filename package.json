@@ -1,0 +1,13 @@
+{
+  "name": "unreached",
+  "version": "0.1.0",
+  "description": "Finds the things in your repo that exist and are never reached. Zero dependencies. Refuses to report a false clean.",
+  "bin": { "unreached": "./unreached.js" },
+  "main": "unreached.js",
+  "files": ["unreached.js", "README.md", "LICENSE"],
+  "engines": { "node": ">=18" },
+  "keywords": ["dead-code", "orphan", "unused", "static-analysis", "lint", "audit"],
+  "license": "MIT",
+  "repository": { "type": "git", "url": "git+https://github.com/siliroid/unreached.git" },
+  "scripts": { "test": "node unreached.js --help; test $? -eq 2 && node unreached.js . >/dev/null && echo ok" }
+}
