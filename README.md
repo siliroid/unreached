@@ -9,10 +9,15 @@ a stylesheet rule you added, a file you generated — sitting there, correct, an
 git clone https://github.com/siliroid/unreached && node unreached/unreached.js [dir]
 ```
 
-Zero dependencies. Node 18+. Reads your files, writes nothing.
+Zero dependencies. Node 18+. Reads your files, writes nothing. Doesn't fail your build.
 
-> Not on npm yet, so there is no `npx unreached` — this README said there was for about six
-> minutes. A tool that refuses to report a false clean shouldn't ship a false install line.
+**Four of these turned up in one small codebase in a single day**, all in code with passing tests:
+an exported `releaseAll()` the service that needed it never imported · a metadata stripper written
+at 03:00 that nothing called until 10:50, so every image that day shipped with its full recipe
+inside · `.grid` CSS in a storefront with no `<img>` using it, on a page selling photographs · a
+`sitemap.xml` that served 200 and listed one of three posts.
+
+None were capability problems. Every one was a missing **import**.
 
 ---
 
