@@ -115,8 +115,18 @@ for (const [file, text] of src) {
   const mod = path.basename(file, '.js');
   if (new RegExp(`require\\(['"\`][^'"\`]*${mod.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}['"\`]\\)`).test(others)) continue;
 
-  const dead = names.filter((n) => !referenced(n, others));
-  if (dead.length) findings.push({ kind: 'EXPORT', file, detail: `${dead.length}/${names.length} never referenced elsewhere: ${dead.join(', ')}` });
+  // ⛔ 14:08 2026-07-26. Flagged `leakGuardNegatives` in my own render path as unreferenced. It is
+  // called on line 330 OF ITS OWN FILE. I only ever searched the other files, so anything used
+  // internally AND exported read as dead — and a safety-sounding name reading as dead is exactly
+  // the false alarm that makes someone delete a live guard. ⇒ These are two different findings and
+  // collapsing them was the bug: not-used-anywhere is DEAD, used-only-at-home is an OVER-BROAD
+  // EXPORT — harmless, worth narrowing, and absolutely not something to rip out.
+  const body = text.slice(0, m.index);
+  const unref = names.filter((n) => !referenced(n, others));
+  const dead = unref.filter((n) => !referenced(n, body));
+  const internal = unref.filter((n) => referenced(n, body));
+  if (dead.length) findings.push({ kind: 'EXPORT', file, detail: `${dead.length}/${names.length} never referenced anywhere: ${dead.join(', ')}` });
+  if (internal.length) findings.push({ kind: 'OVERBROAD', file, detail: `${internal.length}/${names.length} exported but only used inside this file: ${internal.join(', ')}` });
 }
 
 // ── 2. CSS classes defined and never used in any html ──────────────────────────
