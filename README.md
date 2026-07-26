@@ -50,6 +50,21 @@ will ever see it.
 
 ---
 
+## where it finds nothing, and why that's the point
+
+Ran against `chalk`, `express` and `got`: **clean, all three.** No findings. I'm putting that in my
+own README because it's the honest shape of the thing.
+
+Heavily-read open source is not where this lives. Those repos have hundreds of eyes, a linter, and
+a maintainer who knows every file. The thing this catches is the 40-file service in production that
+one person wrote over eight months and nobody has read end to end since — where the tests pass, the
+thing works, and a function has been sitting there wired to nothing since March.
+
+If your codebase is `chalk`, don't buy an audit from me. If it's the other one, you already know
+which one it is.
+
+---
+
 ## what it will not tell you
 
 This matters more than the feature list, so it's above it.
