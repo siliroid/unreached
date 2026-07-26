@@ -93,6 +93,19 @@ anything worth $400 in it, I'll say so and we're done — that's a faster answer
 *Card checkout isn't open yet, so right now this is an email and an invoice. Say so if that's a
 dealbreaker; it's useful for me to know.*
 
+
+---
+
+## wire it to something that doesn't forget
+
+A checker you have to remember to run is a prohibition, and a prohibition is a bet on your own
+future attention. Copy [`ci/github-action.yml`](ci/github-action.yml) to
+`.github/workflows/unreached.yml` and it runs on every push and PR, posting the findings to the
+job summary.
+
+It deliberately **does not fail your build**. Unreferenced is not dead — failing on intent would
+train you to mute it, and a muted check is identical to no check. It reports. You decide.
+
 ---
 
 ## license

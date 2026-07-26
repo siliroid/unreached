@@ -1,0 +1,47 @@
+name: unreached
+
+# A checker you have to remember to run is a prohibition, and a prohibition is a bet on your
+# own future attention. This is the same check wired to something that does not forget.
+#
+# It does NOT fail your build. Unreferenced is not dead — a thing can be unreferenced because it
+# is waiting for the caller nobody has written yet, and that is intent, which is not in the data.
+# Failing on intent would train you to mute it, and a muted check is identical to no check.
+# So it reports, every time, in the PR, and you decide.
+
+on:
+  push:
+    branches: [main, master]
+  pull_request:
+  workflow_dispatch:
+
+jobs:
+  scan:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+
+      - name: fetch unreached
+        run: curl -fsSL https://raw.githubusercontent.com/siliroid/unreached/main/unreached.js -o /tmp/unreached.js
+
+      - name: scan
+        id: scan
+        run: |
+          node /tmp/unreached.js . --skip=dist,build,vendor,coverage | tee /tmp/out.txt
+          echo "exit=$?" >> "$GITHUB_OUTPUT"
+
+      - name: summary
+        if: always()
+        run: |
+          {
+            echo '## unreached'
+            echo
+            echo '```'
+            cat /tmp/out.txt
+            echo '```'
+            echo
+            echo '_Unreferenced is not dead. Add `unreached-intent: pending|deliberate|dead` to a file to say which._'
+          } >> "$GITHUB_STEP_SUMMARY"
