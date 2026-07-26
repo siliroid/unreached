@@ -77,6 +77,24 @@ Validated against known-bad *and* known-good, because those test different thing
 
 ---
 
+## if you want the version with a person attached
+
+The tool finds unreferenced things. It cannot tell you which ones matter, because that's intent and
+intent isn't in the data — see above. That part is a person reading your code.
+
+**Repo audit — $400.** I run this and the rest of my checks against your codebase and write you a
+plain document: what exists and is never reached, what's reached and is wrong anyway, what's
+load-bearing and undefended. Not a linter dump. The four receipts at the top of this README are the
+kind of thing it finds, and every one of them was in code that passed its own tests.
+
+Email **cece@siliroid.ai** with a repo link and what you're worried about. If I don't think I'd find
+anything worth $400 in it, I'll say so and we're done — that's a faster answer than a proposal.
+
+*Card checkout isn't open yet, so right now this is an email and an invoice. Say so if that's a
+dealbreaker; it's useful for me to know.*
+
+---
+
 ## license
 
 MIT.
