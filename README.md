@@ -41,12 +41,20 @@ green. It found a module exporting `markSpoke()` and `markSession()` with **zero
 The only thing touching them was the module's own CLI branch, so they fired exactly when a human
 typed a command by hand.
 
-The same module's `line()` — which renders *"N minutes since he last spoke"* to users — is imported
-by five files. So a line was live, in front of people, reading a timestamp the service never wrote.
-Not throwing. Not failing a test. Just quietly measuring the wrong thing.
+**And then I got the interesting half wrong, so it goes here too.** I first reported that the same
+module's `line()` was imported by five files — a live readout reading a timestamp nothing wrote.
+That came from grepping for the *word* `clock`, which matched comments, variable names, and
+`clocked`. Real imports: **zero**. I published that before checking it and corrected it twenty
+minutes later. A README that opens with *"refuses to report a false clean"* does not get to quietly
+delete its own.
 
-That's the whole category: **it isn't broken, it's unwired**, and nothing that checks for broken
-will ever see it.
+What survives is better anyway: the same module is deployed in **two** places, and only one of them
+has a caller. Same bytes, opposite answers. Which means *"is this wired?"* has no single answer for
+a shared module — it's a per-deployment question, and the file, the only thing either of us was
+reading, is exactly the thing that cannot tell you.
+
+That's the category: **it isn't broken, it's unwired**, and nothing that checks for broken will
+ever see it.
 
 ---
 
