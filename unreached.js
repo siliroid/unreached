@@ -73,7 +73,13 @@ function walk(dir, out = []) {
     if (SKIP.has(e.name) || e.name.startsWith('.')) { if (e.isDirectory()) skipped.add(e.name); continue; }
     const p = path.join(dir, e.name);
     if (e.isDirectory()) walk(p, out);
-    else if (/\.(js|html|css)$/i.test(e.name)) out.push(p);
+    // ⛔ 14:04 2026-07-26. Cloned `got` to test on a stranger's repo and scanned ZERO files — 79
+    // TypeScript, 6 js, and I read none of the ts. The zero-file guard caught it, but only by luck:
+    // had any of those 6 js sat inside my walk I would have scanned 6, found nothing, and printed a
+    // confident "nothing unreferenced" against a repo I was 92% blind to. A check reports on what it
+    // REACHED, and nothing in the output said how much that was. ⇒ read the whole modern surface,
+    // and print the extension mix so coverage is visible instead of inferred.
+    else if (/\.(js|mjs|cjs|jsx|ts|mts|cts|tsx|vue|svelte|html|css|scss)$/i.test(e.name)) out.push(p);
   }
   return out;
 }
@@ -167,8 +173,27 @@ console.log(`unreached — ${files.length} files scanned under ${ROOT}`);
 // skipped, so nothing printed." A missing feature and a feature with nothing to say look IDENTICAL
 // from the outside. Fourth false-clean of the day, ninety seconds after shipping a fix for the third.
 console.log(skipped.size
-  ? `  skipped dirs (not scanned): ${[...skipped].sort().join(', ')}\n`
-  : '  skipped dirs: none\n');
+  ? `  skipped dirs (not scanned): ${[...skipped].sort().join(', ')}`
+  : '  skipped dirs: none');
+// Coverage has to be VISIBLE, not inferred. "6 files scanned" reads like a small repo; it can
+// equally mean a large repo I was blind to. Printing the mix is what makes the difference legible.
+const mix = {};
+for (const f of files) { const e = path.extname(f).slice(1).toLowerCase(); mix[e] = (mix[e] || 0) + 1; }
+const unread = {};
+(function count(dir) {
+  let ents; try { ents = fs.readdirSync(dir, { withFileTypes: true }); } catch { return; }
+  for (const e of ents) {
+    if (SKIP.has(e.name) || e.name.startsWith('.')) continue;
+    if (e.isDirectory()) count(path.join(dir, e.name));
+    else { const x = path.extname(e.name).slice(1).toLowerCase(); if (x && !mix[x]) unread[x] = (unread[x] || 0) + 1; }
+  }
+})(ROOT);
+const fmt = (o) => Object.entries(o).sort((a, b) => b[1] - a[1]).map(([k, v]) => `${v} ${k}`).join(', ');
+if (files.length) console.log(`  read: ${fmt(mix)}`);
+const noise = new Set(['md', 'json', 'yml', 'yaml', 'lock', 'txt', 'svg', 'png', 'jpg', 'ico', 'map']);
+const blind = Object.fromEntries(Object.entries(unread).filter(([k]) => !noise.has(k)));
+if (Object.keys(blind).length) console.log(`  ⚠ NOT read (this tool cannot see them): ${fmt(blind)}`);
+console.log('');
 if (!files.length) {
   console.log('  ⚠ ZERO FILES SCANNED. That is not a pass — the check did not reach its subject.');
   process.exit(2);
