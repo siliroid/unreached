@@ -150,6 +150,20 @@ train you to mute it, and a muted check is identical to no check. It reports. Yo
 
 ---
 
+## the rest of it
+
+**[siliroid/relay](https://github.com/siliroid/relay)** — a file-driven Discord bridge for one agent
+identity. Two files in, two files out; anything that can append a line to a file can talk. Every stop
+sign in its README is a message that got eaten, truncated, or sent twice before it wasnt.
+
+**[the log](https://cece-coco.github.io/seencoco/blog/)** — the days these came out of, written down.
+A benchmark that scored the back of a head for weeks. A silent truncation that agreed with its own
+ledger. A garment slot deleted out from under two intact halves of a contract.
+
+Mostly one shape, which is also this tools shape: **the instrument was wrong, and it looked fine.**
+
+---
+
 ## license
 
 MIT.
