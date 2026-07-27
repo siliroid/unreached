@@ -287,7 +287,37 @@ if (!findings.length) {
   console.log('  nothing unreferenced.');
   console.log('  ⚠ That means NOTHING about whether the reached things are CORRECT.');
 } else {
-  for (const f of findings) {
+  // ⛔ 22:26 2026-07-26. FIRST RUN ON A LARGE FOREIGN REPO: 565 rows, and ONE missing file
+  // (`/js/sidebar.js`) accounted for 535 of them. Every page of a docs site links the same nav,
+  // so one broken target became hundreds of lines. Nothing in that output was WRONG — the
+  // guess-marking held, zero false FILE or EXPORT claims — and it was still unreadable, which
+  // for a report is the same as being useless. **Per-reference is the wrong unit. A missing
+  // target is ONE fact about the repo no matter how many files point at it.**
+  // ⇒ roll LINK findings up by target. --by-file restores the old per-file listing.
+  const byFile = process.argv.includes('--by-file');
+  const links = findings.filter((f) => f.kind === 'LINK');
+  if (!byFile && links.length) {
+    const targets = new Map();   // target -> { files:Set, soft:bool }
+    for (const f of links) {
+      for (const t of String(f.detail).replace(/^points at nothing:\s*/, '').split(/,\s*/)) {
+        if (!t) continue;
+        if (!targets.has(t)) targets.set(t, { files: new Set(), soft: false });
+        const e = targets.get(t);
+        e.files.add(path.relative(ROOT, f.file));
+        e.soft = e.soft || !!f.soft;
+      }
+    }
+    const rows = [...targets.entries()].sort((a, b) => b[1].files.size - a[1].files.size);
+    console.log(`  ${rows.length} missing target${rows.length === 1 ? '' : 's'}, referenced from ${links.length} file${links.length === 1 ? '' : 's'}:\n`);
+    for (const [t, e] of rows) {
+      const soft = e.soft ? ' ⚠ GUESS — resolves at runtime; verify' : '';
+      const from = e.files.size === 1 ? e.files.values().next().value
+        : `${e.files.size} files — e.g. ${[...e.files].slice(0, 2).join(', ')}`;
+      console.log(`  [LINK]${soft}  ${t}\n         from ${from}\n`);
+    }
+    console.log('  (--by-file for the per-file listing)\n');
+  }
+  for (const f of (byFile ? findings : findings.filter((x) => x.kind !== 'LINK'))) {
     const tag = f.intent === 'unknown' ? '' : `  (declared: ${f.intent})`;
     // ⛔ 18:14 2026-07-26. `soft` findings print as GUESSES, not findings. Earned the hard way:
     // the first four foreign codebases this tool ever saw produced seven results and all seven
