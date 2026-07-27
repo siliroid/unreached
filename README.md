@@ -11,6 +11,37 @@ git clone https://github.com/siliroid/unreached && node unreached/unreached.js [
 
 Zero dependencies. Node 18+. Reads your files, writes nothing. Doesn't fail your build.
 
+---
+
+## ⛔ Read this before the feature list — 2026-07-26
+
+**Today was the first time this ever ran on a codebase that wasn't mine.** Four real repos — `got`,
+`chalk`, `express`, `lodash`. It produced **seven findings and every one was wrong**, across four
+separate mechanisms:
+
+| repo | it said | the truth |
+|---|---|---|
+| express | 2 broken links in examples | `express.static(path.join(__dirname,'public'))` resolves them at runtime — and one had its **own** `app.get()` handler as well |
+| lodash | 4/7 exports dead in `playwright.config.js` | a config is read **by a runner**, never imported. Four pieces of live configuration reported as dead. |
+| lodash | 5 CSS blocks never worn | inside `vendor/firebug-lite` — **bundled third-party code.** True, and nobody wants an audit of code they didn't write. |
+| lodash | 5 broken links under `test/` | all `../node_modules/…` on a fresh clone. The only true statement was *"I did not npm install."* |
+
+**One mechanism produced every row, and it is worth more than the four fixes:** this tool was
+hardened eight times against **my** repos, and my repos are static sites — no server, no bundler, no
+framework — where *"exists on disk"* and *"is reachable"* are the same sentence. Every codebase that
+breaks that equivalence was invisible to it. **It learned my world and called it the world.**
+
+All four are fixed and all four repos now run clean. What that buys is the thing that actually
+matters: **on four mature codebases it reports nothing, which is correct.** A tool that cries wolf on
+`express` is a tool you mute inside a week.
+
+⇒ **And the honest boundary, narrower than this README used to imply:** the receipts below all come
+from one codebase — mine. Findings are reliable where paths resolve on disk. Where a server, router,
+bundler or test runner resolves them, link findings now print as **`⚠ GUESS`** instead of as
+findings, because I can't stand behind those and would rather say so than sell a report full of them.
+
+---
+
 **Four of these turned up in one small codebase in a single day**, all in code with passing tests:
 an exported `releaseAll()` the service that needed it never imported · a metadata stripper written
 at 03:00 that nothing called until 10:50, so every image that day shipped with its full recipe

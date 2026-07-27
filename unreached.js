@@ -61,7 +61,12 @@ if (!fs.existsSync(ROOT)) {
 // declines to reach something and reports as though it reached everything.
 // ⇒ Only genuinely universal skips are built in. Anything else is opt-in via --skip, and whatever
 // got skipped is PRINTED, so absence speaks instead of hiding.
-const SKIP = new Set(['node_modules', '.git']);
+// ⛔ 18:15 2026-07-26. `vendor/` added after lodash produced five findings, all of them inside
+// `vendor/firebug-lite` — a bundled third-party debugger from 2009. Every one was technically
+// true: those CSS classes really are never worn by lodash. And every one was useless, because
+// **nobody wants an audit of code they did not write.** A report that opens with somebody else's
+// dead stylesheet has spent its first impression on the one section the reader will skip.
+const SKIP = new Set(['node_modules', '.git', 'vendor', 'third_party', 'thirdparty', 'external']);
 const skipArg = process.argv.find((a) => a.startsWith('--skip='));
 if (skipArg) for (const d of skipArg.slice(7).split(',')) if (d) SKIP.add(d);
 const skipped = new Set();
@@ -125,7 +130,14 @@ for (const [file, text] of src) {
   const unref = names.filter((n) => !referenced(n, others));
   const dead = unref.filter((n) => !referenced(n, body));
   const internal = unref.filter((n) => referenced(n, body));
-  if (dead.length) findings.push({ kind: 'EXPORT', file, detail: `${dead.length}/${names.length} never referenced anywhere: ${dead.join(', ')}` });
+  // ⛔ 18:16 2026-07-26. A `*.config.*` file is read BY A RUNNER, never imported by source — so
+  // every key in it reads as unreferenced and every one of them is load-bearing. Caught on lodash:
+  // flagged `retries, testDir, testMatch, headless` out of playwright.config.js, which is four
+  // pieces of live configuration reported as dead. Same family as the runtime-resolved links:
+  // **the consumer is outside the repo and this tool only ever looks inside it.**
+  const isConfig = /\.(config|rc)\.[cm]?[jt]s$/i.test(path.basename(file))
+                || /^(babel|webpack|rollup|vite|jest|karma|eslint|prettier|tailwind|next|nuxt|svelte|astro)\./i.test(path.basename(file));
+  if (dead.length && !isConfig) findings.push({ kind: 'EXPORT', file, detail: `${dead.length}/${names.length} never referenced anywhere: ${dead.join(', ')}` });
   if (internal.length) findings.push({ kind: 'OVERBROAD', file, detail: `${internal.length}/${names.length} exported but only used inside this file: ${internal.join(', ')}` });
 }
 
@@ -146,6 +158,44 @@ for (const [file, text] of src) {
 }
 
 // ── 3. Local hrefs/srcs pointing at files that do not exist ────────────────────
+// ⛔ 18:12 2026-07-26 — THE FIRST TIME THIS TOOL EVER RAN ON CODE THAT WASN'T MINE.
+// Four real repos: got and chalk clean, express 2 findings, lodash 5. **All seven were wrong.**
+// express resolves at runtime through static middleware and an explicit route; lodash's were
+// vendored third-party CSS and a config file consumed by an external test runner.
+//
+// The mechanism is the whole lesson: this was hardened eight times against MY repos, and my repos
+// are static sites where "on disk" and "resolvable" are the same thing. Every codebase with a
+// server, a bundler or a framework breaks that equivalence — and the tool cannot see any of them,
+// so every link it flags there is a guess wearing a finding's clothes.
+//
+// So: find the runtime resolvers first, and if any exist, say the LINK findings are soft.
+const depsInstalled = fs.existsSync(path.join(ROOT, 'node_modules'));
+const serverish = /express\.static|app\.(get|use)\s*\(|serve-static|koa-static|fastify-static|publicDir|staticDirectory|createServer/;
+const mountRoots = [];
+let hasRuntimeResolver = false;
+for (const [, text] of src) {
+  if (!serverish.test(text)) continue;
+  hasRuntimeResolver = true;
+  for (const m of text.matchAll(/static\s*\(\s*(?:path\.join\s*\()?[^,)]*?['"]([\w./-]+)['"]/g)) {
+    const r = path.resolve(ROOT, m[1]);
+    if (fs.existsSync(r)) mountRoots.push(r);
+  }
+}
+// every dir literally named public/static/dist/assets is a de-facto mount root
+for (const d of ['public', 'static', 'dist', 'assets', 'www']) {
+  const walk = (dir, depth) => {
+    if (depth > 3) return;
+    let ents; try { ents = fs.readdirSync(dir, { withFileTypes: true }); } catch { return; }
+    for (const e of ents) {
+      if (!e.isDirectory() || e.name === 'node_modules' || e.name === '.git') continue;
+      const p = path.join(dir, e.name);
+      if (e.name === d) mountRoots.push(p);
+      walk(p, depth + 1);
+    }
+  };
+  walk(ROOT, 0);
+}
+
 for (const [file, text] of src) {
   if (!/\.html$/i.test(file)) continue;
   const links = [...text.matchAll(/(?:href|src)="([^"#:]+?)"/g)].map((x) => x[1])
@@ -157,9 +207,26 @@ for (const [file, text] of src) {
   const broken = links.filter((h) => {
     const base = h.startsWith('/') ? ROOT : path.dirname(file);
     const t = path.resolve(base, h.replace(/^\//, ''));
-    return !fs.existsSync(t) && !fs.existsSync(path.join(t, 'index.html'));
+    if (fs.existsSync(t) || fs.existsSync(path.join(t, 'index.html'))) return false;
+    // ⛔ 18:17 2026-07-26. A link into `node_modules/` on a repo with no `node_modules/` is not a
+    // defect, it is an uninstalled checkout. Caught on lodash: all five of its remaining findings
+    // were `../node_modules/qunitjs/...` on a fresh clone. I would have sent somebody a report
+    // saying their test harness was broken when the only true statement was "I did not npm install."
+    if (/(^|\/)node_modules\//.test(h.replace(/\\/g, '/')) && !depsInstalled) return false;
+    // interpolated at runtime — `src="' + ui.buildPath + '"` is a template, not a path
+    if (/[+'"`]|\$\{/.test(h)) return false;
+    // ⛔ 18:12 2026-07-26. A link is only "broken" if paths resolve on DISK. In anything with a
+    // server they resolve at RUNTIME, and this check cannot see that. Both of its findings against
+    // express were wrong for exactly that reason: `express.static(path.join(__dirname,'public'))`
+    // serves /stylesheets/style.css from a file that exists, and /client.js additionally has its
+    // own explicit app.get() handler. Two independent resolvers, neither visible from disk.
+    // So: if a static mount exists, look under its root before calling anything missing.
+    return !mountRoots.some((m) => fs.existsSync(path.resolve(m, h.replace(/^\//, ''))));
   });
-  if (broken.length) findings.push({ kind: 'LINK', file, detail: `points at nothing: ${[...new Set(broken)].join(', ')}` });
+  if (broken.length) {
+    findings.push({ kind: 'LINK', file, detail: `points at nothing: ${[...new Set(broken)].join(', ')}`,
+                    soft: hasRuntimeResolver });
+  }
 }
 
 // ⛔ 13:43 2026-07-26, Leaf's, and it is the sharper form of my own README caveat:
@@ -214,7 +281,17 @@ if (!findings.length) {
 } else {
   for (const f of findings) {
     const tag = f.intent === 'unknown' ? '' : `  (declared: ${f.intent})`;
-    console.log(`  [${f.kind}]${tag} ${path.relative(ROOT, f.file)}\n         ${f.detail}\n`);
+    // ⛔ 18:14 2026-07-26. `soft` findings print as GUESSES, not findings. Earned the hard way:
+    // the first four foreign codebases this tool ever saw produced seven results and all seven
+    // were wrong, because a repo with a server resolves paths at runtime and this reads disk.
+    // A guess printed in the same voice as a finding is worse than no output — it spends the
+    // reader's trust on the one class of result I cannot stand behind.
+    const soft = f.soft ? '  ⚠ GUESS — this repo resolves paths at runtime; verify before believing' : '';
+    console.log(`  [${f.kind}]${tag}${soft} ${path.relative(ROOT, f.file)}\n         ${f.detail}\n`);
+  }
+  if (findings.some((f) => f.soft)) {
+    console.log('  ⚠ Some findings are marked GUESS: a static mount, route handler or bundler was');
+    console.log('    detected, so links may resolve at runtime in ways this tool cannot see.\n');
   }
   const u = byIntent('unknown').length, p = byIntent('pending').length, d = byIntent('deliberate').length;
   console.log(`${findings.length} unreferenced. ${u} undeclared, ${p} pending, ${d} deliberate.`);
