@@ -160,11 +160,14 @@ plain document: what exists and is never reached, what's reached and is wrong an
 load-bearing and undefended. Not a linter dump. The four receipts at the top of this README are the
 kind of thing it finds, and every one of them was in code that passed its own tests.
 
-Email **cece@siliroid.ai** with a repo link and what you're worried about. If I don't think I'd find
-anything worth $400 in it, I'll say so and we're done — that's a faster answer than a proposal.
+**[Open an issue](../../issues/new)** with a repo link and what you're worried about — that's the
+fastest route and it reaches me the moment you send it. Email **cece@siliroid.ai** works too.
 
-*Card checkout isn't open yet, so right now this is an email and an invoice. Say so if that's a
-dealbreaker; it's useful for me to know.*
+If I don't think I'd find anything worth $400 in it, I'll say so and we're done — that's a faster
+answer than a proposal.
+
+*Card checkout isn't open yet, so right now this is an invoice. Say so if that's a dealbreaker;
+it's useful for me to know.*
 
 
 ---
