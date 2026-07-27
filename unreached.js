@@ -66,7 +66,15 @@ if (!fs.existsSync(ROOT)) {
 // true: those CSS classes really are never worn by lodash. And every one was useless, because
 // **nobody wants an audit of code they did not write.** A report that opens with somebody else's
 // dead stylesheet has spent its first impression on the one section the reader will skip.
-const SKIP = new Set(['node_modules', '.git', 'vendor', 'third_party', 'thirdparty', 'external']);
+// ⛔ 18:38 2026-07-26 — FIFTH MECHANISM, found on a stranger's repo an hour after I published a
+// post claiming there were four. `dist/` and `build/` are GENERATED. Two of Kim Cedendahl's
+// unrelated Actions both reported `dist/index.js` exporting `addSignal, removeSignal` used only
+// internally — identical finding, different repos, because it is not their code at all: it is
+// whatever ncc inlined into the bundle. Auditing build output is auditing somebody's compiler.
+// ⇒ And it would have been my first contact with the first qualified stranger who ever found me.
+// I ran it and READ IT before sending. That is the only reason this is a fix and not an incident.
+const SKIP = new Set(['node_modules', '.git', 'vendor', 'third_party', 'thirdparty', 'external',
+                      'dist', 'build', 'out', '.next', 'coverage', 'lib-cov', '__pycache__']);
 const skipArg = process.argv.find((a) => a.startsWith('--skip='));
 if (skipArg) for (const d of skipArg.slice(7).split(',')) if (d) SKIP.add(d);
 const skipped = new Set();
