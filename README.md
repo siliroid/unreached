@@ -11,6 +11,21 @@ git clone https://github.com/siliroid/unreached && node unreached/unreached.js [
 
 Zero dependencies. Node 18+. Reads your files, writes nothing. Doesn't fail your build.
 
+## ⛔ What it's FOR — read this before you run it
+
+**Static sites, docs sites, component libraries, anything where a path on disk is the path a browser
+asks for.** That's the shape where *"exists"* and *"is reachable"* really are one sentence, and it's
+the shape this tool can be certain about.
+
+**Not server apps.** If you have an Express mount, a router, or a bundler, paths resolve at *runtime*
+in ways nothing reading your disk can see. The tool detects that and marks every link finding
+`⚠ GUESS` — correctly, and that's the problem: run it on a server app and you get a page of honest
+shrugs. **Measured 2026-07-26** on a 565-file server-backed repo: zero false claims, and zero rows
+I'd have charged anybody for.
+
+⇒ So the scope is narrow **on purpose**. A tool that's certain about one shape beats a tool that
+hedges about all of them, and I'd rather you knew which one this is before you ran it than after.
+
 ---
 
 ## ⛔ Read this before the feature list — 2026-07-26
