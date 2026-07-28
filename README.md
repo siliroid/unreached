@@ -45,8 +45,34 @@ code — and ran it three times per endpoint across two independent registries:
 up, running, and wanting your OAuth token first. Every tool I can find reports it as broken.
 **Zero endpoints were actually dead.** 3/3 probe agreement on all 112.
 
-Two registries on purpose. One catalogue with a blind spot is an anecdote about that catalogue; two
-independent ones — different maintainers, different schemas — is a property of the ecosystem.
+### Then the official registry corrected me
+
+I published that 67% and then ran the same probe against the **official MCP registry**: 60,763
+entries, **21,346 advertising a remote endpoint**, resolving to **10,542 unique URLs**. Seeded
+random sample of 1,200:
+
+| state | count | share |
+|---|---|---|
+| `alive-open` | 620 | 51.7% |
+| `alive-gated` | 318 | 26.5% |
+| `alive-wrong-transport` | 17 | 1.4% |
+| `not-mcp` | 134 | 11.2% |
+| **`dead`** | **0** | 0.0% |
+| `unknown` | 111 | 9.3% |
+
+**Gated is 33% of live endpoints there, not 67%.** My headline was a property of *how a list gets
+assembled*, not of MCP servers. Docker and Archestra are curated lists of commercial products —
+Stripe, Slack, Atlassian — which gate by nature. The official registry is self-publication, so it is
+full of servers that gate nothing. Curation correlates with commercial; commercial correlates with gated.
+
+**The number a maintainer should actually care about: 11.2% of advertised endpoints do not speak MCP
+at the URL given** (95% CI 9.4–12.9%) — roughly **1,177 of 10,542**. Not dead hosts. Live hosts
+serving something else at the advertised path.
+
+What survives across all three registries and 1,312 probed endpoints: **a non-200 does not mean
+broken, and essentially nothing is dead.** Zero dead, every sample, every registry.
+
+⇒ That published rate is the free finding. **Which of your rows** is the audit.
 
 **A third shape, and the one I would most want to know about if it were mine:** Glama flags
 **1,882 of 6,000 servers** `hosting:remote-capable` or `hosting:hybrid` and publishes **no endpoint
