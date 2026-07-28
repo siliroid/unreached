@@ -42,6 +42,25 @@ const path = require('node:path');
 // That is the same false-clean Leaf's verify-path refuses by name: a check that did not reach its
 // subject is NOT a pass. Unknown flags now die, and an empty scan exits non-zero and says so.
 const ARG = process.argv[2];
+if (ARG === '--help' || ARG === '-h') {
+  // The first thing a stranger types after `npx github:siliroid/unreached`. It used to
+  // answer "unknown option", which is a bad first touch on the one command in the email.
+  console.log(`unreached — finds what exists in your repo and is never reached.
+
+  usage:  npx -y github:siliroid/unreached [rootDir]
+
+  [rootDir]        default: the current directory
+  --by-file        group findings by file instead of by kind
+  --skip=a,b       extra directory names to skip
+
+  Scope is narrow on purpose: JS/TS/CSS/HTML where a path on disk is the path a
+  browser or bundler asks for. It skips dist/, build/ and vendor/ — generated
+  output is not yours and auditing it is noise.
+
+  It refuses to report a false clean: a scan that reached nothing exits non-zero.
+  Measured false-positive rate and the four mechanisms behind it are in the README.`);
+  process.exit(0);
+}
 if (ARG && ARG.startsWith('-')) {
   console.error(`unreached — unknown option "${ARG}"\n\n  usage: node unreached.js [rootDir]\n`);
   process.exit(2);

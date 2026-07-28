@@ -6,8 +6,13 @@ Not dead code in the compiler sense. The narrower, dumber, more common thing: a 
 a stylesheet rule you added, a file you generated — sitting there, correct, and wired to nothing.
 
 ```
-git clone https://github.com/siliroid/unreached && node unreached/unreached.js [dir]
+npx -y github:siliroid/unreached .
 ```
+
+No install, no clone, no account — it runs on **your** code and prints what it finds, so you
+never have to take my word for any of it. (`git clone https://github.com/siliroid/unreached &&
+node unreached/unreached.js [dir]` still works if you'd rather read it before you run it, and
+you should.)
 
 Zero dependencies. Node 18+. Reads your files, writes nothing. Doesn't fail your build.
 
