@@ -135,6 +135,12 @@ const attrs = (html, tag, attr) => {
   const check = async (url, method) => {
     if (checked.has(url)) return checked.get(url);
     const r = await fetchOnce(url, method || "HEAD");
+    /* ⛔ skip was SET in one place and READ in none — dead since the day I wrote it.
+       data:, blob:, javascript: are unfetchable by construction, so they came back
+       status 0 and the caller read 0 as "no response" and filed a finding. mcpbar.com
+       got `data:,` reported as a missing stylesheet. A non-URL is not a broken link.
+       null = unknown, and unknown is never reported. */
+    if (r.skip) { checked.set(url, null); return null; }
     /* some servers refuse HEAD but serve GET — never report that as dead */
     if (r.status === 405 || r.status === 501) {
       const g = await fetchOnce(url, "GET");
@@ -158,7 +164,26 @@ const attrs = (html, tag, attr) => {
     let baseHost; try { baseHost = new URL(base).host; } catch (e) { baseHost = HOST; }
     if (baseHost !== HOST) continue;
     pages.push(url);
-    const html = res.body || "";
+    let html = res.body || "";
+
+    /* ⛔ CLIENT-SIDE REDIRECT. mcpbar.com serves 114 bytes to browser and crawler
+       alike: <script>window.onload=function(){window.location.href="/lander"}</script>
+       A browser lands on the real site. A crawler sees a document with zero anchors
+       and reports NO BROKEN LINKS — which is the single worst thing this tool can
+       say, because a clean report and an unvisited site are the same artifact.
+       Follow it once, same-host only. */
+    if (html.length < 2000) {
+      const js = html.match(/location(?:\.href)?\s*=\s*["']([^"']+)["']|location\.replace\(\s*["']([^"']+)["']/);
+      if (js) {
+        const dest = js[1] || js[2];
+        let hop; try { hop = new URL(dest, base).href; } catch (e) { hop = null; }
+        if (hop && new URL(hop).host === HOST && !seen.has(hop)) {
+          seen.add(hop);
+          const r2 = await fetchOnce(hop, "GET");
+          if (r2.status === 200 && /html/i.test(r2.type || "")) html = r2.body || "";
+        }
+      }
+    }
 
     const links = attrs(html, "a", "href");
     const assets = [].concat(
@@ -242,6 +267,21 @@ const attrs = (html, tag, attr) => {
 
   console.log("\n  %s", START);
   console.log("  %d pages crawled, %d links and assets checked\n", pages.length, checked.size);
+  /* ⛔ REFUSE, DO NOT REASSURE. A crawl that extracted nothing has measured nothing,
+     and "no broken links found" is indistinguishable from a clean site — the exact
+     same-artifact failure this tool is sold against. It printed that line over a
+     114-byte JS-redirect stub on 2026-07-28, then added "that is a real result".
+     An empty crawl is the one case where confidence is a lie, so say so and exit 2. */
+  if (!checked.size) {
+    console.log("  NO RESULT — this crawl checked zero links, so it has measured nothing.\n");
+    console.log("  A page was fetched but no anchors or assets came out of it. Usually one of:");
+    console.log("    · the site renders its links in JavaScript (crawler sees an empty shell)");
+    console.log("    · a client-side redirect this tool could not follow");
+    console.log("    · a bot wall serving a stub to non-browser agents\n");
+    console.log("  This is NOT a clean bill of health. Do not read it as one.\n");
+    process.exitCode = 2;
+    return;
+  }
   if (!rowsAll.length) {
     console.log("  No broken links or missing assets found.\n");
     console.log("  That is a real result, not a failed run. Most sites this size have some.\n");
