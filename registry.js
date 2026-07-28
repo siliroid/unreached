@@ -35,15 +35,31 @@ const https = require('node:https');
 
 const TOKEN = process.env.GITHUB_TOKEN || process.env.GH_TOKEN || '';
 const CONC = TOKEN ? 8 : 3;      // unauthenticated github is 60 req/hr — crawl gently
-const ROOT = process.argv[2];
 const JSON_OUT = process.argv.includes('--json');
+const apiIdx = process.argv.indexOf('--api');
+const API_BASE = apiIdx === -1 ? null : process.argv[apiIdx + 1];
+const ROOT = API_BASE ? null : process.argv[2];
 
-if (!ROOT || ROOT.startsWith('-')) {
-  console.error('usage: unreached-registry <dir-of-json> [--json]');
-  console.error('       GITHUB_TOKEN=<pat> strongly recommended (60 req/hr without one)');
-  process.exit(1);
+/* ⛔ --api EXISTS BECAUSE THE FILE MODE MEASURES THE SMALL HALF OF THE ECOSYSTEM.
+   Pointed at modelcontextprotocol/registry as a directory, this returned 27 repos and zero
+   findings, and I was one keystroke from recording "the official registry is clean." It is a
+   Go SERVICE. Its catalogue is an endpoint holding SIX THOUSAND servers, of which 5,120 carry
+   live `remotes[]` across 1,885 distinct hosts — none of which any file-based tool can see.
+
+   And the API asks a better question than the file mode does. A file registry links to SOURCE,
+   so the question is "does this repo exist" — which is permanently ambiguous, because a private
+   repo and a deleted one are the same 404 from outside. An API registry lists RUNNING SERVICES,
+   so the question is "does the thing a user would install still exist," and for the DNS half of
+   that there is no ambiguity at all. */
+if (!API_BASE) {
+  if (!ROOT || ROOT.startsWith('-')) {
+    console.error('usage: unreached-registry <dir-of-json> [--json]');
+    console.error('       unreached-registry --api https://registry.modelcontextprotocol.io [--json]');
+    console.error('       GITHUB_TOKEN=<pat> strongly recommended (60 req/hr without one)');
+    process.exit(1);
+  }
+  if (!fs.existsSync(ROOT)) { console.error('no such directory: ' + ROOT); process.exit(1); }
 }
-if (!fs.existsSync(ROOT)) { console.error('no such directory: ' + ROOT); process.exit(1); }
 
 function api(p) {
   return new Promise((res) => {
@@ -97,7 +113,95 @@ const PLACEHOLDER = /^(my-?org|my-?company|your-?org|your-?company|example|examp
    rather than folding it into the number a maintainer is asked to act on. */
 const PROSE = /\.(md|txt)$/i;
 
+/* Paginate an MCP-registry-shaped API. Cursor-based, 100/page. Extracts BOTH halves:
+   github repos (same ambiguity as file mode) and remote hosts (no ambiguity at all). */
+async function readApi(base) {
+  const servers = [];
+  let cursor = '', pages = 0;
+  while (pages < 500) {
+    const u = base.replace(/\/$/, '') + '/v0/servers?limit=100' + (cursor ? '&cursor=' + encodeURIComponent(cursor) : '');
+    const r = await fetch(u, { headers: { 'user-agent': 'unreached-registry/1.0' } });
+    if (!r.ok) { if (!pages) { console.error(`\n  NO RESULT — ${u} returned ${r.status}. Nothing examined.\n`); process.exit(2); } break; }
+    const j = await r.json();
+    for (const row of (j.servers || j.data || [])) servers.push(row.server || row);
+    pages++;
+    cursor = (j.metadata || j.meta || {}).nextCursor || '';
+    if (!cursor) break;
+  }
+  return servers;
+}
+
+/* ⛔ DNS ONLY, AND THE EXCLUSIONS COST ME FINDINGS ON PURPOSE.
+   DEAD = the hostname does not resolve, v4 and v6. NOT counted: 4xx/5xx (could be auth or a
+   bot wall), timeouts (could be slow or blocking my UA), Cloudflare refusing a non-browser
+   agent — I published a 56% false-positive rate for exactly that class on my own crawler this
+   week. A domain that does not resolve is the one signal with no error bar: no private-vs-
+   deleted ambiguity, no UA dependence, and it is gone for every user too.
+   ⇒ Which makes the result a FLOOR. Real breakage is certainly higher; this measures only
+     the part that cannot be argued with. */
+async function deadHosts(hosts) {
+  const dns = require('node:dns').promises;
+  const list = [...hosts], dead = [];
+  let i = 0;
+  await Promise.all(Array.from({ length: 24 }, async () => {
+    while (i < list.length) {
+      const h = list[i++];
+      try { await dns.resolve4(h); }
+      catch (e) {
+        if (e.code === 'ENOTFOUND' || e.code === 'NXDOMAIN') {
+          try { await dns.resolve6(h); } catch { dead.push(h); }
+        }
+      }
+    }
+  }));
+  return dead;
+}
+
 (async () => {
+  if (API_BASE) {
+    const servers = await readApi(API_BASE);
+    const hostMap = new Map();      // host -> [server names]
+    const repoMap = new Map();      // owner/name -> Set(server names)
+    for (const s of servers) {
+      for (const rm of (s.remotes || [])) {
+        try { const h = new URL(rm.url).host;
+          if (!hostMap.has(h)) hostMap.set(h, []); hostMap.get(h).push(s.name); } catch { }
+      }
+      const ru = s.repository && s.repository.url;
+      if (ru) for (const m of String(ru).matchAll(/github\.com\/([A-Za-z0-9_.-]+)\/([A-Za-z0-9_.-]+)/g)) {
+        if (NOT_A_USER.test(m[1]) || PLACEHOLDER.test(m[1])) continue;
+        const k = `${m[1]}/${m[2].replace(/\.git$/, '')}`;
+        if (!repoMap.has(k)) repoMap.set(k, new Set());
+        repoMap.get(k).add(s.name);
+      }
+    }
+    if (!JSON_OUT) console.error('  %d servers · %d remote hosts · %d github repos · resolving…',
+      servers.length, hostMap.size, repoMap.size);
+
+    const dead = await deadHosts(hostMap.keys());
+    const out = { api: API_BASE, servers: servers.length, hosts: hostMap.size,
+      repos: repoMap.size, deadHosts: dead,
+      affected: dead.reduce((n, h) => n + hostMap.get(h).length, 0),
+      map: Object.fromEntries(dead.map((h) => [h, hostMap.get(h)])) };
+
+    if (JSON_OUT) { console.log(JSON.stringify(out, null, 1)); return; }
+    console.log('\n  %s', API_BASE);
+    console.log('  %d servers · %d distinct remote hosts · %d github repos referenced\n',
+      servers.length, hostMap.size, repoMap.size);
+    console.log('  HOST DOES NOT RESOLVE   %d hosts, affecting %d registry entries\n', dead.length, out.affected);
+    for (const h of dead.slice(0, 25))
+      console.log('    %s   <- %s', h, hostMap.get(h).slice(0, 2).join(', ')
+        + (hostMap.get(h).length > 2 ? ` (+${hostMap.get(h).length - 2})` : ''));
+    if (dead.length > 25) console.log('    … and %d more (--json for all)', dead.length - 25);
+    console.log('\n  ⚠ DNS ONLY. A host that resolves but errors, times out, or bot-walls this');
+    console.log('    agent is NOT counted — those are indistinguishable from my own tooling being');
+    console.log('    refused. So this is a FLOOR on the breakage, and the one number here with no');
+    console.log('    error bar: an unresolvable domain is gone for every user, not just for me.\n');
+    console.log('  ⚠ It also says nothing about whether the SERVICE is broken — only that the');
+    console.log('    hostname is gone. A moved service with a stale entry is a one-line fix.\n');
+    return;
+  }
+
   const files = walk(ROOT);
   if (!files.length) {
     console.error('\n  NO RESULT — no .json files under ' + ROOT + ', so nothing was examined.');
