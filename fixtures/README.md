@@ -57,7 +57,32 @@ known-good orphan.
 You validate a **check** against known-bad and a **rule** against known-good. This README's parent
 repo said that in its own text and then only ever did the first half.
 
-## Status
+## Status — FIXED 07:02, same session. Recall 25% → 100% on this corpus.
 
-**Not fixed.** Published first, deliberately — a clean run from this tool is not currently evidence
-of a clean repo, and anyone running it deserves to know that before the fix rather than after.
+Published broken first, deliberately, and fixed forty minutes later. Both halves closed:
+
+| fixture | before | after |
+|---|---|---|
+| `esm-named` | *nothing unreferenced* | `[EXPORT]` ✅ |
+| `esm-default` | *nothing unreferenced* | `[EXPORT]` ✅ |
+| `cjs-declared` | `[OVERBROAD]` | `[EXPORT]` ✅ |
+| `cjs-inline` | `[EXPORT]` | `[EXPORT]` ✅ |
+| `clean-control` | silent | **silent** ✅ |
+
+⇒ **RECALL: 4 of 4. The control still holds**, which is the only reason the first number means
+anything — recall going to 100% would be worthless if precision had collapsed to buy it.
+
+**Regression, because fixtures are not the world:** `got` and `chalk` both still report **zero
+findings** after the change. Those were clean before and they are clean now, so the fix did not
+buy its recall by crying wolf on mature code.
+
+**What actually changed:**
+1. **ESM was never a candidate.** The detector matched `module.exports = {` and nothing else, so
+   `export function foo` was not missed — it was never considered. Added an `export` matcher.
+2. **The ordinary CJS shape self-suppressed.** The "is it used internally" check searched a region
+   of the file that *contained the declaration*, so `function foo(){}` counted as a use of `foo`
+   and downgraded a dead export to the harmless category. Now the declaration and export construct
+   for that specific name are stripped before the question is asked.
+
+⚠ **This corpus is five fixtures I wrote, so 4/4 is a floor, not a ceiling of confidence.** It
+proves the two mechanisms are closed. It does not prove there is no third.

@@ -130,10 +130,28 @@ const findings = [];
 for (const [file, text] of src) {
   if (!/\.js$/i.test(file)) continue;
   const m = text.match(/module\.exports\s*=\s*\{([\s\S]*?)\n\s*\}/);
-  if (!m) continue;
-  const names = m[1].split(/[,\n]/)
+  const cjsNames = m ? m[1].split(/[,\n]/)
     .map((s) => s.split(':')[0].trim())
-    .filter((n) => /^[A-Za-z_$][\w$]*$/.test(n));
+    .filter((n) => /^[A-Za-z_$][\w$]*$/.test(n)) : [];
+
+  // ⛔ 07:01 2026-07-28. ESM WAS COMPLETELY INVISIBLE HERE. The regex above matches
+  // `module.exports = {` and nothing else, so `export function foo` was never even a
+  // candidate — not missed, never considered. Measured against a planted-orphan corpus
+  // (fixtures/: four planted defects + one clean control): RECALL 1 OF 4. The tool could
+  // not reproduce the example its own README is founded on — hands.js exporting
+  // releaseAll() with zero callers, which is written declare-then-export.
+  // ⇒ AND THE REASON IT SURVIVED IS THE PART WORTH KEEPING: all four dated fixes on this
+  // block were triggered by false POSITIVES. A false positive is a wrong row a human can
+  // point at — visible, embarrassing, fixed within the hour. A false negative is a SHORTER
+  // REPORT, which is pixel-identical to a cleaner codebase. A detector whose corrections
+  // only ever arrive as complaints converges on silence, because only its noise can
+  // generate a complaint. Four fixes, every one narrowing, not one ever run against a
+  // known-good orphan until tonight.
+  const esmNames = [...text.matchAll(
+    /^[ \t]*export\s+(?:default\s+)?(?:async\s+)?(?:function\s*\*?|const|let|var|class)\s+([A-Za-z_$][\w$]*)/gm
+  )].map((x) => x[1]);
+
+  const names = [...new Set([...cjsNames, ...esmNames])];
   if (!names.length) continue;
   const others = [...src.entries()].filter(([f]) => f !== file).map(([, t]) => t).join('\n');
 
@@ -153,10 +171,23 @@ for (const [file, text] of src) {
   // the false alarm that makes someone delete a live guard. ⇒ These are two different findings and
   // collapsing them was the bug: not-used-anywhere is DEAD, used-only-at-home is an OVER-BROAD
   // EXPORT — harmless, worth narrowing, and absolutely not something to rip out.
-  const body = text.slice(0, m.index);
+  // ⛔ Same session, second half of the same bug: THE ORDINARY CJS SHAPE SELF-SUPPRESSED.
+  // `body` used to be everything before `module.exports` — which CONTAINS the declaration.
+  // So `function foo(){}` satisfied referenced(foo, body), and a genuinely dead export was
+  // downgraded to OVERBROAD: the category the comment above calls "harmless, absolutely not
+  // something to rip out". Only an export named nowhere but inside the object literal — the
+  // RARE shape — could ever reach [EXPORT]. ⇒ Strip the declaration and the export construct
+  // for that specific name, THEN ask whether it is still used. Verified against fixtures/.
+  const esc = (s) => s.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+  const residual = (n) => {
+    let t = m ? text.slice(0, m.index) + text.slice(m.index + m[0].length) : text;
+    t = t.replace(new RegExp(`export\\s+(?:default\\s+)?(?:async\\s+)?(?:function\\s*\\*?|const|let|var|class)\\s+${esc(n)}\\b`, 'g'), ' ');
+    t = t.replace(new RegExp(`(?:function\\s*\\*?|const|let|var|class)\\s+${esc(n)}\\b`, 'g'), ' ');
+    return t;
+  };
   const unref = names.filter((n) => !referenced(n, others));
-  const dead = unref.filter((n) => !referenced(n, body));
-  const internal = unref.filter((n) => referenced(n, body));
+  const dead = unref.filter((n) => !referenced(n, residual(n)));
+  const internal = unref.filter((n) => referenced(n, residual(n)));
   // ⛔ 18:16 2026-07-26. A `*.config.*` file is read BY A RUNNER, never imported by source — so
   // every key in it reads as unreferenced and every one of them is load-bearing. Caught on lodash:
   // flagged `retries, testDir, testMatch, headless` out of playwright.config.js, which is four
