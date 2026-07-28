@@ -36,6 +36,7 @@ const https = require('node:https');
 const TOKEN = process.env.GITHUB_TOKEN || process.env.GH_TOKEN || '';
 const CONC = TOKEN ? 8 : 3;      // unauthenticated github is 60 req/hr — crawl gently
 const JSON_OUT = process.argv.includes('--json');
+const SUGGEST = process.argv.includes('--suggest');
 const apiIdx = process.argv.indexOf('--api');
 const API_BASE = apiIdx === -1 ? null : process.argv[apiIdx + 1];
 const ROOT = API_BASE ? null : process.argv[2];
@@ -112,6 +113,70 @@ const PLACEHOLDER = /^(my-?org|my-?company|your-?org|your-?company|example|examp
    URLs. An entry seen ONLY in prose is documentation, not inventory — split it out
    rather than folding it into the number a maintainer is asked to act on. */
 const PROSE = /\.(md|txt)$/i;
+
+/* ⛔ THE SEAM, and I found it by refusing to file a bad issue.
+   acuvity's index listed getsentry/mcp-server-sentry, Shopify/dev-mcp, zapier/zapier-platform-
+   mcp-server as 404. Sentry and Shopify are extremely alive — so I searched their orgs and every
+   one had an obvious successor: sentry-mcp, dev-mcp-gemini-cli, zapier-mcp, mcp-zenml. SIX OF SIX
+   had moved, not died.
+
+   ⇒ "19 dead links" is technically true and practically useless, and shipping it is how a tool
+     gets muted in a week. The maintainer's actual question is not WHICH ROWS ARE BROKEN, it is
+     WHAT DO I PUT THERE INSTEAD — and every scanner in this category answers the first question
+     and none answer the second.
+
+   So: propose the repair. Search the same owner, rank by name similarity, and hand over a
+   candidate. That turns a report into a diff, and a chore into a merge.
+
+   ⚠ A SUGGESTION IS NOT A FINDING and is never presented as one. Name similarity is a heuristic;
+   `zenml-mcp-server` -> `mcp-zenml` is right and something else plausible will be wrong. Every
+   row is emitted as needing a human, and the confidence is printed so it can be argued with. */
+function similarity(a, b) {
+  a = a.toLowerCase().replace(/[^a-z0-9]/g, '');
+  b = b.toLowerCase().replace(/[^a-z0-9]/g, '');
+  if (!a || !b) return 0;
+  if (a === b) return 1;
+  const bigrams = (s) => { const g = new Set(); for (let i = 0; i < s.length - 1; i++) g.add(s.slice(i, i + 2)); return g; };
+  const A = bigrams(a), B = bigrams(b);
+  let hit = 0; for (const g of A) if (B.has(g)) hit++;
+  return (2 * hit) / (A.size + B.size);
+}
+
+async function suggestSuccessors(deadRepos, log) {
+  const out = [];
+  for (let i = 0; i < deadRepos.length; i++) {
+    const [owner, name] = deadRepos[i].split('/');
+    /* GitHub search is 30/min authenticated — far tighter than the 5000/hr core limit, and
+       blowing it returns 403s that would land in the report as findings. Pace it. */
+    if (i && i % 25 === 0) await new Promise((r) => setTimeout(r, 60000));
+    let items = [];
+    try {
+      const r = await api2(`/search/repositories?q=${encodeURIComponent('org:' + owner + ' mcp')}&per_page=10`);
+      items = (r && r.items) || [];
+    } catch { /* a failed search is NOT evidence of anything; leave the row unsuggested */ }
+    const ranked = items.map((x) => ({ full: x.full_name, score: similarity(name, x.name),
+      pushed: (x.pushed_at || '').slice(0, 10) }))
+      .sort((a, b) => b.score - a.score);
+    const best = ranked[0];
+    out.push({ dead: deadRepos[i], suggestion: best && best.score >= 0.34 ? best.full : null,
+      confidence: best ? Number(best.score.toFixed(2)) : 0,
+      alternatives: ranked.slice(1, 3).map((x) => x.full) });
+    if (log) log(i + 1, deadRepos.length);
+  }
+  return out;
+}
+
+/* JSON flavour of api() — the existing one is HEAD-only and returns a status code. */
+function api2(p) {
+  return new Promise((res) => {
+    const h = { 'User-Agent': 'unreached-registry/1.0', Accept: 'application/vnd.github+json' };
+    if (TOKEN) h.Authorization = 'token ' + TOKEN;
+    https.get({ hostname: 'api.github.com', path: p, headers: h, timeout: 10000 }, (r) => {
+      let b = ''; r.on('data', (d) => b += d);
+      r.on('end', () => { try { res(JSON.parse(b)); } catch { res(null); } });
+    }).on('error', () => res(null)).on('timeout', function () { this.destroy(); res(null); });
+  });
+}
 
 /* Paginate an MCP-registry-shaped API. Cursor-based, 100/page. Extracts BOTH halves:
    github repos (same ambiguity as file mode) and remote hosts (no ambiguity at all). */
@@ -328,6 +393,21 @@ async function deadHosts(hosts, onProgress) {
   };
   show('GHOST OWNER', ghostRows);
   show('ROT', rot);
+
+  if (SUGGEST && rot.length) {
+    console.log('  PROPOSED SUCCESSORS — searching each owner for a replacement…\n');
+    const sug = await suggestSuccessors(rot, (d, t) => process.stderr.write(`\r  ${d}/${t}…`));
+    process.stderr.write('\r' + ' '.repeat(30) + '\r');
+    const hit = sug.filter((s) => s.suggestion);
+    for (const s of sug) {
+      if (s.suggestion) console.log('    %s\n      -> %s  (name similarity %s)', s.dead, s.suggestion, s.confidence);
+      else console.log('    %s\n      -> no candidate in that owner', s.dead);
+    }
+    console.log('\n  %d of %d have a candidate. ⚠ THESE ARE SUGGESTIONS, NOT FINDINGS.', hit.length, sug.length);
+    console.log('    Ranked by name similarity within the same owner — a heuristic. Every row');
+    console.log('    needs a human to confirm before it goes into a catalogue. The confidence is');
+    console.log('    printed so it can be argued with rather than trusted.\n');
+  }
 
   /* ⛔ THE SCOPE LIMIT THAT ALMOST PRODUCED A FALSE CLEAN, 2026-07-28 08:09.
      Pointed at modelcontextprotocol/registry: 285 files in, 27 repos out, zero findings.
