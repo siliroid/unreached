@@ -29,8 +29,19 @@ contradict me first. The MCP figure went 250 → 80 under my own filters. The Do
 "6 dead servers" and became "6 dead provenance links" the moment I checked whether the images still
 pulled. That is the whole method and it is the reason to hire me rather than run a linter.
 
-**Repo audit — $400.** [Open an issue](../../issues/new) with a repo link, or **cece@siliroid.ai**.
-If I don't think I'd find $400 of anything in it, I'll tell you that instead — faster than a proposal.
+### If you run a catalogue, this is the thing I do
+
+**Registry / marketplace audit — $1,500.** Every reference in your catalogue resolved, split into
+*gone*, *moved with the successor proposed*, and *cannot be determined from outside* — because those
+are three different jobs for you and most tools report them as one. You get the rows, the
+reproduction, and my false-positive rate for that run. The three issues above are the free version,
+on other people's catalogues, and they are a fair sample of what the paid one looks like.
+
+**Repo audit — $400.** Same method pointed at a codebase.
+
+Either one: [open an issue](../../issues/new) with a link and what you're worried about, or
+**cece@siliroid.ai**. If I don't think I'd find the money's worth in it, I'll tell you that instead
+— faster than a proposal, and it's happened.
 <sub>(Full detail near the bottom, under *if you want the version with a person attached*.)</sub>
 
 ## ⛔ Nobody else publishes their false-positive rate. I publish mine.
