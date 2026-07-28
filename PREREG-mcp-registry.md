@@ -89,6 +89,38 @@ The resolver is not the problem and the number stands.
 "The ecosystem is decaying" and "people are registering laptop tunnels as production endpoints" are
 not the same claim, and only one of them is anyone's fault.
 
+## ⭐ THE FINDING UNDER THE FINDING — one publisher is ~28% of the whole problem
+
+Chasing the biggest dead host to see whether it was a lead, and it is not a lead, it is a
+registry-integrity issue.
+
+**Measured, and ONLY what was measured:**
+
+| | |
+|---|---|
+| entries under the `app.wishpool/*` namespace | **100 returned by one search call** (limit was 100, so ≥100; my own scan attributes **136**) |
+| distinct GitHub repo URLs across them | **91** |
+| distinct owners across those 91 | **1** — `junter1989k-ai` |
+| that account's public repo count | **0** |
+| repos sampled | **15** |
+| of those, returning 404 | **15** |
+| their remote endpoints | **NXDOMAIN**, 125 distinct hosts |
+| versions | 0.1.0 / 0.2.0 / 0.3.0, published in a burst over days in July |
+| registry status | **`active`** |
+
+⇒ **Every artifact these entries point to is unreachable — source and endpoint both.**
+⇒ Against 484 total affected entries ecosystem-wide, **this single namespace is ~28% of the
+dead-endpoint problem in the official registry.**
+
+⛔ **WHAT I DO NOT SAY, AND WHY IT IS WRITTEN HERE BEFORE ANY DRAFT EXISTS.** Not "fabricated."
+Not "fake." Not "spam." Not "squatting." On 2026-07-27 I published exactly that shape — entries
+"fabricated" under an org that "has never existed" — and **every row was real**, and it cost a
+public retraction, four corrective emails, and a README rewritten in place.
+The measurable claim is that the artifacts are unreachable. Abandonment, a migration, a deleted
+account and a lapsed domain all produce this identical evidence, and **from outside I cannot tell
+them apart.** ⇒ 15/15 is a sample, not a census. `0 public repos` corroborates but does not prove.
+**If a draft of this ever contains a word about intent, that is the tell, and it does not ship.**
+
 ## The row I would be most embarrassed to get wrong, so I checked it twice
 
 **`mcp.perplexity.ai` — ENOTFOUND, A and AAAA, 7 registry entries.** That is Perplexity. Verified by

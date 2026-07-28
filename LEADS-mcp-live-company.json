@@ -1,0 +1,819 @@
+[
+ {
+  "apex": "wishpool.app",
+  "entries": 136,
+  "hosts": [
+   "inv-co.wishpool.app",
+   "mcp-bh.wishpool.app",
+   "mcp-ca.wishpool.app",
+   "inv-cl.wishpool.app",
+   "mcp-bg.wishpool.app",
+   "mcp-dz.wishpool.app",
+   "inv-be.wishpool.app",
+   "mcp-bd.wishpool.app",
+   "inv-br.wishpool.app",
+   "mcp-co.wishpool.app",
+   "inv-ar.wishpool.app",
+   "mcp-ar.wishpool.app",
+   "mcp-be.wishpool.app",
+   "logi-au.wishpool.app",
+   "mcp-br.wishpool.app",
+   "mcp-au.wishpool.app",
+   "mcp-cl.wishpool.app",
+   "mcp-at.wishpool.app",
+   "mcp-cr.wishpool.app",
+   "mcp-hr.wishpool.app",
+   "mcp-cz.wishpool.app",
+   "inv-do.wishpool.app",
+   "inv-cr.wishpool.app",
+   "mcp-dk.wishpool.app",
+   "mcp-cy.wishpool.app",
+   "inv-dk.wishpool.app",
+   "mor.wishpool.app",
+   "inv-ec.wishpool.app",
+   "mcp-eg.wishpool.app",
+   "mcp-ee.wishpool.app",
+   "inv-fi.wishpool.app",
+   "mcp-fi.wishpool.app",
+   "logi-fr.wishpool.app",
+   "mcp-fr.wishpool.app",
+   "mcp-ge.wishpool.app",
+   "mcp-de.wishpool.app",
+   "logi-de.wishpool.app",
+   "mcp-gh.wishpool.app",
+   "logi-global.wishpool.app",
+   "inv-gr.wishpool.app",
+   "mcp-gr.wishpool.app",
+   "mcp-gt.wishpool.app",
+   "mcp-hk.wishpool.app",
+   "inv-hu.wishpool.app",
+   "mcp-hu.wishpool.app",
+   "inv-in.wishpool.app",
+   "mcp-in.wishpool.app",
+   "logi-in.wishpool.app",
+   "logi-id.wishpool.app",
+   "logi-it.wishpool.app",
+   "mcp-id.wishpool.app",
+   "mcp-il.wishpool.app",
+   "mcp-ie.wishpool.app",
+   "inv-it.wishpool.app",
+   "mcp-it.wishpool.app",
+   "mcp-ci.wishpool.app",
+   "logi-jp.wishpool.app",
+   "mcp-jp.wishpool.app",
+   "mcp-jo.wishpool.app",
+   "mcp-ke.wishpool.app",
+   "mcp-kr.wishpool.app",
+   "mcp-kz.wishpool.app",
+   "inv-kr.wishpool.app",
+   "logi-latam.wishpool.app",
+   "mcp-kw.wishpool.app",
+   "mcp-lv.wishpool.app",
+   "mcp-lt.wishpool.app",
+   "mcp-lu.wishpool.app",
+   "inv-lu.wishpool.app",
+   "inv-my.wishpool.app",
+   "mcp-my.wishpool.app",
+   "mcp-mt.wishpool.app",
+   "inv-mx.wishpool.app",
+   "mcp-np.wishpool.app",
+   "mcp-mx.wishpool.app",
+   "inv-nl.wishpool.app",
+   "mcp-nl.wishpool.app",
+   "mcp-nz.wishpool.app",
+   "inv-ng.wishpool.app",
+   "mcp-ng.wishpool.app",
+   "inv-no.wishpool.app",
+   "mcp-no.wishpool.app",
+   "inv-py.wishpool.app",
+   "inv-pe.wishpool.app",
+   "mcp-pe.wishpool.app",
+   "mcp-ph.wishpool.app",
+   "mcp-pk.wishpool.app",
+   "mcp-om.wishpool.app",
+   "inv-pl.wishpool.app",
+   "mcp-pt.wishpool.app",
+   "inv-ro.wishpool.app",
+   "mcp-pl.wishpool.app",
+   "mcp-ro.wishpool.app",
+   "mcp-qa.wishpool.app",
+   "mcp-rw.wishpool.app",
+   "mcp-sa.wishpool.app",
+   "inv-sa.wishpool.app",
+   "mcp-sn.wishpool.app",
+   "inv-rs.wishpool.app",
+   "mcp-sg.wishpool.app",
+   "mcp-si.wishpool.app",
+   "mcp-za.wishpool.app",
+   "mcp-sk.wishpool.app",
+   "mcp-es.wishpool.app",
+   "mcp-se.wishpool.app",
+   "mcp-ch.wishpool.app",
+   "inv-se.wishpool.app",
+   "logi-tw.wishpool.app",
+   "mcp.wishpool.app",
+   "inv-th.wishpool.app",
+   "mcp-tz.wishpool.app",
+   "mcp-th.wishpool.app",
+   "mcp-ae.wishpool.app",
+   "mcp-tr.wishpool.app",
+   "mcp-ug.wishpool.app",
+   "logi-uk.wishpool.app",
+   "mcp-gb.wishpool.app",
+   "mcp-ua.wishpool.app",
+   "inv-uy.wishpool.app",
+   "mcp-uy.wishpool.app",
+   "logi-us.wishpool.app",
+   "inv-vn.wishpool.app",
+   "mcp-vn.wishpool.app",
+   "mcp-zm.wishpool.app",
+   "mcp-us.wishpool.app"
+  ],
+  "servers": [
+   "app.wishpool/colombia-invoice-mcp",
+   "app.wishpool/bahrain-payments-mcp",
+   "app.wishpool/canada-payments-mcp",
+   "app.wishpool/chile-invoice-mcp",
+   "app.wishpool/bulgaria-payments-mcp",
+   "app.wishpool/algeria-payments-mcp",
+   "app.wishpool/belgium-invoice-mcp",
+   "app.wishpool/bangladesh-payments-mcp",
+   "app.wishpool/brazil-invoice-mcp",
+   "app.wishpool/colombia-payments-mcp",
+   "app.wishpool/argentina-invoice-mcp",
+   "app.wishpool/argentina-payments-mcp",
+   "app.wishpool/belgium-payments-mcp",
+   "app.wishpool/australia-logistics-mcp",
+   "app.wishpool/brazil-payments-mcp",
+   "app.wishpool/australia-payments-mcp",
+   "app.wishpool/chile-payments-mcp",
+   "app.wishpool/austria-payments-mcp",
+   "app.wishpool/costa-rica-payments-mcp",
+   "app.wishpool/croatia-payments-mcp",
+   "app.wishpool/czechia-payments-mcp",
+   "app.wishpool/dominican-republic-invoice-mcp",
+   "app.wishpool/costa-rica-invoice-mcp",
+   "app.wishpool/denmark-payments-mcp",
+   "app.wishpool/cyprus-payments-mcp",
+   "app.wishpool/denmark-invoice-mcp",
+   "app.wishpool/digital-goods-mcp",
+   "app.wishpool/ecuador-invoice-mcp",
+   "app.wishpool/egypt-payments-mcp",
+   "app.wishpool/estonia-payments-mcp",
+   "app.wishpool/finland-invoice-mcp",
+   "app.wishpool/finland-payments-mcp",
+   "app.wishpool/france-logistics-mcp",
+   "app.wishpool/france-payments-mcp",
+   "app.wishpool/georgia-payments-mcp",
+   "app.wishpool/germany-payments-mcp",
+   "app.wishpool/germany-logistics-mcp",
+   "app.wishpool/ghana-payments-mcp",
+   "app.wishpool/global-logistics-mcp",
+   "app.wishpool/greece-invoice-mcp",
+   "app.wishpool/greece-payments-mcp",
+   "app.wishpool/guatemala-payments-mcp",
+   "app.wishpool/hong-kong-payments-mcp",
+   "app.wishpool/hungary-invoice-mcp",
+   "app.wishpool/hungary-payments-mcp",
+   "app.wishpool/india-invoice-mcp",
+   "app.wishpool/india-payments-mcp",
+   "app.wishpool/india-logistics-mcp",
+   "app.wishpool/indonesia-logistics-mcp",
+   "app.wishpool/italy-logistics-mcp",
+   "app.wishpool/indonesia-payments-mcp",
+   "app.wishpool/israel-payments-mcp",
+   "app.wishpool/ireland-payments-mcp",
+   "app.wishpool/italy-invoice-mcp",
+   "app.wishpool/italy-payments-mcp",
+   "app.wishpool/ivory-coast-payments-mcp",
+   "app.wishpool/japan-logistics-mcp",
+   "app.wishpool/japan-payments-mcp",
+   "app.wishpool/jordan-payments-mcp",
+   "app.wishpool/kenya-payments-mcp",
+   "app.wishpool/korea-payments-mcp",
+   "app.wishpool/kazakhstan-payments-mcp",
+   "app.wishpool/korea-invoice-mcp",
+   "app.wishpool/latam-logistics-mcp",
+   "app.wishpool/kuwait-payments-mcp",
+   "app.wishpool/latvia-payments-mcp",
+   "app.wishpool/lithuania-payments-mcp",
+   "app.wishpool/luxembourg-payments-mcp",
+   "app.wishpool/luxembourg-invoice-mcp",
+   "app.wishpool/malaysia-invoice-mcp",
+   "app.wishpool/malaysia-payments-mcp",
+   "app.wishpool/malta-payments-mcp",
+   "app.wishpool/mexico-invoice-mcp",
+   "app.wishpool/nepal-payments-mcp",
+   "app.wishpool/mexico-payments-mcp",
+   "app.wishpool/netherlands-invoice-mcp",
+   "app.wishpool/netherlands-payments-mcp",
+   "app.wishpool/new-zealand-payments-mcp",
+   "app.wishpool/nigeria-invoice-mcp",
+   "app.wishpool/nigeria-payments-mcp",
+   "app.wishpool/norway-invoice-mcp",
+   "app.wishpool/norway-payments-mcp",
+   "app.wishpool/paraguay-invoice-mcp",
+   "app.wishpool/peru-invoice-mcp",
+   "app.wishpool/peru-payments-mcp",
+   "app.wishpool/philippines-payments-mcp",
+   "app.wishpool/pakistan-payments-mcp",
+   "app.wishpool/oman-payments-mcp",
+   "app.wishpool/poland-invoice-mcp",
+   "app.wishpool/portugal-payments-mcp",
+   "app.wishpool/romania-invoice-mcp",
+   "app.wishpool/poland-payments-mcp",
+   "app.wishpool/romania-payments-mcp",
+   "app.wishpool/qatar-payments-mcp",
+   "app.wishpool/rwanda-payments-mcp",
+   "app.wishpool/saudi-arabia-payments-mcp",
+   "app.wishpool/saudi-invoice-mcp",
+   "app.wishpool/senegal-payments-mcp",
+   "app.wishpool/serbia-invoice-mcp",
+   "app.wishpool/singapore-payments-mcp",
+   "app.wishpool/slovenia-payments-mcp",
+   "app.wishpool/south-africa-payments-mcp",
+   "app.wishpool/slovakia-payments-mcp",
+   "app.wishpool/spain-payments-mcp",
+   "app.wishpool/sweden-payments-mcp",
+   "app.wishpool/switzerland-payments-mcp",
+   "app.wishpool/sweden-invoice-mcp",
+   "app.wishpool/taiwan-logistics-mcp",
+   "app.wishpool/taiwan-payments-mcp",
+   "app.wishpool/thailand-invoice-mcp",
+   "app.wishpool/tanzania-payments-mcp",
+   "app.wishpool/thailand-payments-mcp",
+   "app.wishpool/uae-payments-mcp",
+   "app.wishpool/turkey-payments-mcp",
+   "app.wishpool/uganda-payments-mcp",
+   "app.wishpool/uk-logistics-mcp",
+   "app.wishpool/uk-payments-mcp",
+   "app.wishpool/ukraine-payments-mcp",
+   "app.wishpool/uruguay-invoice-mcp",
+   "app.wishpool/uruguay-payments-mcp",
+   "app.wishpool/usa-logistics-mcp",
+   "app.wishpool/vietnam-invoice-mcp",
+   "app.wishpool/vietnam-payments-mcp",
+   "app.wishpool/zambia-payments-mcp",
+   "app.wishpool/usa-payments-mcp"
+  ]
+ },
+ {
+  "apex": "workers.dev",
+  "entries": 20,
+  "hosts": [
+   "kachink.ahmadsl.workers.dev",
+   "jusho-mcp.plus-synergy.workers.dev",
+   "horei-mcp.plus-synergy.workers.dev",
+   "gbiz-leads-mcp.plus-synergy.workers.dev",
+   "edinet-mcp.plus-synergy.workers.dev",
+   "estat-mcp.plus-synergy.workers.dev",
+   "kokkai-mcp.plus-synergy.workers.dev",
+   "fudousan-mcp.plus-synergy.workers.dev",
+   "hojokin-mcp.plus-synergy.workers.dev",
+   "tenki-mcp.plus-synergy.workers.dev",
+   "agentbooks-mcp.agentbooks.workers.dev"
+  ],
+  "servers": [
+   "io.github.ahmadsl/kachink",
+   "io.github.fujimura-ui/japan-address-geocoding-mcp",
+   "io.github.fujimura-ui/japan-law-search-mcp",
+   "io.github.fujimura-ui/japan-company-leads-mcp",
+   "io.github.fujimura-ui/japan-corporate-filings-mcp",
+   "io.github.fujimura-ui/japan-official-statistics-mcp",
+   "io.github.fujimura-ui/japan-parliament-search-mcp",
+   "io.github.fujimura-ui/japan-real-estate-mcp",
+   "io.github.fujimura-ui/japan-subsidy-search-mcp",
+   "io.github.fujimura-ui/japan-weather-alerts-mcp",
+   "io.github.scott2121/agentbooks-mcp"
+  ]
+ },
+ {
+  "apex": "docfork.com",
+  "entries": 12,
+  "hosts": [
+   "mcp.docfork.com"
+  ],
+  "servers": [
+   "com.docfork/docfork-mcp"
+  ]
+ },
+ {
+  "apex": "perplexity.ai",
+  "entries": 7,
+  "hosts": [
+   "mcp.perplexity.ai"
+  ],
+  "servers": [
+   "io.github.perplexityai/mcp-server"
+  ]
+ },
+ {
+  "apex": "obligationsign.com",
+  "entries": 4,
+  "hosts": [
+   "agts-mcp.obligationsign.com"
+  ],
+  "servers": [
+   "io.github.ObligationSign/agts-mcp"
+  ]
+ },
+ {
+  "apex": "somdewan.com",
+  "entries": 4,
+  "hosts": [
+   "tz-us.somdewan.com",
+   "tz-eu.somdewan.com",
+   "tz.somdewan.com"
+  ],
+  "servers": [
+   "com.somdewan/timezone-helper"
+  ]
+ },
+ {
+  "apex": "unifiedoffer.com",
+  "entries": 3,
+  "hosts": [
+   "api.unifiedoffer.com"
+  ],
+  "servers": [
+   "com.unifiedoffer/mcp-server"
+  ]
+ },
+ {
+  "apex": "docly.work",
+  "entries": 3,
+  "hosts": [
+   "neo.docly.work"
+  ],
+  "servers": [
+   "io.github.atakanelik34/neo-x402-mcp"
+  ]
+ },
+ {
+  "apex": "supabase.co",
+  "entries": 3,
+  "hosts": [
+   "yaewurxvufigjntzdruf.supabase.co",
+   "helavgrvwipmdvyejfom.supabase.co"
+  ],
+  "servers": [
+   "io.github.dhanaway/analog-mcp",
+   "io.github.sensact-agents/sensact"
+  ]
+ },
+ {
+  "apex": "weather.com",
+  "entries": 3,
+  "hosts": [
+   "kulybaba.weather.com"
+  ],
+  "servers": [
+   "io.github.kulybaba/weather",
+   "io.github.kulybaba/weather-mcp"
+  ]
+ },
+ {
+  "apex": "backengine.ai",
+  "entries": 2,
+  "hosts": [
+   "mcp.backengine.ai"
+  ],
+  "servers": [
+   "ai.backengine/backengine-mcp"
+  ]
+ },
+ {
+  "apex": "dockai.co",
+  "entries": 2,
+  "hosts": [
+   "mcp.dockai.co"
+  ],
+  "servers": [
+   "co.dockai/mcp"
+  ]
+ },
+ {
+  "apex": "skillssafe.com",
+  "entries": 2,
+  "hosts": [
+   "mcp.skillssafe.com"
+  ],
+  "servers": [
+   "com.skillssafe/scanner"
+  ]
+ },
+ {
+  "apex": "bizgigz.com",
+  "entries": 2,
+  "hosts": [
+   "agents.bizgigz.com"
+  ],
+  "servers": [
+   "com.bizgigz/agent-marketplace"
+  ]
+ },
+ {
+  "apex": "brick.directory",
+  "entries": 2,
+  "hosts": [
+   "mcp.brick.directory"
+  ],
+  "servers": [
+   "directory.brick/mcp"
+  ]
+ },
+ {
+  "apex": "dania.ai",
+  "entries": 2,
+  "hosts": [
+   "mcp.dania.ai"
+  ],
+  "servers": [
+   "io.github.carlosdania/autopilots"
+  ]
+ },
+ {
+  "apex": "globalping.io",
+  "entries": 2,
+  "hosts": [
+   "mcp.globalping.io"
+  ],
+  "servers": [
+   "io.globalping/mcp"
+  ]
+ },
+ {
+  "apex": "paxai.app",
+  "entries": 2,
+  "hosts": [
+   "mcp.paxai.app"
+  ],
+  "servers": [
+   "io.github.ax-platform/ax-platform"
+  ]
+ },
+ {
+  "apex": "phos.nz",
+  "entries": 2,
+  "hosts": [
+   "analytics.phos.nz",
+   "sales.phos.nz"
+  ],
+  "servers": [
+   "nz.phos/analytics-engine",
+   "nz.phos/sales-engine"
+  ]
+ },
+ {
+  "apex": "memoryapi.org",
+  "entries": 2,
+  "hosts": [
+   "contracts.memoryapi.org",
+   "rep.memoryapi.org"
+  ],
+  "servers": [
+   "org.memoryapi/contracts",
+   "org.memoryapi/rep"
+  ]
+ },
+ {
+  "apex": "ignission.io",
+  "entries": 2,
+  "hosts": [
+   "mcp.ignission.io"
+  ],
+  "servers": [
+   "io.ignission/mcp"
+  ]
+ },
+ {
+  "apex": "dominal.in",
+  "entries": 2,
+  "hosts": [
+   "solapursoftwaredevelopers.dominal.in"
+  ],
+  "servers": [
+   "io.github.mdyahhya/solapursoftwares"
+  ]
+ },
+ {
+  "apex": "glean.com",
+  "entries": 2,
+  "hosts": [
+   "acme-be.glean.com"
+  ],
+  "servers": [
+   "com.glean/mcp"
+  ]
+ },
+ {
+  "apex": "plainsight.pro",
+  "entries": 2,
+  "hosts": [
+   "playbook-mcp.plainsight.pro"
+  ],
+  "servers": [
+   "pro.plainsight/mcp"
+  ]
+ },
+ {
+  "apex": "baselight.app",
+  "entries": 1,
+  "hosts": [
+   "api.baselight.app"
+  ],
+  "servers": [
+   "ai.baselight/baselight"
+  ]
+ },
+ {
+  "apex": "clarid.ai",
+  "entries": 1,
+  "hosts": [
+   "mcp.clarid.ai"
+  ],
+  "servers": [
+   "ai.clarid/compliance"
+  ]
+ },
+ {
+  "apex": "trendsmcp.ai",
+  "entries": 1,
+  "hosts": [
+   "social-media.api.trendsmcp.ai"
+  ],
+  "servers": [
+   "ai.trendsmcp/social-media"
+  ]
+ },
+ {
+  "apex": "fintrx.net",
+  "entries": 1,
+  "hosts": [
+   "mcp.fintrx.net"
+  ],
+  "servers": [
+   "com.fintrx/fintrx-mcp"
+  ]
+ },
+ {
+  "apex": "alpic.ai",
+  "entries": 1,
+  "hosts": [
+   "test.alpic.ai"
+  ],
+  "servers": [
+   "ai.alpic.test/test-mcp-server"
+  ]
+ },
+ {
+  "apex": "buyersense.ai",
+  "entries": 1,
+  "hosts": [
+   "mcp.buyersense.ai"
+  ],
+  "servers": [
+   "ai.buyersense/buyersense"
+  ]
+ },
+ {
+  "apex": "copass.com",
+  "entries": 1,
+  "hosts": [
+   "mcp.copass.com"
+  ],
+  "servers": [
+   "com.olane/copass-remote"
+  ]
+ },
+ {
+  "apex": "revensi.com",
+  "entries": 1,
+  "hosts": [
+   "mcp.revensi.com"
+  ],
+  "servers": [
+   "com.revensi/revensi"
+  ]
+ },
+ {
+  "apex": "zenable.app",
+  "entries": 1,
+  "hosts": [
+   "mcp.www.zenable.app"
+  ],
+  "servers": [
+   "app.zenable/zenable"
+  ]
+ },
+ {
+  "apex": "robomart.ai",
+  "entries": 1,
+  "hosts": [
+   "mcp.robomart.ai"
+  ],
+  "servers": [
+   "ai.robomart/robomart"
+  ]
+ },
+ {
+  "apex": "craftablesoftware.com",
+  "entries": 1,
+  "hosts": [
+   "mcp.craftablesoftware.com"
+  ],
+  "servers": [
+   "com.craftablesoftware/mcp"
+  ]
+ },
+ {
+  "apex": "cred.fyi",
+  "entries": 1,
+  "hosts": [
+   "mcp.cred.fyi"
+  ],
+  "servers": [
+   "fyi.cred/cred"
+  ]
+ },
+ {
+  "apex": "conjure.ing",
+  "entries": 1,
+  "hosts": [
+   "mcp.conjure.ing"
+  ],
+  "servers": [
+   "ing.conjure/conjure"
+  ]
+ },
+ {
+  "apex": "startvest.ai",
+  "entries": 1,
+  "hosts": [
+   "mcp.idealift.startvest.ai"
+  ],
+  "servers": [
+   "io.github.Startvest-LLC/idealift-mcp"
+  ]
+ },
+ {
+  "apex": "thebalancedinvestorclub.com",
+  "entries": 1,
+  "hosts": [
+   "mcp.thebalancedinvestorclub.com"
+  ],
+  "servers": [
+   "com.thebalancedinvestorclub/welcome"
+  ]
+ },
+ {
+  "apex": "ai-gaoqian.xyz",
+  "entries": 1,
+  "hosts": [
+   "api.ai-gaoqian.xyz"
+  ],
+  "servers": [
+   "io.github.ai-gaoqian/agentmart"
+  ]
+ },
+ {
+  "apex": "aiqaramba.com",
+  "entries": 1,
+  "hosts": [
+   "mcp.aiqaramba.com"
+  ],
+  "servers": [
+   "io.github.ajrogier/aiqaramba"
+  ]
+ },
+ {
+  "apex": "sonatype.com",
+  "entries": 1,
+  "hosts": [
+   "mcp.seaworthy.sonatype.com"
+  ],
+  "servers": [
+   "com.sonatype/dependency-management-mcp-server"
+  ]
+ },
+ {
+  "apex": "wildwallet.ai",
+  "entries": 1,
+  "hosts": [
+   "mcp.wildwallet.ai"
+  ],
+  "servers": [
+   "io.github.MCFLAMINGO/wildwallet"
+  ]
+ },
+ {
+  "apex": "nexus-api-lab.com",
+  "entries": 1,
+  "hosts": [
+   "mcp.nexus-api-lab.com"
+  ],
+  "servers": [
+   "io.github.nexus-api-lab/nexus-mcp"
+  ]
+ },
+ {
+  "apex": "tycana.com",
+  "entries": 1,
+  "hosts": [
+   "app.tycana.com"
+  ],
+  "servers": [
+   "io.github.tycana/tycana"
+  ]
+ },
+ {
+  "apex": "whaber.ai",
+  "entries": 1,
+  "hosts": [
+   "oracle.whaber.ai"
+  ],
+  "servers": [
+   "io.github.Whawi/oracle"
+  ]
+ },
+ {
+  "apex": "jinko.so",
+  "entries": 1,
+  "hosts": [
+   "mcp-remote.jinko.so"
+  ],
+  "servers": [
+   "so.jinko/jinko-mcp"
+  ]
+ },
+ {
+  "apex": "chaincontext.dev",
+  "entries": 1,
+  "hosts": [
+   "nlocq.chaincontext.dev"
+  ],
+  "servers": [
+   "dev.chaincontext/nlocq"
+  ]
+ },
+ {
+  "apex": "animica.org",
+  "entries": 1,
+  "hosts": [
+   "mcp.animica.org"
+  ],
+  "servers": [
+   "io.github.animicaorg/animica"
+  ]
+ },
+ {
+  "apex": "arcagent.dev",
+  "entries": 1,
+  "hosts": [
+   "mcp.arcagent.dev"
+  ],
+  "servers": [
+   "io.github.araujota/arcagent-mcp"
+  ]
+ },
+ {
+  "apex": "openbsp.dev",
+  "entries": 1,
+  "hosts": [
+   "google-mcp.openbsp.dev"
+  ],
+  "servers": [
+   "io.github.matiasbattocchia/google-mcp"
+  ]
+ },
+ {
+  "apex": "kultur.dev",
+  "entries": 1,
+  "hosts": [
+   "api.kultur.dev"
+  ],
+  "servers": [
+   "io.github.skviteberg/kultur-dev"
+  ]
+ },
+ {
+  "apex": "getcotrader.com",
+  "entries": 1,
+  "hosts": [
+   "api.getcotrader.com"
+  ],
+  "servers": [
+   "io.github.get-cotrader/cotrader"
+  ]
+ },
+ {
+  "apex": "ts.net",
+  "entries": 1,
+  "hosts": [
+   "aws.tail177fbd.ts.net"
+  ],
+  "servers": [
+   "io.github.edge-claw/mood-booster-agent"
+  ]
+ }
+]
