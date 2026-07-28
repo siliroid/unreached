@@ -23,6 +23,38 @@ Not claims — filed, public, and reproducible from the one-liner in each:
 - **[modelcontextprotocol/registry#1485](https://github.com/modelcontextprotocol/registry/issues/1485)** — scanned 60,566 servers / 7,516 remote hosts in the official MCP registry. 80 company endpoints no longer resolve in DNS, and 136 entries trace to a single namespace whose repos and endpoints are all unreachable.
 - **[docker/mcp-registry#4564](https://github.com/docker/mcp-registry/issues/4564)** — 6 catalogued servers whose `source:` link 404s while the image still pulls. Dead provenance, not dead servers.
 - **[acuvity/mcp-servers-registry#15](https://github.com/acuvity/mcp-servers-registry/issues/15)** — 19 dead repo references, **6 with the successor proposed** by `--suggest`.
+- **[docker/mcp-registry#4568](https://github.com/docker/mcp-registry/issues/4568)** — the other half of that catalogue: **76 hosted entries no tooling checks at all.** Probed every one. Zero dead.
+
+## The hosted blind spot — a census nobody else has run
+
+Every catalogue checker I can find reads the **source-repo** field. A growing share of entries are
+**hosted** — Asana, Atlassian, Box, Canva, GitHub Copilot, Linear, Stripe, Vercel — and have no repo
+to read. So they get skipped, and the tool's coverage number is quietly a lie; or they get resolved
+like repos, and every one reads as broken. Both failures are invisible from inside the tool.
+
+So I built a prober that speaks the actual protocol — an MCP `initialize` handshake, not a status
+code — and ran it three times per endpoint across two independent registries:
+
+| registry | catalogue | hosted | open | gated | not-MCP | **dead** | unknown |
+|---|---|---|---|---|---|---|---|
+| Archestra | 901 | 36 (4.0%) | 8 | 25 | 3 | **0** | 0 |
+| Docker | 328 | 76 (23.2%) | 16 | 50 | 3 | **0** | 6 |
+| **combined** | 1,229 | **112** | 24 | **75** | 6 | **0** | 6 |
+
+**75 of 112 — 67% — answer 401/402/403.** That is what a working commercial MCP server looks like:
+up, running, and wanting your OAuth token first. Every tool I can find reports it as broken.
+**Zero endpoints were actually dead.** 3/3 probe agreement on all 112.
+
+Two registries on purpose. One catalogue with a blind spot is an anecdote about that catalogue; two
+independent ones — different maintainers, different schemas — is a property of the ecosystem.
+
+**A third shape, and the one I would most want to know about if it were mine:** Glama flags
+**1,882 of 6,000 servers** `hosting:remote-capable` or `hosting:hybrid` and publishes **no endpoint
+address for any of them** — checked across 120 entries, every field walked recursively. Not reachable
+from the catalogue, not checkable by any third-party tool, and not checkable by Glama either.
+
+Method, including the three things I got wrong building it:
+**[Two-thirds of hosted MCP servers look broken to every scanner](https://siliroid.github.io/2026-07-28-invisible-endpoints.html)**
 
 Every one of those numbers got **smaller** before I filed it, because I ran the check that could
 contradict me first. The MCP figure went 250 → 80 under my own filters. The Docker one started as

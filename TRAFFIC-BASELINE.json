@@ -1,0 +1,243 @@
+{
+ "taken": "2026-07-28T16:37:12.273Z",
+ "note": "BASELINE taken 11 min after 3 registry issues filed. README conversion fix shipped 09:35.",
+ "views": {
+  "count": 61,
+  "uniques": 52,
+  "views": [
+   {
+    "timestamp": "2026-07-14T00:00:00Z",
+    "count": 0,
+    "uniques": 0
+   },
+   {
+    "timestamp": "2026-07-15T00:00:00Z",
+    "count": 0,
+    "uniques": 0
+   },
+   {
+    "timestamp": "2026-07-16T00:00:00Z",
+    "count": 0,
+    "uniques": 0
+   },
+   {
+    "timestamp": "2026-07-17T00:00:00Z",
+    "count": 0,
+    "uniques": 0
+   },
+   {
+    "timestamp": "2026-07-18T00:00:00Z",
+    "count": 0,
+    "uniques": 0
+   },
+   {
+    "timestamp": "2026-07-19T00:00:00Z",
+    "count": 0,
+    "uniques": 0
+   },
+   {
+    "timestamp": "2026-07-20T00:00:00Z",
+    "count": 0,
+    "uniques": 0
+   },
+   {
+    "timestamp": "2026-07-21T00:00:00Z",
+    "count": 0,
+    "uniques": 0
+   },
+   {
+    "timestamp": "2026-07-22T00:00:00Z",
+    "count": 0,
+    "uniques": 0
+   },
+   {
+    "timestamp": "2026-07-23T00:00:00Z",
+    "count": 0,
+    "uniques": 0
+   },
+   {
+    "timestamp": "2026-07-24T00:00:00Z",
+    "count": 0,
+    "uniques": 0
+   },
+   {
+    "timestamp": "2026-07-25T00:00:00Z",
+    "count": 0,
+    "uniques": 0
+   },
+   {
+    "timestamp": "2026-07-26T00:00:00Z",
+    "count": 50,
+    "uniques": 43
+   },
+   {
+    "timestamp": "2026-07-27T00:00:00Z",
+    "count": 11,
+    "uniques": 10
+   }
+  ]
+ },
+ "clones": {
+  "count": 96,
+  "uniques": 50,
+  "clones": [
+   {
+    "timestamp": "2026-07-14T00:00:00Z",
+    "count": 0,
+    "uniques": 0
+   },
+   {
+    "timestamp": "2026-07-15T00:00:00Z",
+    "count": 0,
+    "uniques": 0
+   },
+   {
+    "timestamp": "2026-07-16T00:00:00Z",
+    "count": 0,
+    "uniques": 0
+   },
+   {
+    "timestamp": "2026-07-17T00:00:00Z",
+    "count": 0,
+    "uniques": 0
+   },
+   {
+    "timestamp": "2026-07-18T00:00:00Z",
+    "count": 0,
+    "uniques": 0
+   },
+   {
+    "timestamp": "2026-07-19T00:00:00Z",
+    "count": 0,
+    "uniques": 0
+   },
+   {
+    "timestamp": "2026-07-20T00:00:00Z",
+    "count": 0,
+    "uniques": 0
+   },
+   {
+    "timestamp": "2026-07-21T00:00:00Z",
+    "count": 0,
+    "uniques": 0
+   },
+   {
+    "timestamp": "2026-07-22T00:00:00Z",
+    "count": 0,
+    "uniques": 0
+   },
+   {
+    "timestamp": "2026-07-23T00:00:00Z",
+    "count": 0,
+    "uniques": 0
+   },
+   {
+    "timestamp": "2026-07-24T00:00:00Z",
+    "count": 0,
+    "uniques": 0
+   },
+   {
+    "timestamp": "2026-07-25T00:00:00Z",
+    "count": 0,
+    "uniques": 0
+   },
+   {
+    "timestamp": "2026-07-26T00:00:00Z",
+    "count": 78,
+    "uniques": 40
+   },
+   {
+    "timestamp": "2026-07-27T00:00:00Z",
+    "count": 18,
+    "uniques": 12
+   }
+  ]
+ },
+ "referrers": [
+  {
+   "referrer": "news.ycombinator.com",
+   "count": 16,
+   "uniques": 10
+  },
+  {
+   "referrer": "git.news",
+   "count": 1,
+   "uniques": 1
+  },
+  {
+   "referrer": "github.com",
+   "count": 1,
+   "uniques": 1
+  },
+  {
+   "referrer": "hackernewsx.com",
+   "count": 1,
+   "uniques": 1
+  }
+ ],
+ "paths": [
+  {
+   "path": "/siliroid/unreached",
+   "title": "Overview",
+   "count": 42,
+   "uniques": 37
+  },
+  {
+   "path": "/siliroid/unreached/blob/main/ci/github-action.yml",
+   "title": "/blob/main/ci/github-action.yml",
+   "count": 2,
+   "uniques": 2
+  },
+  {
+   "path": "/siliroid/unreached/blob/main/unreached.js",
+   "title": "/blob/main/unreached.js",
+   "count": 2,
+   "uniques": 2
+  },
+  {
+   "path": "/siliroid/unreached/actions",
+   "title": "/actions",
+   "count": 1,
+   "uniques": 1
+  },
+  {
+   "path": "/siliroid/unreached/activity",
+   "title": "/activity",
+   "count": 1,
+   "uniques": 1
+  },
+  {
+   "path": "/siliroid/unreached/blob/main/LICENSE",
+   "title": "/blob/main/LICENSE",
+   "count": 1,
+   "uniques": 1
+  },
+  {
+   "path": "/siliroid/unreached/blob/main/README.md",
+   "title": "/blob/main/README.md",
+   "count": 1,
+   "uniques": 1
+  },
+  {
+   "path": "/siliroid/unreached/blob/main/SAMPLE-AUDIT.md",
+   "title": "/blob/main/SAMPLE-AUDIT.md",
+   "count": 1,
+   "uniques": 1
+  },
+  {
+   "path": "/siliroid/unreached/blob/main/package.json",
+   "title": "/blob/main/package.json",
+   "count": 1,
+   "uniques": 1
+  },
+  {
+   "path": "/siliroid/unreached/commit/b2c925ece16af2ae020a22af92c31784f2ec8cff",
+   "title": "/commit/b2c925ece16af2ae020a22af92c31784f2ec8cff",
+   "count": 1,
+   "uniques": 1
+  }
+ ],
+ "stars": 1,
+ "forks": 0,
+ "watchers": 0
+}

@@ -1,0 +1,67 @@
+{
+  "scanned_at": "2026-07-28T19:11:51.120Z",
+  "catalogue_entries": 901,
+  "letter_claimed": 1281,
+  "phase0": {
+    "sampled": 40,
+    "agree": 29,
+    "disagree": [
+      {
+        "file": "0xdaef0f__job-searchoor",
+        "filename": "0xdaef0f/job-searchoor",
+        "structured": "0xDAEF0F/job-searchoor"
+      },
+      {
+        "file": "chatmcp__remote-mcp",
+        "filename": "chatmcp/remote-mcp",
+        "structured": "undefined/undefined"
+      },
+      {
+        "file": "coding-solo__godot-mcp",
+        "filename": "coding-solo/godot-mcp",
+        "structured": "Coding-Solo/godot-mcp"
+      },
+      {
+        "file": "mcp__ext-apps__video-resource-server",
+        "filename": "mcp/ext-apps",
+        "structured": "modelcontextprotocol/ext-apps"
+      },
+      {
+        "file": "mtehabsim__screenpilot",
+        "filename": "mtehabsim/screenpilot",
+        "structured": "Mtehabsim/ScreenPilot"
+      },
+      {
+        "file": "octagonai__octagon-mcp-server",
+        "filename": "octagonai/octagon-mcp-server",
+        "structured": "OctagonAI/octagon-mcp-server"
+      },
+      {
+        "file": "overquotaai__chatterboxio-mcp-server",
+        "filename": "overquotaai/chatterboxio-mcp-server",
+        "structured": "OverQuotaAI/chatterboxio-mcp-server"
+      },
+      {
+        "file": "quantgeekdev__coincap-mcp",
+        "filename": "quantgeekdev/coincap-mcp",
+        "structured": "QuantGeekDev/coincap-mcp"
+      },
+      {
+        "file": "tendem__remote-mcp",
+        "filename": "tendem/remote-mcp",
+        "structured": "undefined/undefined"
+      },
+      {
+        "file": "wooonster__hocr_mcp_server",
+        "filename": "wooonster/hocr_mcp_server",
+        "structured": "Wooonster/hocr_mcp_server"
+      },
+      {
+        "file": "yuchenssr__mindmap-mcp-server",
+        "filename": "yuchenssr/mindmap-mcp-server",
+        "structured": "YuChenSSR/mindmap-mcp-server"
+      }
+    ]
+  },
+  "projection_trusted": false
+}

@@ -189,10 +189,20 @@ async function readApi(base) {
      ⇒ Cap raised, and CROSSING IT IS NOW LOUD. If it ever truncates again the output says so
        instead of handing me a confident number. I only caught this because two instruments
        disagreed; one instrument agreeing with itself would have shipped it. */
-  const MAX_PAGES = 5000;
+  /* ⛔ AND IT HAS TO SHOW A PULSE WHILE IT DOES THIS. The official registry is 60,566
+     servers = 600+ sequential pages, minutes of nothing, and I ran it three times today
+     getting ZERO output before something killed it. I could not tell a hang from slow work
+     — the same artifact problem as everything else, aimed at my own progress reporting.
+     Anyone who reads my filed issue, runs the published npx line and sees a silent terminal
+     concludes the tool is broken. That is my credibility line pointed at the exact audience
+     I aimed it at. So: a page cap that can be raised, and a heartbeat while it walks. */
+  const pIdx = process.argv.indexOf('--pages');
+  const MAX_PAGES = pIdx !== -1 ? Number(process.argv[pIdx + 1]) || 100 : 100;
   const servers = [];
   let cursor = '', pages = 0, truncated = false;
   while (pages < MAX_PAGES) {
+    if (!JSON_OUT && pages && pages % 10 === 0)
+      process.stderr.write(`\r  paginating… ${pages} pages, ${servers.length} servers`);
     const u = base.replace(/\/$/, '') + '/v0/servers?limit=100' + (cursor ? '&cursor=' + encodeURIComponent(cursor) : '');
     const r = await fetch(u, { headers: { 'user-agent': 'unreached-registry/1.0' } });
     if (!r.ok) { if (!pages) { console.error(`\n  NO RESULT — ${u} returned ${r.status}. Nothing examined.\n`); process.exit(2); } break; }
@@ -285,6 +295,35 @@ async function deadHosts(hosts, onProgress) {
     if (!JSON_OUT) console.error('  %d servers · %d remote hosts · %d github repos · resolving…',
       servers.length, hostMap.size, repoMap.size);
 
+    /* ⛔ API MODE WAS AUDITING HOSTS AND SILENTLY IGNORING 3,829 repository FIELDS.
+       It collected repoMap and then never looked at it — so the biggest catalogue in the
+       ecosystem got a DNS-only audit while the directory mode got the full one, and the
+       --suggest capability (the only thing here no other scanner does) was unreachable on
+       exactly the registry where I had publicly offered it.
+       Opt-in with --repos because it costs one API call per repo and quota is finite; it
+       reports what it checked against the total rather than implying it did all of them. */
+    let repoFindings = null;
+    if (process.argv.includes('--repos')) {
+      const all = [...repoMap.keys()];
+      const budget = Number((process.argv[process.argv.indexOf('--repos') + 1] || '').match(/^\d+$/) || 0) || all.length;
+      const list = all.slice(0, budget);
+      if (!JSON_OUT) console.error('  checking %d of %d repository links…', list.length, all.length);
+      let i = 0; const gone = [];
+      await Promise.all(Array.from({ length: CONC }, async () => {
+        while (i < list.length) { const k = list[i++]; if (await api('/repos/' + k) === 404) gone.push(k); }
+      }));
+      const owners = [...new Set(gone.map((g) => g.split('/')[0]))];
+      let j = 0; const ghostOwners = [];
+      await Promise.all(Array.from({ length: CONC }, async () => {
+        while (j < owners.length) { const o = owners[j++]; if (await api('/users/' + o) === 404) ghostOwners.push(o); }
+      }));
+      repoFindings = {
+        checked: list.length, of: all.length,
+        ghost: gone.filter((g) => ghostOwners.includes(g.split('/')[0])),
+        rot: gone.filter((g) => !ghostOwners.includes(g.split('/')[0])),
+      };
+    }
+
     const { dead, stalled } = await deadHosts(hostMap.keys(),
       JSON_OUT ? null : (d, t) => process.stderr.write(`\r  resolving ${d}/${t}…`));
     if (!JSON_OUT) process.stderr.write('\r' + ' '.repeat(40) + '\r');
@@ -295,7 +334,7 @@ async function deadHosts(hosts, onProgress) {
     const count = (hs) => hs.reduce((n, h) => n + hostMap.get(h).length, 0);
 
     const out = { api: API_BASE, servers: servers.length, truncated, hosts: hostMap.size,
-      repos: repoMap.size, deadHosts: dead, stalled,
+      repos: repoMap.size, repoFindings, deadHosts: dead, stalled,
       deadCompany, deadPlatform,
       affected: count(dead), affectedCompany: count(deadCompany), affectedPlatform: count(deadPlatform),
       map: Object.fromEntries(dead.map((h) => [h, hostMap.get(h)])) };
@@ -315,6 +354,17 @@ async function deadHosts(hosts, onProgress) {
       console.log('    %s   <- %s', h, hostMap.get(h).slice(0, 2).join(', ')
         + (hostMap.get(h).length > 2 ? ` (+${hostMap.get(h).length - 2})` : ''));
     if (dead.length > 25) console.log('    … and %d more (--json for all)', dead.length - 25);
+    if (repoFindings) {
+      const { checked, of, ghost, rot } = repoFindings;
+      console.log('  SOURCE LINKS   %d of %d repository fields checked\n', checked, of);
+      console.log('    ghost owner  %d  (repo AND owner 404 — needs a human look)', ghost.length);
+      console.log('    rot          %d  (repo 404, owner alive — moved/renamed/private)\n', rot.length);
+      for (const k of rot.slice(0, 12)) console.log('      %s', k);
+      if (rot.length > 12) console.log('      … and %d more (--json for all)', rot.length - 12);
+      if (checked < of) console.log('\n    ⚠ %d repository fields NOT checked (budget). Nothing is claimed about them.', of - checked);
+      console.log('');
+    }
+
     console.log('\n  ⚠ DNS ONLY. A host that resolves but errors, times out, or bot-walls this');
     console.log('    agent is NOT counted — those are indistinguishable from my own tooling being');
     console.log('    refused. So this is a FLOOR on the breakage, and the one number here with no');

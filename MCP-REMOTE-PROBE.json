@@ -1,0 +1,495 @@
+{
+  "scanned_at": "2026-07-28T19:56:15.079Z",
+  "source": "archestra-ai/archestra :: mcp-catalog/data/mcp-evaluations/*.json, server.url where server.type=remote",
+  "method": "JSON-RPC initialize handshake, not a status code",
+  "total_remote": 36,
+  "counts": {
+    "alive-open": 8,
+    "alive-gated": 25,
+    "not-mcp": 3,
+    "dead": 0,
+    "unknown": 0
+  },
+  "caveat": "alive-gated means RUNNING and requiring auth — it is the opposite of dead, and every scanner I can find collapses the two. unknown is never counted as dead.",
+  "endpoints": [
+    {
+      "name": "agenttools__remote-mcp",
+      "url": "https://agenttools.wolfram.com/mcp",
+      "oauth_required": false,
+      "state": "alive-open",
+      "status": 200,
+      "proto": "2025-03-26",
+      "agreement": "3/3",
+      "runs": [
+        "alive-open",
+        "alive-open",
+        "alive-open"
+      ]
+    },
+    {
+      "name": "asana__remote-mcp",
+      "url": "https://mcp.asana.com/sse",
+      "oauth_required": true,
+      "state": "alive-gated",
+      "status": 401,
+      "agreement": "3/3",
+      "runs": [
+        "alive-gated",
+        "alive-gated",
+        "alive-gated"
+      ]
+    },
+    {
+      "name": "atlassian__remote-mcp",
+      "url": "https://mcp.atlassian.com/v1/mcp",
+      "oauth_required": true,
+      "state": "alive-gated",
+      "status": 401,
+      "agreement": "3/3",
+      "runs": [
+        "alive-gated",
+        "alive-gated",
+        "alive-gated"
+      ]
+    },
+    {
+      "name": "box__remote-mcp",
+      "url": "https://mcp.box.com/",
+      "oauth_required": true,
+      "state": "alive-gated",
+      "status": 401,
+      "agreement": "3/3",
+      "runs": [
+        "alive-gated",
+        "alive-gated",
+        "alive-gated"
+      ]
+    },
+    {
+      "name": "canva__remote-mcp",
+      "url": "https://mcp.canva.com/mcp",
+      "oauth_required": true,
+      "state": "alive-gated",
+      "status": 401,
+      "agreement": "3/3",
+      "runs": [
+        "alive-gated",
+        "alive-gated",
+        "alive-gated"
+      ]
+    },
+    {
+      "name": "calendarmcp__remote-mcp",
+      "url": "https://calendarmcp.googleapis.com/mcp/v1",
+      "oauth_required": true,
+      "state": "alive-open",
+      "status": 200,
+      "proto": "2024-11-05",
+      "agreement": "3/3",
+      "runs": [
+        "alive-open",
+        "alive-open",
+        "alive-open"
+      ]
+    },
+    {
+      "name": "chatmcp__remote-mcp",
+      "url": "https://chatmcp.googleapis.com/mcp/v1",
+      "oauth_required": true,
+      "state": "alive-open",
+      "status": 200,
+      "proto": "2024-11-05",
+      "agreement": "3/3",
+      "runs": [
+        "alive-open",
+        "alive-open",
+        "alive-open"
+      ]
+    },
+    {
+      "name": "daloopa__remote-mcp",
+      "url": "https://mcp.daloopa.com/server/mcp",
+      "oauth_required": true,
+      "state": "alive-gated",
+      "status": 401,
+      "agreement": "3/3",
+      "runs": [
+        "alive-gated",
+        "alive-gated",
+        "alive-gated"
+      ]
+    },
+    {
+      "name": "drivemcp__remote-mcp",
+      "url": "https://drivemcp.googleapis.com/mcp/v1",
+      "oauth_required": true,
+      "state": "alive-open",
+      "status": 200,
+      "proto": "2024-11-05",
+      "agreement": "3/3",
+      "runs": [
+        "alive-open",
+        "alive-open",
+        "alive-open"
+      ]
+    },
+    {
+      "name": "excalidraw__remote-mcp",
+      "url": "https://mcp.excalidraw.com/mcp",
+      "oauth_required": false,
+      "state": "alive-open",
+      "status": 200,
+      "proto": "2024-11-05",
+      "agreement": "3/3",
+      "runs": [
+        "alive-open",
+        "alive-open",
+        "alive-open"
+      ]
+    },
+    {
+      "name": "fireflies__remote-mcp",
+      "url": "https://api.fireflies.ai/mcp",
+      "oauth_required": true,
+      "state": "alive-gated",
+      "status": 401,
+      "agreement": "3/3",
+      "runs": [
+        "alive-gated",
+        "alive-gated",
+        "alive-gated"
+      ]
+    },
+    {
+      "name": "githubcopilot__remote-mcp",
+      "url": "https://api.githubcopilot.com/mcp/",
+      "oauth_required": true,
+      "state": "alive-gated",
+      "status": 401,
+      "agreement": "3/3",
+      "runs": [
+        "alive-gated",
+        "alive-gated",
+        "alive-gated"
+      ]
+    },
+    {
+      "name": "gmailmcp__remote-mcp",
+      "url": "https://gmailmcp.googleapis.com/mcp/v1",
+      "oauth_required": true,
+      "state": "alive-open",
+      "status": 200,
+      "proto": "2024-11-05",
+      "agreement": "3/3",
+      "runs": [
+        "alive-open",
+        "alive-open",
+        "alive-open"
+      ]
+    },
+    {
+      "name": "grain__remote-mcp",
+      "url": "https://api.grain.com/_/mcp",
+      "oauth_required": true,
+      "state": "alive-gated",
+      "status": 401,
+      "agreement": "3/3",
+      "runs": [
+        "alive-gated",
+        "alive-gated",
+        "alive-gated"
+      ]
+    },
+    {
+      "name": "hubspot__remote-mcp",
+      "url": "https://mcp.hubspot.com/anthropic",
+      "oauth_required": false,
+      "state": "alive-gated",
+      "status": 401,
+      "agreement": "3/3",
+      "runs": [
+        "alive-gated",
+        "alive-gated",
+        "alive-gated"
+      ]
+    },
+    {
+      "name": "huggingface__remote-mcp",
+      "url": "https://huggingface.co/mcp",
+      "oauth_required": true,
+      "state": "alive-open",
+      "status": 200,
+      "proto": "2024-11-05",
+      "agreement": "3/3",
+      "runs": [
+        "alive-open",
+        "alive-open",
+        "alive-open"
+      ]
+    },
+    {
+      "name": "intercom__remote-mcp",
+      "url": "https://mcp.intercom.com/mcp",
+      "oauth_required": true,
+      "state": "alive-gated",
+      "status": 401,
+      "agreement": "3/3",
+      "runs": [
+        "alive-gated",
+        "alive-gated",
+        "alive-gated"
+      ]
+    },
+    {
+      "name": "invideo__remote-mcp",
+      "url": "https://mcp.invideo.io/sse",
+      "oauth_required": true,
+      "state": "not-mcp",
+      "status": 404,
+      "sample": "Not Found",
+      "agreement": "3/3",
+      "runs": [
+        "not-mcp",
+        "not-mcp",
+        "not-mcp"
+      ]
+    },
+    {
+      "name": "jam__remote-mcp",
+      "url": "https://mcp.jam.dev/mcp",
+      "oauth_required": true,
+      "state": "alive-gated",
+      "status": 401,
+      "agreement": "3/3",
+      "runs": [
+        "alive-gated",
+        "alive-gated",
+        "alive-gated"
+      ]
+    },
+    {
+      "name": "linear__remote-mcp",
+      "url": "https://mcp.linear.app/mcp",
+      "oauth_required": true,
+      "state": "alive-gated",
+      "status": 401,
+      "agreement": "3/3",
+      "runs": [
+        "alive-gated",
+        "alive-gated",
+        "alive-gated"
+      ]
+    },
+    {
+      "name": "monday__remote-mcp",
+      "url": "https://mcp.monday.com/sse",
+      "oauth_required": true,
+      "state": "alive-gated",
+      "status": 401,
+      "agreement": "3/3",
+      "runs": [
+        "alive-gated",
+        "alive-gated",
+        "alive-gated"
+      ]
+    },
+    {
+      "name": "n8n__remote-mcp",
+      "url": "https://n8n.io/mcp-server/http",
+      "oauth_required": true,
+      "state": "not-mcp",
+      "status": 404,
+      "sample": "{ \"error\": true, \"url\": \"https://n8n.io/mcp-server/http/\", \"statusCode\": 404, \"sta",
+      "agreement": "3/3",
+      "runs": [
+        "not-mcp",
+        "not-mcp",
+        "not-mcp"
+      ]
+    },
+    {
+      "name": "netlify-mcp__remote-mcp",
+      "url": "https://netlify-mcp.netlify.app/mcp",
+      "oauth_required": true,
+      "state": "alive-gated",
+      "status": 401,
+      "agreement": "3/3",
+      "runs": [
+        "alive-gated",
+        "alive-gated",
+        "alive-gated"
+      ]
+    },
+    {
+      "name": "paypal__remote-mcp",
+      "url": "https://mcp.paypal.com/mcp",
+      "oauth_required": true,
+      "state": "alive-gated",
+      "status": 401,
+      "agreement": "3/3",
+      "runs": [
+        "alive-gated",
+        "alive-gated",
+        "alive-gated"
+      ]
+    },
+    {
+      "name": "people__remote-mcp",
+      "url": "https://people.googleapis.com/mcp/v1",
+      "oauth_required": true,
+      "state": "alive-open",
+      "status": 200,
+      "proto": "2024-11-05",
+      "agreement": "3/3",
+      "runs": [
+        "alive-open",
+        "alive-open",
+        "alive-open"
+      ]
+    },
+    {
+      "name": "plaid__remote-mcp",
+      "url": "https://api.dashboard.plaid.com/mcp/sse",
+      "oauth_required": true,
+      "state": "alive-gated",
+      "status": 401,
+      "agreement": "3/3",
+      "runs": [
+        "alive-gated",
+        "alive-gated",
+        "alive-gated"
+      ]
+    },
+    {
+      "name": "port__remote-mcp",
+      "url": "https://mcp.port.io/v1",
+      "oauth_required": true,
+      "state": "alive-gated",
+      "status": 401,
+      "agreement": "3/3",
+      "runs": [
+        "alive-gated",
+        "alive-gated",
+        "alive-gated"
+      ]
+    },
+    {
+      "name": "posthog__remote-mcp",
+      "url": "https://mcp.posthog.com/mcp",
+      "oauth_required": true,
+      "state": "alive-gated",
+      "status": 401,
+      "agreement": "3/3",
+      "runs": [
+        "alive-gated",
+        "alive-gated",
+        "alive-gated"
+      ]
+    },
+    {
+      "name": "slack__remote-mcp",
+      "url": "https://mcp.slack.com/mcp",
+      "oauth_required": true,
+      "state": "alive-gated",
+      "status": 401,
+      "agreement": "3/3",
+      "runs": [
+        "alive-gated",
+        "alive-gated",
+        "alive-gated"
+      ]
+    },
+    {
+      "name": "square__remote-mcp",
+      "url": "https://mcp.squareup.com/sse",
+      "oauth_required": true,
+      "state": "alive-gated",
+      "status": 401,
+      "agreement": "3/3",
+      "runs": [
+        "alive-gated",
+        "alive-gated",
+        "alive-gated"
+      ]
+    },
+    {
+      "name": "stripe__remote-mcp",
+      "url": "https://mcp.stripe.com",
+      "oauth_required": true,
+      "state": "alive-gated",
+      "status": 401,
+      "agreement": "3/3",
+      "runs": [
+        "alive-gated",
+        "alive-gated",
+        "alive-gated"
+      ]
+    },
+    {
+      "name": "stytch__remote-mcp",
+      "url": "http://mcp.stytch.dev/mcp",
+      "oauth_required": true,
+      "state": "alive-gated",
+      "status": 401,
+      "agreement": "3/3",
+      "runs": [
+        "alive-gated",
+        "alive-gated",
+        "alive-gated"
+      ]
+    },
+    {
+      "name": "tendem__remote-mcp",
+      "url": "https://mcp.tendem.ai/mcp",
+      "oauth_required": false,
+      "state": "alive-gated",
+      "status": 401,
+      "agreement": "3/3",
+      "runs": [
+        "alive-gated",
+        "alive-gated",
+        "alive-gated"
+      ]
+    },
+    {
+      "name": "vercel__remote-mcp",
+      "url": "https://mcp.vercel.com/",
+      "oauth_required": true,
+      "state": "alive-gated",
+      "status": 401,
+      "agreement": "3/3",
+      "runs": [
+        "alive-gated",
+        "alive-gated",
+        "alive-gated"
+      ]
+    },
+    {
+      "name": "windmill__remote-mcp",
+      "url": "https://windmill.dev/api/mcp/gateway",
+      "oauth_required": true,
+      "state": "not-mcp",
+      "status": 404,
+      "sample": "<!doctype html><html lang=en dir=ltr class=\"plugin-native plugin-id-default\" data-has-hydr",
+      "agreement": "3/3",
+      "runs": [
+        "not-mcp",
+        "not-mcp",
+        "not-mcp"
+      ]
+    },
+    {
+      "name": "xmemory__remote-mcp",
+      "url": "https://mcp.xmemory.ai",
+      "oauth_required": true,
+      "state": "alive-gated",
+      "status": 401,
+      "agreement": "3/3",
+      "runs": [
+        "alive-gated",
+        "alive-gated",
+        "alive-gated"
+      ]
+    }
+  ]
+}

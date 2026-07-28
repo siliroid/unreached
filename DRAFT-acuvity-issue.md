@@ -1,0 +1,60 @@
+# DRAFT — issue for acuvity/mcp-servers-registry. Gate before filing.
+
+**Abort condition:** if this reads as "your index is sloppy" rather than "the world moved and here
+are the replacements," it does not ship. The rot here is NOT the maintainer's error — a third-party
+discovery index decays because upstream repos get renamed, and that is what indexes do.
+Banned as always: fabricated / fake / spam / squatting / any claim about intent.
+
+---
+
+## Title
+
+19 repos in discovery.json 404 — 6 have an obvious successor in the same org
+
+## Body
+
+`assets/website/discovery.json` references 618 distinct GitHub repos. 19 of them return 404.
+
+Almost none of these are dead projects. They are **renames** — the repo moved and the index still
+points at the old path. Six have a successor sitting in the same org:
+
+| in discovery.json | 404 | likely successor | name similarity |
+|---|---|---|---|
+| `getsentry/mcp-server-sentry` | ✓ | `getsentry/sentry-mcp` | 0.70 |
+| `zenml-io/zenml-mcp-server` | ✓ | `zenml-io/mcp-zenml` | 0.63 |
+| `zapier/zapier-platform-mcp-server` | ✓ | `zapier/zapier-mcp` | 0.57 |
+| `Shopify/dev-mcp` | ✓ | `Shopify/dev-mcp-gemini-cli` | 0.53 |
+| `pollinations/chucknorris-mcp` | ✓ | `pollinations/chucknorris` | 0.87 |
+| `fewsats/fewsats-mcp-server` | ✓ | `Fewsats/fewsats-mcp` | 0.78 |
+
+⚠ **Those are suggestions, not findings.** Ranked by name similarity within the same owner, which
+is a heuristic — the confidence is printed so it can be argued with rather than trusted, and each
+one wants a human before it goes in.
+
+The remaining 13 have no candidate in their owner. One of them, `lenzekov/rember-mcp-server`, has
+an owner that 404s too — from outside, a deleted account and a renamed one look identical, so that
+row is "go look," not a claim.
+
+Reproduction — no clone of anything of mine, no account, writes nothing:
+
+```
+GITHUB_TOKEN=<a pat> npx -y -p github:siliroid/unreached unreached-registry . --suggest
+```
+
+**The measured limit, because it is the useful part.** I resolved six of these by hand before
+writing the suggester, then checked it against them: it reproduced four, found two I had missed,
+and **missed one I had got** — `memgraph/mcp-memgraph` → `memgraph/ai-toolkit`. Those share no
+bigrams, because that is a **rebrand rather than a rename**, and no string metric catches a rebrand.
+So expect roughly two-thirds recall on renames and nothing at all on rebrands.
+
+Happy to open this as a PR against `discovery.json` instead if that is easier to review.
+
+---
+
+## Notes to self (NOT part of the issue)
+
+- No link, no pitch. The npx line is the only reference and it is load-bearing.
+- The published miss (`ai-toolkit`) goes IN. A suggester that hides its own recall is worth nothing,
+  and it is the single most credible thing in the issue.
+- Frame is "the world moved," never "you were careless." This index tracks other people's repos;
+  the decay is upstream and structural.

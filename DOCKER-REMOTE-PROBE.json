@@ -1,0 +1,1012 @@
+{
+  "scanned_at": "2026-07-28T19:54:43.606Z",
+  "source": "docker/mcp-registry :: servers/*/server.yaml where type=remote, remote.url",
+  "method": "MCP initialize handshake, 3 probes per endpoint",
+  "catalogue_size": 328,
+  "remote_endpoints": 76,
+  "counts": {
+    "alive-open": 16,
+    "alive-gated": 50,
+    "alive-wrong-transport": 1,
+    "not-mcp": 3,
+    "dead": 0,
+    "unknown": 6,
+    "flapping": 0
+  },
+  "caveat": "alive-gated = running and requiring auth, the opposite of dead. unknown is never counted dead. YAML read by regex, so the miss direction is fewer-found, never live-reported-dead.",
+  "endpoints": [
+    {
+      "name": "ais-fleet",
+      "url": "https://mcp.aisfleet.com/sse",
+      "transport": "sse",
+      "state": "unknown",
+      "note": "fetch failed",
+      "agreement": "3/3",
+      "runs": [
+        "unknown",
+        "unknown",
+        "unknown"
+      ]
+    },
+    {
+      "name": "apify",
+      "url": "https://mcp.apify.com",
+      "transport": "streamable-http",
+      "state": "alive-gated",
+      "status": 401,
+      "agreement": "3/3",
+      "runs": [
+        "alive-gated",
+        "alive-gated",
+        "alive-gated"
+      ]
+    },
+    {
+      "name": "asana",
+      "url": "https://mcp.asana.com/sse",
+      "transport": "sse",
+      "state": "alive-gated",
+      "status": 401,
+      "agreement": "3/3",
+      "runs": [
+        "alive-gated",
+        "alive-gated",
+        "alive-gated"
+      ]
+    },
+    {
+      "name": "astro-docs",
+      "url": "https://mcp.docs.astro.build/mcp",
+      "transport": "streamable-http",
+      "state": "alive-open",
+      "status": 200,
+      "agreement": "3/3",
+      "runs": [
+        "alive-open",
+        "alive-open",
+        "alive-open"
+      ]
+    },
+    {
+      "name": "audioscrape",
+      "url": "https://mcp.audioscrape.com",
+      "transport": "streamable-http",
+      "state": "alive-gated",
+      "status": 401,
+      "agreement": "3/3",
+      "runs": [
+        "alive-gated",
+        "alive-gated",
+        "alive-gated"
+      ]
+    },
+    {
+      "name": "atlassian-remote",
+      "url": "https://mcp.atlassian.com/v1/mcp",
+      "transport": "streamable-http",
+      "state": "alive-gated",
+      "status": 401,
+      "agreement": "3/3",
+      "runs": [
+        "alive-gated",
+        "alive-gated",
+        "alive-gated"
+      ]
+    },
+    {
+      "name": "carbon-voice",
+      "url": "https://mcp.carbonvoice.app",
+      "transport": "streamable-http",
+      "state": "alive-gated",
+      "status": 401,
+      "agreement": "3/3",
+      "runs": [
+        "alive-gated",
+        "alive-gated",
+        "alive-gated"
+      ]
+    },
+    {
+      "name": "brightdata",
+      "url": "https://mcp.brightdata.com/mcp",
+      "transport": "streamable-http",
+      "state": "alive-gated",
+      "status": 401,
+      "agreement": "3/3",
+      "runs": [
+        "alive-gated",
+        "alive-gated",
+        "alive-gated"
+      ]
+    },
+    {
+      "name": "cloudflare-autorag",
+      "url": "https://autorag.mcp.cloudflare.com/sse",
+      "transport": "sse",
+      "state": "alive-gated",
+      "status": 401,
+      "agreement": "3/3",
+      "runs": [
+        "alive-gated",
+        "alive-gated",
+        "alive-gated"
+      ]
+    },
+    {
+      "name": "cloudflare-ai-gateway",
+      "url": "https://ai-gateway.mcp.cloudflare.com/sse",
+      "transport": "sse",
+      "state": "alive-gated",
+      "status": 401,
+      "agreement": "3/3",
+      "runs": [
+        "alive-gated",
+        "alive-gated",
+        "alive-gated"
+      ]
+    },
+    {
+      "name": "close",
+      "url": "https://mcp.close.com/mcp",
+      "transport": "streamable-http",
+      "state": "alive-gated",
+      "status": 401,
+      "agreement": "3/3",
+      "runs": [
+        "alive-gated",
+        "alive-gated",
+        "alive-gated"
+      ]
+    },
+    {
+      "name": "cloudflare-audit-logs",
+      "url": "https://auditlogs.mcp.cloudflare.com/sse",
+      "transport": "sse",
+      "state": "alive-gated",
+      "status": 401,
+      "agreement": "3/3",
+      "runs": [
+        "alive-gated",
+        "alive-gated",
+        "alive-gated"
+      ]
+    },
+    {
+      "name": "cloudflare-browser-rendering",
+      "url": "https://browser.mcp.cloudflare.com/sse",
+      "transport": "sse",
+      "state": "alive-gated",
+      "status": 401,
+      "agreement": "3/3",
+      "runs": [
+        "alive-gated",
+        "alive-gated",
+        "alive-gated"
+      ]
+    },
+    {
+      "name": "cloudflare-digital-experience-monitoring",
+      "url": "https://dex.mcp.cloudflare.com/sse",
+      "transport": "sse",
+      "state": "alive-gated",
+      "status": 401,
+      "agreement": "3/3",
+      "runs": [
+        "alive-gated",
+        "alive-gated",
+        "alive-gated"
+      ]
+    },
+    {
+      "name": "cloudflare-container",
+      "url": "https://containers.mcp.cloudflare.com/sse",
+      "transport": "sse",
+      "state": "alive-gated",
+      "status": 401,
+      "agreement": "3/3",
+      "runs": [
+        "alive-gated",
+        "alive-gated",
+        "alive-gated"
+      ]
+    },
+    {
+      "name": "cloudflare-dns-analytics",
+      "url": "https://dns-analytics.mcp.cloudflare.com/sse",
+      "transport": "sse",
+      "state": "alive-gated",
+      "status": 401,
+      "agreement": "3/3",
+      "runs": [
+        "alive-gated",
+        "alive-gated",
+        "alive-gated"
+      ]
+    },
+    {
+      "name": "cloudflare-docs",
+      "url": "https://docs.mcp.cloudflare.com/sse",
+      "transport": "sse",
+      "state": "alive-open",
+      "status": 200,
+      "agreement": "3/3",
+      "runs": [
+        "alive-open",
+        "alive-open",
+        "alive-open"
+      ]
+    },
+    {
+      "name": "cloudflare-observability",
+      "url": "https://observability.mcp.cloudflare.com/sse",
+      "transport": "sse",
+      "state": "alive-gated",
+      "status": 401,
+      "agreement": "3/3",
+      "runs": [
+        "alive-gated",
+        "alive-gated",
+        "alive-gated"
+      ]
+    },
+    {
+      "name": "cloudflare-logpush",
+      "url": "https://logs.mcp.cloudflare.com/sse",
+      "transport": "sse",
+      "state": "alive-gated",
+      "status": 401,
+      "agreement": "3/3",
+      "runs": [
+        "alive-gated",
+        "alive-gated",
+        "alive-gated"
+      ]
+    },
+    {
+      "name": "cloudflare-graphql",
+      "url": "https://graphql.mcp.cloudflare.com/sse",
+      "transport": "sse",
+      "state": "alive-gated",
+      "status": 401,
+      "agreement": "3/3",
+      "runs": [
+        "alive-gated",
+        "alive-gated",
+        "alive-gated"
+      ]
+    },
+    {
+      "name": "cloudflare-workers-bindings",
+      "url": "https://bindings.mcp.cloudflare.com/sse",
+      "transport": "sse",
+      "state": "alive-gated",
+      "status": 401,
+      "agreement": "3/3",
+      "runs": [
+        "alive-gated",
+        "alive-gated",
+        "alive-gated"
+      ]
+    },
+    {
+      "name": "cloudflare-workers-builds",
+      "url": "https://builds.mcp.cloudflare.com/sse",
+      "transport": "sse",
+      "state": "alive-gated",
+      "status": 401,
+      "agreement": "3/3",
+      "runs": [
+        "alive-gated",
+        "alive-gated",
+        "alive-gated"
+      ]
+    },
+    {
+      "name": "cloudflare-one-casb",
+      "url": "https://casb.mcp.cloudflare.com/sse",
+      "transport": "sse",
+      "state": "alive-gated",
+      "status": 401,
+      "agreement": "3/3",
+      "runs": [
+        "alive-gated",
+        "alive-gated",
+        "alive-gated"
+      ]
+    },
+    {
+      "name": "cloudflare-radar",
+      "url": "https://radar.mcp.cloudflare.com/sse",
+      "transport": "sse",
+      "state": "alive-gated",
+      "status": 401,
+      "agreement": "3/3",
+      "runs": [
+        "alive-gated",
+        "alive-gated",
+        "alive-gated"
+      ]
+    },
+    {
+      "name": "context7",
+      "url": "https://mcp.context7.com/mcp",
+      "transport": "streamable-http",
+      "state": "alive-open",
+      "status": 200,
+      "agreement": "3/3",
+      "runs": [
+        "alive-open",
+        "alive-open",
+        "alive-open"
+      ]
+    },
+    {
+      "name": "dappier-remote",
+      "url": "https://mcp.dappier.com/mcp",
+      "transport": "streamable-http",
+      "state": "alive-gated",
+      "status": 402,
+      "note": "payment required — live commercial service",
+      "agreement": "3/3",
+      "runs": [
+        "alive-gated",
+        "alive-gated",
+        "alive-gated"
+      ]
+    },
+    {
+      "name": "deepwiki",
+      "url": "https://mcp.deepwiki.com/sse",
+      "transport": "sse",
+      "state": "alive-wrong-transport",
+      "status": 405,
+      "agreement": "3/3",
+      "runs": [
+        "alive-wrong-transport",
+        "alive-wrong-transport",
+        "alive-wrong-transport"
+      ]
+    },
+    {
+      "name": "docker-docs",
+      "url": "https://mcp-docs.docker.com/mcp",
+      "transport": "streamable-http",
+      "state": "alive-open",
+      "status": 200,
+      "agreement": "3/3",
+      "runs": [
+        "alive-open",
+        "alive-open",
+        "alive-open"
+      ]
+    },
+    {
+      "name": "dodo-payments",
+      "url": "https://mcp.dodopayments.com/sse",
+      "transport": "sse",
+      "state": "alive-gated",
+      "status": 401,
+      "agreement": "3/3",
+      "runs": [
+        "alive-gated",
+        "alive-gated",
+        "alive-gated"
+      ]
+    },
+    {
+      "name": "dialer",
+      "url": "https://getdialer.app/sse",
+      "transport": "sse",
+      "state": "alive-gated",
+      "status": 401,
+      "agreement": "3/3",
+      "runs": [
+        "alive-gated",
+        "alive-gated",
+        "alive-gated"
+      ]
+    },
+    {
+      "name": "excalidraw-remote",
+      "url": "https://excalidraw-mcp-app.vercel.app/mcp",
+      "transport": "streamable-http",
+      "state": "alive-open",
+      "status": 200,
+      "agreement": "3/3",
+      "runs": [
+        "alive-open",
+        "alive-open",
+        "alive-open"
+      ]
+    },
+    {
+      "name": "find-a-domain",
+      "url": "https://api.findadomain.dev/mcp",
+      "transport": "streamable-http",
+      "state": "alive-open",
+      "status": 200,
+      "agreement": "3/3",
+      "runs": [
+        "alive-open",
+        "alive-open",
+        "alive-open"
+      ]
+    },
+    {
+      "name": "firefly",
+      "url": "https://api.fireflies.ai/mcp",
+      "transport": "streamable-http",
+      "state": "alive-gated",
+      "status": 401,
+      "agreement": "3/3",
+      "runs": [
+        "alive-gated",
+        "alive-gated",
+        "alive-gated"
+      ]
+    },
+    {
+      "name": "gitmcp",
+      "url": "https://gitmcp.io/docs",
+      "transport": "streamable-http",
+      "state": "unknown",
+      "note": "timeout",
+      "agreement": "3/3",
+      "runs": [
+        "unknown",
+        "unknown",
+        "unknown"
+      ]
+    },
+    {
+      "name": "globalping",
+      "url": "https://mcp.globalping.dev/sse",
+      "transport": "sse",
+      "state": "alive-gated",
+      "status": 401,
+      "agreement": "3/3",
+      "runs": [
+        "alive-gated",
+        "alive-gated",
+        "alive-gated"
+      ]
+    },
+    {
+      "name": "grafbase",
+      "url": "https://api.grafbase.com/mcp",
+      "transport": "streamable-http",
+      "state": "not-mcp",
+      "status": 404,
+      "sample": "{\"error\": {\"code\": \"404\", \"message\": \"The deployment could not be found on Verce",
+      "agreement": "3/3",
+      "runs": [
+        "not-mcp",
+        "not-mcp",
+        "not-mcp"
+      ]
+    },
+    {
+      "name": "granola-remote",
+      "url": "https://mcp.granola.ai/mcp",
+      "transport": "streamable-http",
+      "state": "alive-gated",
+      "status": 401,
+      "agreement": "3/3",
+      "runs": [
+        "alive-gated",
+        "alive-gated",
+        "alive-gated"
+      ]
+    },
+    {
+      "name": "hubspot",
+      "url": "https://app.hubspot.com/mcp/v1/http",
+      "transport": "streamable-http",
+      "state": "alive-gated",
+      "status": 401,
+      "agreement": "3/3",
+      "runs": [
+        "alive-gated",
+        "alive-gated",
+        "alive-gated"
+      ]
+    },
+    {
+      "name": "hugging-face",
+      "url": "https://huggingface.co/mcp",
+      "transport": "streamable-http",
+      "state": "alive-open",
+      "status": 200,
+      "agreement": "3/3",
+      "runs": [
+        "alive-open",
+        "alive-open",
+        "alive-open"
+      ]
+    },
+    {
+      "name": "incident-io",
+      "url": "https://mcp.incident.io/mcp",
+      "transport": "streamable-http",
+      "state": "alive-gated",
+      "status": 401,
+      "agreement": "3/3",
+      "runs": [
+        "alive-gated",
+        "alive-gated",
+        "alive-gated"
+      ]
+    },
+    {
+      "name": "instant",
+      "url": "https://mcp.instantdb.com/mcp",
+      "transport": "streamable-http",
+      "state": "alive-gated",
+      "status": 401,
+      "agreement": "3/3",
+      "runs": [
+        "alive-gated",
+        "alive-gated",
+        "alive-gated"
+      ]
+    },
+    {
+      "name": "invideo",
+      "url": "https://mcp.invideo.io/sse",
+      "transport": "sse",
+      "state": "not-mcp",
+      "status": 404,
+      "sample": "Not Found",
+      "agreement": "3/3",
+      "runs": [
+        "not-mcp",
+        "not-mcp",
+        "not-mcp"
+      ]
+    },
+    {
+      "name": "javadocs",
+      "url": "https://www.javadocs.dev/mcp",
+      "transport": "streamable-http",
+      "state": "alive-open",
+      "status": 200,
+      "agreement": "3/3",
+      "runs": [
+        "alive-open",
+        "alive-open",
+        "alive-open"
+      ]
+    },
+    {
+      "name": "linear",
+      "url": "https://mcp.linear.app/mcp",
+      "transport": "streamable-http",
+      "state": "alive-gated",
+      "status": 401,
+      "agreement": "3/3",
+      "runs": [
+        "alive-gated",
+        "alive-gated",
+        "alive-gated"
+      ]
+    },
+    {
+      "name": "llmtxt",
+      "url": "https://mcp.llmtxt.dev/sse",
+      "transport": "sse",
+      "state": "unknown",
+      "note": "fetch failed",
+      "agreement": "3/3",
+      "runs": [
+        "unknown",
+        "unknown",
+        "unknown"
+      ]
+    },
+    {
+      "name": "manifold",
+      "url": "https://api.manifold.markets/v0/mcp",
+      "transport": "streamable-http",
+      "state": "alive-open",
+      "status": 200,
+      "agreement": "3/3",
+      "runs": [
+        "alive-open",
+        "alive-open",
+        "alive-open"
+      ]
+    },
+    {
+      "name": "mercado-libre",
+      "url": "https://mcp.mercadolibre.com",
+      "transport": "streamable-http",
+      "state": "alive-gated",
+      "status": 403,
+      "agreement": "3/3",
+      "runs": [
+        "alive-gated",
+        "alive-gated",
+        "alive-gated"
+      ]
+    },
+    {
+      "name": "mercado-pago",
+      "url": "https://mcp.mercadopago.com",
+      "transport": "streamable-http",
+      "state": "alive-gated",
+      "status": 403,
+      "agreement": "3/3",
+      "runs": [
+        "alive-gated",
+        "alive-gated",
+        "alive-gated"
+      ]
+    },
+    {
+      "name": "microsoft-learn",
+      "url": "https://learn.microsoft.com/api/mcp",
+      "transport": "streamable-http",
+      "state": "alive-open",
+      "status": 200,
+      "agreement": "3/3",
+      "runs": [
+        "alive-open",
+        "alive-open",
+        "alive-open"
+      ]
+    },
+    {
+      "name": "monday",
+      "url": "https://mcp.monday.com/sse",
+      "transport": "sse",
+      "state": "alive-gated",
+      "status": 401,
+      "agreement": "3/3",
+      "runs": [
+        "alive-gated",
+        "alive-gated",
+        "alive-gated"
+      ]
+    },
+    {
+      "name": "miro-remote",
+      "url": "https://mcp.miro.com/mcp",
+      "transport": "streamable-http",
+      "state": "alive-gated",
+      "status": 401,
+      "agreement": "3/3",
+      "runs": [
+        "alive-gated",
+        "alive-gated",
+        "alive-gated"
+      ]
+    },
+    {
+      "name": "morningstar-mcp-server",
+      "url": "https://mcp.morningstar.com/mcp",
+      "transport": "streamable-http",
+      "state": "alive-gated",
+      "status": 401,
+      "agreement": "3/3",
+      "runs": [
+        "alive-gated",
+        "alive-gated",
+        "alive-gated"
+      ]
+    },
+    {
+      "name": "needle",
+      "url": "https://mcp.needle.app/mcp",
+      "transport": "streamable-http",
+      "state": "unknown",
+      "status": 500,
+      "note": "server error — not a death certificate",
+      "agreement": "3/3",
+      "runs": [
+        "unknown",
+        "unknown",
+        "unknown"
+      ]
+    },
+    {
+      "name": "notion-remote",
+      "url": "https://mcp.notion.com/mcp",
+      "transport": "streamable-http",
+      "state": "alive-gated",
+      "status": 401,
+      "agreement": "3/3",
+      "runs": [
+        "alive-gated",
+        "alive-gated",
+        "alive-gated"
+      ]
+    },
+    {
+      "name": "octagon",
+      "url": "https://mcp.octagonagents.com/mcp",
+      "transport": "streamable-http",
+      "state": "alive-gated",
+      "status": 401,
+      "agreement": "3/3",
+      "runs": [
+        "alive-gated",
+        "alive-gated",
+        "alive-gated"
+      ]
+    },
+    {
+      "name": "openmesh",
+      "url": "https://api.openmesh.dev/mcp",
+      "transport": "streamable-http",
+      "state": "unknown",
+      "note": "fetch failed",
+      "agreement": "3/3",
+      "runs": [
+        "unknown",
+        "unknown",
+        "unknown"
+      ]
+    },
+    {
+      "name": "openzeppelin-cairo",
+      "url": "https://mcp.openzeppelin.com/contracts/cairo/mcp",
+      "transport": "streamable-http",
+      "state": "alive-open",
+      "status": 200,
+      "agreement": "3/3",
+      "runs": [
+        "alive-open",
+        "alive-open",
+        "alive-open"
+      ]
+    },
+    {
+      "name": "openzeppelin-stellar",
+      "url": "https://mcp.openzeppelin.com/contracts/stellar/mcp",
+      "transport": "streamable-http",
+      "state": "alive-open",
+      "status": 200,
+      "agreement": "3/3",
+      "runs": [
+        "alive-open",
+        "alive-open",
+        "alive-open"
+      ]
+    },
+    {
+      "name": "openzeppelin-solidity",
+      "url": "https://mcp.openzeppelin.com/contracts/solidity/mcp",
+      "transport": "streamable-http",
+      "state": "alive-open",
+      "status": 200,
+      "agreement": "3/3",
+      "runs": [
+        "alive-open",
+        "alive-open",
+        "alive-open"
+      ]
+    },
+    {
+      "name": "openzeppelin-stylus",
+      "url": "https://mcp.openzeppelin.com/contracts/stylus/mcp",
+      "transport": "streamable-http",
+      "state": "alive-open",
+      "status": 200,
+      "agreement": "3/3",
+      "runs": [
+        "alive-open",
+        "alive-open",
+        "alive-open"
+      ]
+    },
+    {
+      "name": "paypal",
+      "url": "https://mcp.paypal.com/sse",
+      "transport": "sse",
+      "state": "alive-gated",
+      "status": 401,
+      "agreement": "3/3",
+      "runs": [
+        "alive-gated",
+        "alive-gated",
+        "alive-gated"
+      ]
+    },
+    {
+      "name": "prisma-postgres",
+      "url": "https://mcp.prisma.io/mcp",
+      "transport": "streamable-http",
+      "state": "alive-gated",
+      "status": 401,
+      "agreement": "3/3",
+      "runs": [
+        "alive-gated",
+        "alive-gated",
+        "alive-gated"
+      ]
+    },
+    {
+      "name": "polar-signals",
+      "url": "https://api.polarsignals.com/api/mcp/",
+      "transport": "streamable-http",
+      "state": "alive-gated",
+      "status": 401,
+      "agreement": "3/3",
+      "runs": [
+        "alive-gated",
+        "alive-gated",
+        "alive-gated"
+      ]
+    },
+    {
+      "name": "pulumi-remote",
+      "url": "https://mcp.ai.pulumi.com/mcp",
+      "transport": "streamable-http",
+      "state": "alive-gated",
+      "status": 401,
+      "agreement": "3/3",
+      "runs": [
+        "alive-gated",
+        "alive-gated",
+        "alive-gated"
+      ]
+    },
+    {
+      "name": "remote-mcp",
+      "url": "https://mcp.remote-mcp.com",
+      "transport": "streamable-http",
+      "state": "alive-open",
+      "status": 200,
+      "agreement": "3/3",
+      "runs": [
+        "alive-open",
+        "alive-open",
+        "alive-open"
+      ]
+    },
+    {
+      "name": "rube",
+      "url": "https://rube.app/mcp",
+      "transport": "streamable-http",
+      "state": "unknown",
+      "note": "fetch failed",
+      "agreement": "3/3",
+      "runs": [
+        "unknown",
+        "unknown",
+        "unknown"
+      ]
+    },
+    {
+      "name": "scorecard",
+      "url": "https://scorecard-mcp.dare-d5b.workers.dev/sse",
+      "transport": "sse",
+      "state": "alive-gated",
+      "status": 401,
+      "agreement": "3/3",
+      "runs": [
+        "alive-gated",
+        "alive-gated",
+        "alive-gated"
+      ]
+    },
+    {
+      "name": "sentry-remote",
+      "url": "https://mcp.sentry.dev/sse",
+      "transport": "sse",
+      "state": "not-mcp",
+      "status": 404,
+      "sample": "404 Not Found",
+      "agreement": "3/3",
+      "runs": [
+        "not-mcp",
+        "not-mcp",
+        "not-mcp"
+      ]
+    },
+    {
+      "name": "short-io",
+      "url": "https://ai-assistant.short.io/mcp",
+      "transport": "streamable-http",
+      "state": "alive-gated",
+      "status": 401,
+      "agreement": "3/3",
+      "runs": [
+        "alive-gated",
+        "alive-gated",
+        "alive-gated"
+      ]
+    },
+    {
+      "name": "semgrep",
+      "url": "https://mcp.semgrep.ai/mcp",
+      "transport": "streamable-http",
+      "state": "alive-gated",
+      "status": 401,
+      "agreement": "3/3",
+      "runs": [
+        "alive-gated",
+        "alive-gated",
+        "alive-gated"
+      ]
+    },
+    {
+      "name": "stripe-remote",
+      "url": "https://mcp.stripe.com",
+      "transport": "streamable-http",
+      "state": "alive-gated",
+      "status": 401,
+      "agreement": "3/3",
+      "runs": [
+        "alive-gated",
+        "alive-gated",
+        "alive-gated"
+      ]
+    },
+    {
+      "name": "telnyx",
+      "url": "https://api.telnyx.com/v2/mcp",
+      "transport": "streamable-http",
+      "state": "alive-open",
+      "status": 200,
+      "agreement": "3/3",
+      "runs": [
+        "alive-open",
+        "alive-open",
+        "alive-open"
+      ]
+    },
+    {
+      "name": "wayfound",
+      "url": "https://app.wayfound.ai/sse",
+      "transport": "sse",
+      "state": "alive-gated",
+      "status": 401,
+      "agreement": "3/3",
+      "runs": [
+        "alive-gated",
+        "alive-gated",
+        "alive-gated"
+      ]
+    },
+    {
+      "name": "waystation",
+      "url": "https://waystation.ai/mcp",
+      "transport": "streamable-http",
+      "state": "alive-gated",
+      "status": 401,
+      "agreement": "3/3",
+      "runs": [
+        "alive-gated",
+        "alive-gated",
+        "alive-gated"
+      ]
+    },
+    {
+      "name": "webflow-remote",
+      "url": "https://mcp.webflow.com/sse",
+      "transport": "sse",
+      "state": "alive-gated",
+      "status": 401,
+      "agreement": "3/3",
+      "runs": [
+        "alive-gated",
+        "alive-gated",
+        "alive-gated"
+      ]
+    },
+    {
+      "name": "wix",
+      "url": "https://mcp.wix.com/sse",
+      "transport": "sse",
+      "state": "alive-gated",
+      "status": 401,
+      "agreement": "3/3",
+      "runs": [
+        "alive-gated",
+        "alive-gated",
+        "alive-gated"
+      ]
+    }
+  ]
+}
