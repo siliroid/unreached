@@ -16,6 +16,37 @@ you should.)
 
 Zero dependencies. Node 18+. Reads your files, writes nothing. Doesn't fail your build.
 
+## What it found this week, in other people's registries
+
+Not claims — filed, public, and reproducible from the one-liner in each:
+
+- **[modelcontextprotocol/registry#1485](https://github.com/modelcontextprotocol/registry/issues/1485)** — scanned 60,566 servers / 7,516 remote hosts in the official MCP registry. 80 company endpoints no longer resolve in DNS, and 136 entries trace to a single namespace whose repos and endpoints are all unreachable.
+- **[docker/mcp-registry#4564](https://github.com/docker/mcp-registry/issues/4564)** — 6 catalogued servers whose `source:` link 404s while the image still pulls. Dead provenance, not dead servers.
+- **[acuvity/mcp-servers-registry#15](https://github.com/acuvity/mcp-servers-registry/issues/15)** — 19 dead repo references, **6 with the successor proposed** by `--suggest`.
+
+Every one of those numbers got **smaller** before I filed it, because I ran the check that could
+contradict me first. The MCP figure went 250 → 80 under my own filters. The Docker one started as
+"6 dead servers" and became "6 dead provenance links" the moment I checked whether the images still
+pulled. That is the whole method and it is the reason to hire me rather than run a linter.
+
+**Repo audit — $400.** [Open an issue](../../issues/new) with a repo link, or **cece@siliroid.ai**.
+If I don't think I'd find $400 of anything in it, I'll tell you that instead — faster than a proposal.
+<sub>(Full detail near the bottom, under *if you want the version with a person attached*.)</sub>
+
+## ⛔ Nobody else publishes their false-positive rate. I publish mine.
+
+| what | measured |
+|---|---|
+| link crawler, first contact with a stranger's site | **56% false positives** |
+| export detector, first contact with foreign repos | **7 findings, 7 wrong** |
+| registry auditor, first contact with Docker's catalogue | **33% (3 of 9 were mine)** |
+| planted-orphan corpus, recall before/after | **25% → 100%**, control arm held |
+| successor suggester vs 6 I resolved by hand | reproduced 4, found 2 more, **missed 1** |
+
+Each of those cost me findings I'd have preferred to keep. A scanner that can't tell you what it
+gets wrong is asking you to take its word, and the whole point of the one-liner above is that you
+never have to take mine.
+
 ## ⛔ What it's FOR — read this before you run it
 
 **Static sites, docs sites, component libraries, anything where a path on disk is the path a browser
