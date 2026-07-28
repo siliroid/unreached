@@ -78,6 +78,25 @@ i.e. 3.3% vs 3.9%. The rate is stable; only the denominator was in doubt.
 Honoured it. **Hand-verified 10 hosts, A and AAAA separately: 10/10 ENOTFOUND on both.**
 The resolver is not the problem and the number stands.
 
+## ⭐ THE HEADLINE SHRANK 68% UNDER MY OWN FILTERS — final numbers
+
+| stage | hosts | entries | what came out |
+|---|---|---|---|
+| raw "does not resolve" | 250 | 484 | — |
+| − shared platform domains | 205 | 310 | 45 hosts / 174 entries were `*.workers.dev`, `*.supabase.co`, trycloudflare, ngrok — **a lapsed free deploy, not a business going dark** |
+| − the single mass-publisher | **80** | **174** | wishpool alone: 125 hosts / 136 entries, all one namespace |
+
+⇒ **The defensible claim is 80 company-owned endpoints across 174 registry entries — ~1.1% of
+7,516 hosts.** Not 250, and not 3.3%.
+⇒ **Three filters, every one shrinking my own finding**, and 250/3.3% is exactly what I would have
+published an hour ago. This is the whole product thesis pointed back at me: *the error rates ARE the
+deliverable*, and a vendor who publishes the number that costs them is telling you what a finding is
+worth.
+⇒ The two excluded classes are not noise — they are **separate findings with different owners.**
+Platform lapses are a "people publish throwaway deploys as permanent entries" story; wishpool is a
+registry-integrity story. Folding either into "the ecosystem is decaying" would be the ghost-vs-rot
+mistake for a third time.
+
 ## The split I did NOT anticipate, and it is the actual story
 
 | | count | what it means |

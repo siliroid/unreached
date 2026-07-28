@@ -155,6 +155,16 @@ async function readApi(base) {
    deleted ambiguity, no UA dependence, and it is gone for every user too.
    ⇒ Which makes the result a FLOOR. Real breakage is certainly higher; this measures only
      the part that cannot be argued with. */
+/* ⛔ SHARED PLATFORM DOMAINS ARE NOT COMPANY ENDPOINTS, and counting them as such
+   inflated my own headline. A dead `*.workers.dev`, `*.supabase.co` or `*.trycloudflare.com`
+   means somebody's free deploy lapsed — it is the same class as an ngrok tunnel, not a
+   business whose production endpoint went dark. I had 228 "real domains" and a chunk of them
+   were these. The distinction matters because the two support completely different sentences:
+   "the ecosystem is decaying" vs "people publish throwaway deploys as permanent entries."
+   Splitting it makes my number SMALLER, which is the direction that costs me, which is
+   exactly why it goes in. */
+const PLATFORM = /(^|\.)(workers\.dev|supabase\.co|trycloudflare\.com|ngrok\.(io|app|dev)|loca\.lt|devtunnels\.ms|fly\.dev|onrender\.com|vercel\.app|netlify\.app|herokuapp\.com|railway\.app|glitch\.me|repl\.co|pages\.dev|azurewebsites\.net|appspot\.com|web\.app|firebaseapp\.com|streamlit\.app|hf\.space|modal\.run|deno\.dev|val\.run|cloudfunctions\.net)$/i;
+
 async function deadHosts(hosts, onProgress) {
   const dns = require('node:dns').promises;
   const list = [...hosts], dead = [], stalled = [];
@@ -213,9 +223,16 @@ async function deadHosts(hosts, onProgress) {
     const { dead, stalled } = await deadHosts(hostMap.keys(),
       JSON_OUT ? null : (d, t) => process.stderr.write(`\r  resolving ${d}/${t}…`));
     if (!JSON_OUT) process.stderr.write('\r' + ' '.repeat(40) + '\r');
-    const out = { api: API_BASE, servers: servers.length, hosts: hostMap.size,
+    const apexOf = (h) => { const p = h.split('.'); return p.length <= 2 ? h : p.slice(-2).join('.'); };
+    const isPlatform = (h) => PLATFORM.test(h) || PLATFORM.test(apexOf(h));
+    const deadPlatform = dead.filter(isPlatform);
+    const deadCompany = dead.filter((h) => !isPlatform(h));
+    const count = (hs) => hs.reduce((n, h) => n + hostMap.get(h).length, 0);
+
+    const out = { api: API_BASE, servers: servers.length, truncated, hosts: hostMap.size,
       repos: repoMap.size, deadHosts: dead, stalled,
-      affected: dead.reduce((n, h) => n + hostMap.get(h).length, 0),
+      deadCompany, deadPlatform,
+      affected: count(dead), affectedCompany: count(deadCompany), affectedPlatform: count(deadPlatform),
       map: Object.fromEntries(dead.map((h) => [h, hostMap.get(h)])) };
 
     if (JSON_OUT) { console.log(JSON.stringify(out, null, 1)); return; }
@@ -223,7 +240,13 @@ async function deadHosts(hosts, onProgress) {
     console.log('  %d servers · %d distinct remote hosts · %d github repos referenced\n',
       servers.length, hostMap.size, repoMap.size);
     console.log('  HOST DOES NOT RESOLVE   %d hosts, affecting %d registry entries\n', dead.length, out.affected);
-    for (const h of dead.slice(0, 25))
+    console.log('    · company domains   %d hosts / %d entries   ← the real signal',
+      deadCompany.length, out.affectedCompany);
+    console.log('    · shared platforms  %d hosts / %d entries   ← workers.dev, *.supabase.co,',
+      deadPlatform.length, out.affectedPlatform);
+    console.log('                          trycloudflare and friends: a lapsed free deploy, NOT a');
+    console.log('                          business whose production endpoint went dark.\n');
+    for (const h of deadCompany.slice(0, 25))
       console.log('    %s   <- %s', h, hostMap.get(h).slice(0, 2).join(', ')
         + (hostMap.get(h).length > 2 ? ` (+${hostMap.get(h).length - 2})` : ''));
     if (dead.length > 25) console.log('    … and %d more (--json for all)', dead.length - 25);
