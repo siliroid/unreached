@@ -57,11 +57,19 @@ function api(p) {
   });
 }
 
+/* ⛔ NOT .json ONLY. The first registry I pointed this at after mcpbar was Docker's,
+   whose catalogue is 336 YAML files and 82 JSON. A json-only walker would have audited
+   the 82, silently ignored the 336, and printed a number that looks exactly like a
+   result. The github.com URL regex does not care what format the file is in — only my
+   extension filter did. Same failure as everything else this week: the tool measures
+   what it can see and says nothing at all about what it cannot. */
+const TEXTY = /\.(json|ya?ml|toml|md|txt|jsonc|json5|csv|tsv|ini|cfg|xml)$/i;
+const SKIP_DIR = /^(\.git|node_modules|vendor|dist|build|\.next|target)$/i;
+
 function walk(dir, out = []) {
   for (const e of fs.readdirSync(dir, { withFileTypes: true })) {
-    const p = path.join(dir, e.name);
-    if (e.isDirectory()) walk(p, out);
-    else if (e.name.endsWith('.json')) out.push(p);
+    if (e.isDirectory()) { if (!SKIP_DIR.test(e.name)) walk(path.join(dir, e.name), out); }
+    else if (TEXTY.test(e.name)) out.push(path.join(dir, e.name));
   }
   return out;
 }
@@ -76,7 +84,18 @@ async function pool(items, fn) {
 
 /* Reserved namespaces that are not user accounts. github.com/orgs/... and friends
    404 on /users/ by construction, and reporting them as ghost owners is noise. */
-const NOT_A_USER = /^(orgs|about|features|topics|collections|sponsors|marketplace|apps|settings|login|join|pricing|enterprise|security|readme|explore|new|notifications|search)$/i;
+const NOT_A_USER = /^(orgs|about|features|topics|collections|sponsors|marketplace|apps|settings|login|join|pricing|enterprise|security|readme|explore|new|notifications|search|user-attachments|assets|raw|gist|blog|contact|site|customer-stories|trending)$/i;
+
+/* ⛔ PLACEHOLDER NAMESPACES. Docker's registry produced `myorg/my-orgdb-mcp` from
+   CONTRIBUTING.md and `my-org/my-mcp-server` from docs/configuration.md. Those are
+   EXAMPLES IN PROSE, not catalogue entries, and reporting them to a maintainer as rot
+   in their registry is a category error that makes every other row look automated. */
+const PLACEHOLDER = /^(my-?org|my-?company|your-?org|your-?company|example|examples|username|your-?username|owner|user|org|acme|foo|bar|test|placeholder|company|yourname|<[^>]*>)$/i;
+
+/* A registry's CATALOGUE is its data files. Its DOCS are prose full of illustrative
+   URLs. An entry seen ONLY in prose is documentation, not inventory — split it out
+   rather than folding it into the number a maintainer is asked to act on. */
+const PROSE = /\.(md|txt)$/i;
 
 (async () => {
   const files = walk(ROOT);
@@ -89,7 +108,7 @@ const NOT_A_USER = /^(orgs|about|features|topics|collections|sponsors|marketplac
   for (const f of files) {
     let txt; try { txt = fs.readFileSync(f, 'utf8'); } catch { continue; }
     for (const m of txt.matchAll(/github\.com\/([A-Za-z0-9_.-]+)\/([A-Za-z0-9_.-]+)/g)) {
-      if (NOT_A_USER.test(m[1])) continue;
+      if (NOT_A_USER.test(m[1]) || PLACEHOLDER.test(m[1]) || PLACEHOLDER.test(m[2])) continue;
       const key = `${m[1]}/${m[2].replace(/\.git$/, '')}`;
       if (!repos.has(key)) repos.set(key, new Set());
       repos.get(key).add(path.relative(ROOT, f));
@@ -115,8 +134,16 @@ const NOT_A_USER = /^(orgs|about|features|topics|collections|sponsors|marketplac
   const oc = await pool(owners, async (o) => ({ o, status: await api('/users/' + o) }));
   const ghostOwners = oc.filter((x) => x.status === 404).map((x) => x.o);
 
-  const ghostRows = gone.filter((g) => ghostOwners.includes(g.k.split('/')[0])).map((g) => g.k);
-  const rot = gone.filter((g) => !ghostOwners.includes(g.k.split('/')[0])).map((g) => g.k);
+  /* Split prose from inventory. A key seen ONLY in .md/.txt is an illustrative URL in
+     documentation — real, often dead, and NOT a defect in the catalogue. Folding it in
+     is what makes a report read as automated. */
+  const proseOnly = (k) => [...repos.get(k)].every((f) => PROSE.test(f));
+  const deadKeys = gone.map((g) => g.k);
+  const docs = deadKeys.filter(proseOnly);
+  const inventory = deadKeys.filter((k) => !proseOnly(k));
+
+  const ghostRows = inventory.filter((k) => ghostOwners.includes(k.split('/')[0]));
+  const rot = inventory.filter((k) => !ghostOwners.includes(k.split('/')[0]));
 
   const out = { root: ROOT, files: files.length, total: keys.length, authenticated: !!TOKEN,
     ghostOwners, ghostRows, rot, unknown: unknown.map((u) => u.k),
@@ -141,6 +168,31 @@ const NOT_A_USER = /^(orgs|about|features|topics|collections|sponsors|marketplac
   show('GHOST OWNER', ghostRows);
   show('ROT', rot);
 
+  /* ⛔ THE SCOPE LIMIT THAT ALMOST PRODUCED A FALSE CLEAN, 2026-07-28 08:09.
+     Pointed at modelcontextprotocol/registry: 285 files in, 27 repos out, zero findings.
+     I was one keystroke from writing down "the official MCP registry is clean." It is not
+     a file catalogue — it is a Go SERVICE whose server list lives behind an API. I audited
+     its source tree and nearly reported that as a fact about its contents, on the exact
+     catalogue I already got publicly wrong once this week.
+     A repo with many files and few references is the signature of an API-served registry,
+     and for those this tool has measured almost nothing. Say so out loud, because a small
+     clean number and an unexamined catalogue are the same output. */
+  /* ⛔ I FIRST WROTE THIS AS A HEURISTIC AND IT WAS WRONG TWICE OVER.
+     ① it tested files.length, which is the count AFTER filtering to text files — 64, not
+        the 285 in the tree. A guard against a number I did not have, inside the fix for
+        measuring the wrong variable.
+     ② then I checked whether the ratio discriminates at all, and it does not:
+        mcpbar 1717 files -> 1719 refs · docker 511 -> 214 · official 64 -> 27.
+        Docker and the API-served official repo have the SAME ratio. There is no signal.
+     A check that cannot tell the two cases apart is not a check, it is decoration — and
+     shipping it would have been an instrument that cannot disagree with me, which is the
+     one thing I have promised all week never to ship.
+     ⇒ So state the scope unconditionally instead. Always true, always useful, claims
+       nothing I cannot detect. */
+  console.log('  ⚠ SCOPE: this audited %d text files in that tree. If the registry serves its', files.length);
+  console.log('    catalogue from an API or a database, THAT CONTENT WAS NOT EXAMINED and none of');
+  console.log('    the above is a statement about it. (modelcontextprotocol/registry is a Go');
+  console.log('    service, not a file catalogue — 27 refs here, and its real list is an endpoint.)\n');
   if (!TOKEN) console.log('  ⚠ ran unauthenticated. Set GITHUB_TOKEN for a complete run.\n');
   console.log('  ⚠ A private repo and a deleted repo are the same 404 from out here, so every');
   console.log('    number above is a CEILING on the damage, not a measurement of it. Treat the');
