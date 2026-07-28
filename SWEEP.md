@@ -10,7 +10,22 @@ without cloning anything of mine.
 | `acuvity/mcp-servers-registry` | 618 | 1 (`lenzekov`) | 18 | 598 | ⏳ not contacted |
 | `docker/mcp-registry` | 214 | 0 | 6 | 208 | ⏳ **issue drafted, parked** |
 | `ravitemer/mcp-registry` | ~40 | 1 (`connerlambden`) | 1 | — | ⏳ not contacted |
-| `modelcontextprotocol/registry` | 27 | 0 | 0 | 24 | ⛔ **NOT MEASURED — see below** |
+| `modelcontextprotocol/registry` **(as a repo)** | 27 | 0 | 0 | 24 | ⛔ **NOT A RESULT — see below** |
+| **`registry.modelcontextprotocol.io` (the real one, via `--api`)** | **60,566 servers / 7,516 hosts** | — | **250 hosts dead (3.3%), 484 entries** | 7,266 | ✅ **MEASURED + hand-verified** |
+
+⭐ **The API run is the biggest thing in this table and it is a different question.** File registries
+link to SOURCE, so the question is "does this repo exist" — permanently ambiguous, because a private
+repo and a deleted one are the same 404. The official registry lists **running services**, so the
+question becomes "does the thing a user would install still exist," and the DNS half of that has no
+ambiguity at all. Pre-registration + result: `PREREG-mcp-registry.md`.
+- **The abort condition fired and was honoured.** I pre-registered ">100 dead ⇒ suspect my own
+  resolver first." Got 250. Hand-checked 10 hosts, A and AAAA separately: **10/10 ENOTFOUND**.
+- **The split I did not anticipate is the actual story:** 22 of the dead are **ephemeral dev
+  tunnels** (`*.trycloudflare.com`, ngrok) — one of them backing **42 registry entries**. Someone
+  published a laptop tunnel as a permanent endpoint. The other 228 are real company subdomains.
+  ⇒ *"the ecosystem is decaying"* and *"people register dev tunnels as production"* are two claims,
+  and conflating them is the ghost-vs-rot mistake wearing a new hat.
+- ⚠ **`mcp.perplexity.ai` is gone** — 7 entries. Checked twice on purpose.
 | `toolsdk-ai/toolsdk-mcp-registry` | 4,571 | 0 | 130 | 1,910 | ⚠ **PARTIAL — 2,531 UNKNOWN** |
 
 ⚠ **toolsdk is 42% of a measurement, not a result.** 2,531 of 4,571 repos came back UNKNOWN

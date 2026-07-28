@@ -116,9 +116,18 @@ const PROSE = /\.(md|txt)$/i;
 /* Paginate an MCP-registry-shaped API. Cursor-based, 100/page. Extracts BOTH halves:
    github repos (same ambiguity as file mode) and remote hosts (no ambiguity at all). */
 async function readApi(base) {
+  /* ⛔ A PAGE CAP THAT REPORTS ITS CEILING AS A COUNT. Two runs disagreed — a scratch script
+     said 60,566 servers, this said EXACTLY 50,000 — and exactly-50,000 is not a measurement,
+     it is `pages < 500` firing silently. I had already written the other number into two
+     documents as fact. The truncated total and the real total are the same artifact: a
+     plausible integer with nothing marking it as a ceiling.
+     ⇒ Cap raised, and CROSSING IT IS NOW LOUD. If it ever truncates again the output says so
+       instead of handing me a confident number. I only caught this because two instruments
+       disagreed; one instrument agreeing with itself would have shipped it. */
+  const MAX_PAGES = 5000;
   const servers = [];
-  let cursor = '', pages = 0;
-  while (pages < 500) {
+  let cursor = '', pages = 0, truncated = false;
+  while (pages < MAX_PAGES) {
     const u = base.replace(/\/$/, '') + '/v0/servers?limit=100' + (cursor ? '&cursor=' + encodeURIComponent(cursor) : '');
     const r = await fetch(u, { headers: { 'user-agent': 'unreached-registry/1.0' } });
     if (!r.ok) { if (!pages) { console.error(`\n  NO RESULT — ${u} returned ${r.status}. Nothing examined.\n`); process.exit(2); } break; }
@@ -127,8 +136,15 @@ async function readApi(base) {
     pages++;
     cursor = (j.metadata || j.meta || {}).nextCursor || '';
     if (!cursor) break;
+    if (pages >= MAX_PAGES) truncated = true;
   }
-  return servers;
+  if (truncated) {
+    console.error('\n  ⛔ TRUNCATED at %d pages (%d servers). The registry has MORE and this run did',
+      MAX_PAGES, servers.length);
+    console.error('     not see it. Every number below is about the first %d servers only — NOT', servers.length);
+    console.error('     the registry. Raise MAX_PAGES and re-run before quoting any of it.\n');
+  }
+  return { servers, truncated };
 }
 
 /* ⛔ DNS ONLY, AND THE EXCLUSIONS COST ME FINDINGS ON PURPOSE.
@@ -175,7 +191,7 @@ async function deadHosts(hosts, onProgress) {
 
 (async () => {
   if (API_BASE) {
-    const servers = await readApi(API_BASE);
+    const { servers, truncated } = await readApi(API_BASE);
     const hostMap = new Map();      // host -> [server names]
     const repoMap = new Map();      // owner/name -> Set(server names)
     for (const s of servers) {
