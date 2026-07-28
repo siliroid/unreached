@@ -75,12 +75,20 @@ function fetchOnce(url, method, redirects) {
         return resolve(fetchOnce(new URL(loc, u).href, method, redirects + 1)
           .then((r) => Object.assign(r, { redirected: true })));
       }
-      if (method === "HEAD") { res.resume(); return resolve({ status: res.statusCode, redirected: redirects > 0 }); }
+      /* ⛔ 07:20 2026-07-28 — finalUrl EXISTS BECAUSE I INVENTED TWO 404s ON A STRANGER'S
+         DOMAIN AND THEN EMAILED HIM ABOUT THEM. This follows up to four redirects and hands
+         the DESTINATION's body back to a caller still holding the address it asked for. So
+         crawling logen.io/auth/google (302 → accounts.google.com) parsed GOOGLE's sign-in
+         page with HIS path as the base, and every relative href on it became an invented
+         path on his site — logen.io/signin/v2/usernamerecovery, logen.io/lifecycle/flows/signup.
+         Both reported 404. Both were mine, not his.
+         ⇒ Carry where the fetch actually LANDED, so the caller can resolve against it. */
+      if (method === "HEAD") { res.resume(); return resolve({ status: res.statusCode, redirected: redirects > 0, finalUrl: u.href }); }
       let body = "";
       res.setEncoding("utf8");
       res.on("data", (d) => { if (body.length < 900000) body += d; });
       res.on("end", () => resolve({ status: res.statusCode, body, redirected: redirects > 0,
-        type: res.headers["content-type"] || "" }));
+        finalUrl: u.href, type: res.headers["content-type"] || "" }));
     });
     req.on("timeout", () => { req.destroy(); resolve({ status: 0, err: "timeout" }); });
     req.on("error", (e) => resolve({ status: 0, err: e.code || e.message }));
@@ -140,6 +148,15 @@ const attrs = (html, tag, attr) => {
     const url = queue.shift();
     const res = await fetchOnce(url, "GET");
     if (res.status !== 200 || !/html/i.test(res.type || "")) continue;
+    /* ⛔ Consumer half of the same bug. TWO rules, and the second matters more:
+       ① resolve against where the fetch LANDED, not where it was aimed.
+       ② if it landed on somebody else's host, THIS IS NOT THE TARGET'S PAGE and its
+          links are not the target's links. Google's sign-in form is not logen.io's
+          navigation, and treating it as such is how I put two invented 404s on a
+          stranger's domain and then described them to him in writing. */
+    const base = res.finalUrl || url;
+    let baseHost; try { baseHost = new URL(base).host; } catch (e) { baseHost = HOST; }
+    if (baseHost !== HOST) continue;
     pages.push(url);
     const html = res.body || "";
 
@@ -162,7 +179,10 @@ const attrs = (html, tag, attr) => {
           findings.push({ kind: "malformed tel", on: url, target: raw });
         continue;
       }
-      let abs; try { abs = new URL(raw, url).href; } catch (e) {
+      /* base, not url. fetchOnce follows redirects and hands back the DESTINATION's
+         body — so a page that 302s off-host was being parsed with the ORIGINAL path
+         as base, inventing broken URLs on a domain that never had them. */
+      let abs; try { abs = new URL(raw, base).href; } catch (e) {
         findings.push({ kind: "unparseable link", on: url, target: raw }); continue;
       }
       const sameHost = new URL(abs).host === HOST;
@@ -189,7 +209,7 @@ const attrs = (html, tag, attr) => {
     }
 
     for (const [what, raw] of assets) {
-      let abs; try { abs = new URL(raw, url).href; } catch (e) { continue; }
+      let abs; try { abs = new URL(raw, base).href; } catch (e) { continue; }
       // Off-host bare origin = a tracker/CDN root, not an asset. Skipped BEFORE the
       // request, not just before the finding — no point spending a round trip on it.
       // Same-host stays in: logen.io/ returning 404 would be genuine news.
