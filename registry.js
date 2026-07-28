@@ -139,22 +139,38 @@ async function readApi(base) {
    deleted ambiguity, no UA dependence, and it is gone for every user too.
    ⇒ Which makes the result a FLOOR. Real breakage is certainly higher; this measures only
      the part that cannot be argued with. */
-async function deadHosts(hosts) {
+async function deadHosts(hosts, onProgress) {
   const dns = require('node:dns').promises;
-  const list = [...hosts], dead = [];
-  let i = 0;
+  const list = [...hosts], dead = [], stalled = [];
+  let i = 0, done = 0;
+
+  /* ⛔ TIMEOUT, BECAUSE THE FIRST VERSION OF THIS HUNG FOREVER AND PRODUCED NOTHING.
+     dns.resolve* has no default deadline. One unresponsive resolver and Promise.all never
+     settles — the process sits at 100% of nothing, writes no file, throws no error, and
+     after thirty minutes I had neither a result NOR a failure. That is strictly worse than
+     crashing: a hang is indistinguishable from slow work, so I kept waiting on it.
+     A lookup that never returns is UNKNOWN, not dead. Counting it dead would inflate the
+     one number in this tool that is supposed to have no error bar. */
+  const withTimeout = (p, ms) => Promise.race([
+    p, new Promise((_, rej) => setTimeout(() => rej(Object.assign(new Error('dnstimeout'), { code: 'DNSTIMEOUT' })), ms)),
+  ]);
+
   await Promise.all(Array.from({ length: 24 }, async () => {
     while (i < list.length) {
       const h = list[i++];
-      try { await dns.resolve4(h); }
+      try { await withTimeout(dns.resolve4(h), 5000); }
       catch (e) {
         if (e.code === 'ENOTFOUND' || e.code === 'NXDOMAIN') {
-          try { await dns.resolve6(h); } catch { dead.push(h); }
-        }
+          try { await withTimeout(dns.resolve6(h), 5000); } catch (e2) {
+            if (e2.code === 'ENOTFOUND' || e2.code === 'NXDOMAIN') dead.push(h);
+            else stalled.push(h);
+          }
+        } else if (e.code === 'DNSTIMEOUT') stalled.push(h);
       }
+      if (onProgress && ++done % 200 === 0) onProgress(done, list.length);
     }
   }));
-  return dead;
+  return { dead, stalled };
 }
 
 (async () => {
@@ -178,9 +194,11 @@ async function deadHosts(hosts) {
     if (!JSON_OUT) console.error('  %d servers · %d remote hosts · %d github repos · resolving…',
       servers.length, hostMap.size, repoMap.size);
 
-    const dead = await deadHosts(hostMap.keys());
+    const { dead, stalled } = await deadHosts(hostMap.keys(),
+      JSON_OUT ? null : (d, t) => process.stderr.write(`\r  resolving ${d}/${t}…`));
+    if (!JSON_OUT) process.stderr.write('\r' + ' '.repeat(40) + '\r');
     const out = { api: API_BASE, servers: servers.length, hosts: hostMap.size,
-      repos: repoMap.size, deadHosts: dead,
+      repos: repoMap.size, deadHosts: dead, stalled,
       affected: dead.reduce((n, h) => n + hostMap.get(h).length, 0),
       map: Object.fromEntries(dead.map((h) => [h, hostMap.get(h)])) };
 
