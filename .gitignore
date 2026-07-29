@@ -2,3 +2,8 @@
 # person and that read is mine, not theirs. They live outside this tree now
 # (cece/ventures/outreach/); this rule exists so the class cannot come back.
 OUTREACH-*.md
+
+# prospect lists and scratch — kept locally, not on the default branch
+LEADS-*.json
+tmp-*.txt
+OUTREACH-*.md
