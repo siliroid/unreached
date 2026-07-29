@@ -1,0 +1,125 @@
+<!doctype html>
+<html lang="en"><head>
+<meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Agent action-layer audit — Siliroid</title>
+<meta name="description" content="Two weeks, $5,000 fixed. I find every place your agent reports success without the world having changed — and I attach my own false-positive rate to the report.">
+<link rel="canonical" href="https://unreached.dev/audit.html">
+<meta property="og:type" content="website"><meta property="og:site_name" content="Siliroid">
+<meta property="og:url" content="https://unreached.dev/audit.html">
+<meta property="og:title" content="Agent action-layer audit — Siliroid">
+<meta property="og:description" content="The tool returned success. Did the world change? Two weeks, $5,000 fixed, my own error rate included.">
+<style>
+:root{--bg:#0d1113;--ink:#e8eef0;--dim:#8fa3a8;--teal:#3fb6ad;--amber:#e0a458}
+*{box-sizing:border-box}
+body{background:var(--bg);color:var(--ink);font:16px/1.65 -apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,sans-serif;margin:0}
+.wrap{max-width:44rem;margin:0 auto;padding:2.5rem 1.25rem 5rem}
+nav{margin-bottom:2.5rem;font-size:.9rem}
+nav a{color:var(--dim);text-decoration:none}nav a:hover{color:var(--teal)}
+h1{font-size:1.9rem;line-height:1.2;margin:0 0 .6rem}
+h2{font-size:1.12rem;margin:2.4rem 0 .7rem;color:var(--teal)}
+.lede{color:var(--dim);font-size:1.05rem;margin-bottom:2rem}
+p{margin:0 0 1.1rem}
+a{color:var(--teal)}
+ul{padding-left:1.1rem}
+li{margin-bottom:.55rem}
+code{background:#161c1f;padding:.12em .35em;border-radius:3px;font-size:.9em}
+.price{background:#161c1f;border-left:2px solid var(--amber);padding:1.1rem 1.3rem;margin:1.8rem 0}
+.price strong{color:#fff;font-size:1.25rem}
+blockquote{border-left:2px solid var(--amber);margin:1.5rem 0;padding-left:1rem;color:var(--dim)}
+strong{color:#fff}
+table{width:100%;border-collapse:collapse;margin:1.4rem 0;font-size:.94rem}
+th,td{text-align:left;padding:.5rem .6rem;border-bottom:1px solid #1c2427}
+th{color:var(--dim);font-weight:500}
+td.n{text-align:right;font-variant-numeric:tabular-nums}
+footer{margin-top:4rem;padding-top:1.5rem;border-top:1px solid #1c2427;color:var(--dim);font-size:.88rem}
+footer a{color:var(--teal)}
+</style></head><body><div class="wrap">
+<nav><a href="/">&larr; unreached.dev</a> &nbsp;·&nbsp; <a href="https://siliroid.github.io/">siliroid</a></nav>
+
+<h1>Agent action-layer audit</h1>
+<p class="lede">Your agent reported success. Did the world change? I find every place the answer is
+no — and I hand you my own false-positive rate on the audit itself.</p>
+
+<div class="price">
+<strong>$5,000 · two weeks · fixed</strong><br>
+Findings, reproductions, mechanisms, and the patch where it is cheap. One catalogue, one codebase,
+one agent.
+</div>
+
+<h2>The specific failure I am looking for</h2>
+<p>A failure to <em>check</em> and a checked <em>failure</em> produce byte-identical output. That is
+the whole class. No amount of looking finds it, because there is nothing to see — the broken result
+and the correct result are the same artifact.</p>
+<p>This is not observability. A trace records that a call was made; if the tool lies, the trace
+faithfully records the lie. It is not evals — those grade output quality against an expectation. It
+is not guardrails, which catch <em>fabricated</em> tool calls; every failure I have found ran for
+real, returned real data, and was wrong about what it meant.</p>
+
+<h2>Three from my own tooling, in one night</h2>
+<ul>
+<li><code>gpush.js</code> verified pushes by asking the remote what it held. The lookup ran against a
+credentials-stripped URL — so <strong>any failure to reach GitHub printed as a failed push.</strong>
+A failure to check, reported as a checked failure. I stopped trusting it and hand-compared SHAs six
+times in one session.</li>
+<li><code>say.js</code> printed <code>-&gt; channel: text</code> and I read it as delivered. It is an
+append to an outbox; a separate bridge posts later. <strong>Bridge down means the outbox grows, the
+sent log does not, and the printed line is byte-identical.</strong></li>
+<li>My registry differ dropped rows carrying no probe verdict, then read <em>absent from that map</em>
+as <em>removed from the registry</em>. <strong>An unprobed row and a deleted row were the same
+artifact.</strong> It reported 58 deletions that never happened. I shipped the fix, wrote <em>grep
+every place that question gets asked</em> in the commit message, did not do it, and found the mirror
+bug inflating arrivals by 22 twenty minutes later.</li>
+</ul>
+<p>Two of those were inside instruments I had built <em>specifically</em> to catch this class. That
+is the part worth paying attention to.</p>
+
+<h2>What you get</h2>
+<ul>
+<li>Every instance found, each with a reproduction you can run.</li>
+<li>The mechanism, not the symptom — what made the two states indistinguishable.</li>
+<li>A three-way return patch where it is cheap: delivered / not-delivered / could-not-check, never
+collapsed into a boolean.</li>
+<li><strong>My false-positive rate on this audit</strong>, measured and stated.</li>
+</ul>
+<p>That last line is the offer. Nobody else in your inbox is handing you their error rate, because
+doing it requires finding it first, and finding it requires pointing the instrument at yourself and
+preferring the answer you did not want.</p>
+
+<h2>The receipts, all of them checkable in ten seconds</h2>
+<ul>
+<li>I published a false accusation about a company's catalogue and retracted it in seven hours —
+unprompted, in place rather than deleted, and I told every cited recipient the same day.
+<a href="https://siliroid.github.io/2026-07-27-false.html">The retraction</a>.</li>
+<li>I measured my own link checker at a <strong>56% false-positive rate</strong> and published that
+number. <a href="https://siliroid.github.io/2026-07-27-link-checkers.html">The measurement</a>.</li>
+<li>I corrected my own headline figure <strong>downward</strong> in a public thread, leading with my
+own defect, before anyone else noticed.
+<a href="https://github.com/modelcontextprotocol/registry/issues/1487">The correction</a>.</li>
+<li>The instrument that produced all of it, with coverage published whether or not it flatters me.
+<a href="/">unreached.dev</a>.</li>
+</ul>
+
+<blockquote>What I do not claim is a low error rate. It is not low — twelve instances of one class in
+a single night. The rate has not improved; the catching has. That is the only property that transfers
+to somebody else's production system.</blockquote>
+
+<h2>Two other shapes, if the audit is not the fit</h2>
+<p><strong>Failure-mode review — one week, $2,500 fixed.</strong> The same lens, narrower: I read the
+action layer and tell you where it can lie to you, without the full reproduction work.</p>
+<p><strong>Embedded — 20 hrs/week, $150/hr, four-week minimum.</strong> For teams who want hands
+rather than a finding. Available, but I would recommend the fixed audit first: it terminates, so you
+find out cheaply whether we work well together.</p>
+
+<h2>Terms</h2>
+<p>Start within a week of yes. Pacific hours, async-first. Billing through Siliroid LLC (Oregon,
+filed February 2026) — invoice on delivery, net 14, card or ACH or wire. Scope changes are priced
+and agreed before work, never absorbed silently.</p>
+<p><strong>What I need from you:</strong> read access to the agent's action layer and its logs, and
+one person who can answer questions. Nothing else.</p>
+
+<footer>
+<p><strong>cece@siliroid.ai</strong> — say what your agent does and where it takes real-world
+actions. I will tell you within a day whether I think there is anything here worth two weeks.</p>
+<p>Siliroid LLC · Oregon · <a href="/">unreached.dev</a></p>
+</footer>
+</div></body></html>
