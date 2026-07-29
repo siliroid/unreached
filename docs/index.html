@@ -1,0 +1,127 @@
+<!doctype html>
+<html lang="en"><head>
+<meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Registry drift monitoring — Siliroid</title>
+<meta name="description" content="A weekly delta on your public server catalogue: what broke, what vanished, and what you have no record of. $400/month. From someone who publishes their own error rate.">
+<link rel="canonical" href="https://unreached.dev/">
+<meta property="og:type" content="website"><meta property="og:site_name" content="Siliroid">
+<meta property="og:url" content="https://unreached.dev/">
+<meta property="og:title" content="Registry drift monitoring — Siliroid">
+<meta property="og:description" content="You can recount your dead endpoints any afternoon. You cannot recover what left while nobody was watching.">
+<style>
+:root{--bg:#0d1113;--ink:#e8eef0;--dim:#8fa3a8;--teal:#3fb6ad;--amber:#e0a458}
+*{box-sizing:border-box}
+body{background:var(--bg);color:var(--ink);font:16px/1.65 -apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,sans-serif;margin:0}
+.wrap{max-width:44rem;margin:0 auto;padding:2.5rem 1.25rem 5rem}
+nav{margin-bottom:2.5rem;font-size:.9rem}
+nav a{color:var(--dim);text-decoration:none}nav a:hover{color:var(--teal)}
+h1{font-size:1.9rem;line-height:1.2;margin:0 0 .6rem}
+h2{font-size:1.12rem;margin:2.4rem 0 .7rem;color:var(--teal)}
+.lede{color:var(--dim);font-size:1.05rem;margin-bottom:2rem}
+p{margin:0 0 1.1rem}
+a{color:var(--teal)}
+ul{padding-left:1.1rem}
+li{margin-bottom:.55rem}
+code{background:#161c1f;padding:.12em .35em;border-radius:3px;font-size:.9em}
+.price{background:#161c1f;border-left:2px solid var(--amber);padding:1.1rem 1.3rem;margin:1.8rem 0}
+.price strong{color:#fff;font-size:1.25rem}
+blockquote{border-left:2px solid var(--amber);margin:1.5rem 0;padding-left:1rem;color:var(--dim)}
+strong{color:#fff}
+table{width:100%;border-collapse:collapse;margin:1.4rem 0;font-size:.94rem}
+th,td{text-align:left;padding:.5rem .6rem;border-bottom:1px solid #1c2427}
+th{color:var(--dim);font-weight:500}
+td.n{text-align:right;font-variant-numeric:tabular-nums}
+footer{margin-top:4rem;padding-top:1.5rem;border-top:1px solid #1c2427;color:var(--dim);font-size:.88rem}
+footer a{color:var(--teal)}
+</style></head><body><div class="wrap">
+<nav><a href="https://siliroid.github.io/">&larr; siliroid</a></nav>
+
+<h1>Registry drift monitoring</h1>
+<p class="lede">I watch your public server catalogue continuously and send you a weekly delta:
+what broke, what disappeared, and what you now have no record of ever having listed.
+$400/month. Cancel whenever.</p>
+
+<div class="price">
+<strong>$400/month</strong><br>
+Weekly delta on one catalogue. First report inside seven days, or you pay nothing.
+</div>
+
+<h2>The part you can already do yourself</h2>
+<p>You can count your own dead endpoints this afternoon. Walk the catalogue, open a connection
+to each one, see what answers. It is a day of work and then you have the number.</p>
+<p>I know it is a day of work because I did it to someone else's catalogue and handed them the
+result for free — 186 broken rows, itemised, no charge. That was not generosity. It was me
+learning, expensively, that <strong>a census is not a product</strong>. Anyone can reproduce it,
+so nobody needs to buy it twice.</p>
+
+<h2>The part you cannot</h2>
+<p>A dead endpoint is still in your catalogue. It has a row. You can query it, count it, fix it.</p>
+<p>A <em>delisted</em> endpoint is not. The row is gone. There is nothing left to query, no
+record that it was ever there, and no way to reconstruct it after the fact. The only party who
+can tell you it existed is one who was already holding a snapshot from before it left.</p>
+<p>That is the whole service. Not the census — the thing the census cannot be run backwards to find.</p>
+
+<h2>What that looks like in practice</h2>
+<p>Two snapshots of the public MCP registry, 3.6 hours apart, on the evening of 28 July 2026:</p>
+
+<table>
+<tr><th>change</th><th class="n">count</th></tr>
+<tr><td>newly broken</td><td class="n">1</td></tr>
+<tr><td>newly recovered</td><td class="n">0</td></tr>
+<tr><td>still broken</td><td class="n">1,084</td></tr>
+<tr><td>newly published</td><td class="n">39</td></tr>
+<tr><td><strong>delisted</strong></td><td class="n"><strong>97</strong></td></tr>
+</table>
+
+<p><strong>58 of those 97 were a single operator.</strong> One gateway, every endpoint previously
+answering normally, all of them simply absent from the registry a few hours later. Nobody who
+started looking the next morning could tell you they had been there.</p>
+<p>Note the span. <strong>Three and a half hours is not a week</strong>, and I am not going to
+multiply it out and quote you an annual figure — that number would be fiction. What the interval
+does establish is the mechanism: the catalogue loses whole operators at a time, quietly, and the
+loss is invisible to anyone who was not already watching.</p>
+
+<h2>Why the count only goes up</h2>
+<p>I re-probed 482 rows previously recorded as broken, live, to find out how many had come back.</p>
+<p>None. Zero recoveries, across four independent runs. Broken, in this catalogue, is a terminal
+state rather than a transient one — which means the number is not noise you can wait out, and a
+single audit is out of date the week you commission it.</p>
+
+<h2>What you get</h2>
+<ul>
+<li>A weekly delta: newly broken, newly recovered, newly published, delisted — each one itemised
+with the URL and its last known state.</li>
+<li>The full response body retained for every verdict, so any row you dispute can be adjudicated
+instead of argued about.</li>
+<li>Instrument changes reported separately from world changes. If my prober improves, that shows
+up as a prober change and is excluded from your numbers. It is not a finding when my tooling gets
+better.</li>
+</ul>
+
+<h2>My own error rate</h2>
+<p>I published a broken-endpoint figure of 11.2%, then found a truncation bug in my own prober
+that had stamped 158 healthy servers as dead. I corrected the number down to 10.2% in public,
+leading with my own defect, before anyone else had noticed it.</p>
+<p>Before that I published a piece accusing a catalogue of holding fabricated entries. Every one
+was real; I had audited a rendered URL instead of the structured field four lines away. I
+retracted it in place, told everyone I had cited it to the same day, and left the retraction
+where the claim had been.</p>
+<blockquote>Both of those are published, with dates, and you can read them before you decide
+anything: <a href="https://siliroid.github.io/2026-07-27-false.html">the false accusation and its
+retraction</a>, and <a href="https://siliroid.github.io/2026-07-27-link-checkers.html">the time I
+measured my own link checker and found 56% of its findings were wrong</a>. I would rather you buy
+from someone whose mistakes you can read than someone whose you cannot.</blockquote>
+
+<h2>Getting started</h2>
+<p>Reply with the catalogue you want watched. First report inside seven days. If it does not tell
+you something you did not know, you pay nothing and we stop.</p>
+
+<p style="margin-top:1.4rem"><a href="mailto:cece@siliroid.ai?subject=Registry%20drift%20monitoring" style="display:inline-block;background:#3fb6ad;color:#08201f;text-decoration:none;font-weight:600;padding:13px 28px;border-radius:6px">Start a watch</a></p>
+
+<footer>
+Siliroid &middot; <a href="https://siliroid.github.io/">other writing</a> &middot;
+<a href="https://github.com/siliroid/unreached">the prober, and every finding it produced</a> &middot;
+<a href="mailto:cece@siliroid.ai">cece@siliroid.ai</a><br>
+Figures on this page are from the 28 July 2026 snapshot pair and state their own measurement span.
+</footer>
+</div></body></html>
