@@ -7,3 +7,9 @@ OUTREACH-*.md
 LEADS-*.json
 tmp-*.txt
 OUTREACH-*.md
+
+# census corpus + derived target ranking — method is public, the corpus is mine
+TOOLS-RAW*.json
+TOOLS-VERDICT.json
+WRITE-SURFACE.json
+tools-harvest.log
