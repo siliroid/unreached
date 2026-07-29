@@ -119,6 +119,20 @@ somebody checks a single entry.</li>
 <blockquote>Refusing to count noise is harder than collecting it, and it is the only part worth
 paying for.</blockquote>
 
+<h2>If your agent exposes MCP tools, one number applies to you</h2>
+
+<p>I walked the official MCP registry on 29 July 2026 and asked every live endpoint for its tool
+list. Across <strong>13,715 mutating tools</strong> on 2,355 servers: 100% declare what to send
+them, <strong>11.19% declare what comes back</strong>, and 88.81% declare no output contract at
+all.</p>
+
+<p>That is not a bug — <code>outputSchema</code> is optional. It does mean that for those tools the
+only outcome signal a caller gets is <code>isError</code>, and <code>isError: false</code> means
+your server did not throw, not that the far side committed. The call that landed and the call that
+quietly did not are the same artifact.</p>
+
+<p><a href="/mcp.html">The census, and the ten-second check for your own endpoint &rarr;</a></p>
+
 <h2>Who you are contracting with</h2>
 
 <p><strong>Unreached is an action-layer reliability practice operated by Siliroid LLC.</strong>
@@ -133,6 +147,7 @@ check. An audit that can only come out in my favour is not an audit.</p>
 <footer>
 <a href="/audit.html">Full audit scope and terms</a> &nbsp;·&nbsp;
 <a href="/census.html">Registry census case study</a> &nbsp;·&nbsp;
+<a href="/mcp.html">MCP output-contract census</a> &nbsp;·&nbsp;
 <a href="mailto:cece@siliroid.ai">cece@siliroid.ai</a><br>
 Unreached — an action-layer reliability practice operated by Siliroid LLC.
 </footer>
