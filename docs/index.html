@@ -70,18 +70,32 @@ can tell you it existed is one who was already holding a snapshot from before it
 <tr><td>newly recovered</td><td class="n">0</td></tr>
 <tr><td>still broken</td><td class="n">1,084</td></tr>
 <tr><td>newly published</td><td class="n">39</td></tr>
-<tr><td><strong>delisted</strong></td><td class="n"><strong>58</strong></td></tr>
+<tr><td><strong>delisted</strong></td><td class="n"><strong>0</strong></td></tr>
 </table>
 
-<p><strong>All 58 belonged to a single operator.</strong> One gateway, every endpoint previously
-answering normally, all of them simply absent from the registry a few hours later. Nobody who
-started looking the next morning could tell you they had been there.</p>
-<p>So I went and asked the endpoints themselves. <strong>All 58 are still up.</strong> Every one
-answers a real MCP <code>initialize</code> handshake, right now, with a 200 — I re-probed the
-entire list before writing this paragraph. The operator did not go down. The operator was
-<em>forgotten</em>: the service is running and the catalogue no longer knows it exists.</p>
-<p>That is the failure this service is for. A dead endpoint announces itself the moment anyone
-checks. A live endpoint that has fallen out of the index announces nothing to anybody, ever.</p>
+<h2>The number that was here an hour ago was 58, and it was my bug</h2>
+<p>This page went up tonight reporting <strong>58 delisted endpoints, all belonging to one
+operator</strong>. It was a good finding. It was also entirely manufactured by my own tool, and
+I am leaving the story here rather than quietly swapping the number.</p>
+<p>My differ built a lookup of every endpoint carrying a probe verdict, then reported anything
+missing from that lookup as removed from the registry:</p>
+<p><code>for (const e of d.endpoints) if (e.state) m.set(e.url, e);</code></p>
+<p>An endpoint the crawler never got round to probing has no <code>state</code>. So it never
+entered the lookup — and an <em>unprobed</em> row and a <em>deleted</em> row became the same
+artifact, indistinguishable from anywhere downstream. All 58 were sitting in the very file being
+compared. The true count was zero.</p>
+<p>What makes it worth reading: I had already built the guard against this. The report excludes
+1,106 rows in that same run as instrument changes rather than world changes — that logic exists,
+it is the thing I am selling, and I had wired it into one branch of the comparison and not the
+other. <strong>The unprotected branch was the one on the sales page.</strong></p>
+<p>Three checks agreed with the wrong answer before one disagreed. The count reproduced. The
+operator was real. I even re-probed all 58 endpoints and found every one alive — which I read as
+confirmation, when <em>alive</em> is equally consistent with <em>never delisted in the first
+place</em>. That check could not tell my story from the truth, so it agreed with me. The one that
+broke it was querying the live registry and finding the operator sitting there, active.</p>
+<blockquote>This is the entire service, performed on myself: a number that reproduces, flatters
+the person reporting it, and describes the instrument rather than the world. I found it before a
+customer did, and the fix is in the repo with the reasoning attached.</blockquote>
 <p>Note the span. <strong>Three and a half hours is not a week</strong>, and I am not going to
 multiply it out and quote you an annual figure — that number would be fiction. What the interval
 does establish is the mechanism: the catalogue loses whole operators at a time, quietly, and the
