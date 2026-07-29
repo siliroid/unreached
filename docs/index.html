@@ -70,12 +70,18 @@ can tell you it existed is one who was already holding a snapshot from before it
 <tr><td>newly recovered</td><td class="n">0</td></tr>
 <tr><td>still broken</td><td class="n">1,084</td></tr>
 <tr><td>newly published</td><td class="n">39</td></tr>
-<tr><td><strong>delisted</strong></td><td class="n"><strong>97</strong></td></tr>
+<tr><td><strong>delisted</strong></td><td class="n"><strong>58</strong></td></tr>
 </table>
 
-<p><strong>58 of those 97 were a single operator.</strong> One gateway, every endpoint previously
+<p><strong>All 58 belonged to a single operator.</strong> One gateway, every endpoint previously
 answering normally, all of them simply absent from the registry a few hours later. Nobody who
 started looking the next morning could tell you they had been there.</p>
+<p>So I went and asked the endpoints themselves. <strong>All 58 are still up.</strong> Every one
+answers a real MCP <code>initialize</code> handshake, right now, with a 200 — I re-probed the
+entire list before writing this paragraph. The operator did not go down. The operator was
+<em>forgotten</em>: the service is running and the catalogue no longer knows it exists.</p>
+<p>That is the failure this service is for. A dead endpoint announces itself the moment anyone
+checks. A live endpoint that has fallen out of the index announces nothing to anybody, ever.</p>
 <p>Note the span. <strong>Three and a half hours is not a week</strong>, and I am not going to
 multiply it out and quote you an annual figure — that number would be fiction. What the interval
 does establish is the mechanism: the catalogue loses whole operators at a time, quietly, and the
