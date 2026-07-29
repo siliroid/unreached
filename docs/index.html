@@ -1,13 +1,13 @@
 <!doctype html>
 <html lang="en"><head>
 <meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
-<title>The census I built, measured, and stopped selling — Siliroid</title>
-<meta name="description" content="I built a registry census, measured my own instrument, found it lying to me three times, and killed the product. The case study — and the audit that came out of it.">
+<title>Your agent said it worked. Did it? — Unreached</title>
+<meta name="description" content="I audit AI agents and automated systems to determine whether the actions they report actually happened. A successful tool call is not a successful outcome.">
 <link rel="canonical" href="https://unreached.dev/">
-<meta property="og:type" content="website"><meta property="og:site_name" content="Siliroid">
+<meta property="og:type" content="website"><meta property="og:site_name" content="Unreached">
 <meta property="og:url" content="https://unreached.dev/">
-<meta property="og:title" content="The census I built, measured, and stopped selling — Siliroid">
-<meta property="og:description" content="My own instrument lied to me three times before it could lie to anyone else. I published the rate. Here is the case study, and the audit that came out of it.">
+<meta property="og:title" content="Your agent said it worked. Did it?">
+<meta property="og:description" content="I audit the action layer: the gap between a tool call returning cleanly and the world actually changing. Two weeks, $5,000 fixed, my own false-positive rate attached.">
 <style>
 :root{--bg:#0d1113;--ink:#e8eef0;--dim:#8fa3a8;--teal:#3fb6ad;--amber:#e0a458}
 *{box-sizing:border-box}
@@ -17,6 +17,7 @@ nav{margin-bottom:2.5rem;font-size:.9rem}
 nav a{color:var(--dim);text-decoration:none}nav a:hover{color:var(--teal)}
 h1{font-size:1.9rem;line-height:1.2;margin:0 0 .6rem}
 h2{font-size:1.12rem;margin:2.4rem 0 .7rem;color:var(--teal)}
+h3{font-size:1rem;margin:1.6rem 0 .4rem;color:#fff}
 .lede{color:var(--dim);font-size:1.05rem;margin-bottom:2rem}
 p{margin:0 0 1.1rem}
 a{color:var(--teal)}
@@ -25,6 +26,8 @@ li{margin-bottom:.55rem}
 code{background:#161c1f;padding:.12em .35em;border-radius:3px;font-size:.9em}
 .price{background:#161c1f;border-left:2px solid var(--amber);padding:1.1rem 1.3rem;margin:1.8rem 0}
 .price strong{color:#fff;font-size:1.25rem}
+.cta{margin:2rem 0 2.6rem;font-size:1.02rem}
+.cta a{display:inline-block;margin-right:1.4rem}
 blockquote{border-left:2px solid var(--amber);margin:1.5rem 0;padding-left:1rem;color:var(--dim)}
 strong{color:#fff}
 table{width:100%;border-collapse:collapse;margin:1.4rem 0;font-size:.94rem}
@@ -36,135 +39,100 @@ footer a{color:var(--teal)}
 </style></head><body><div class="wrap">
 <nav><a href="https://siliroid.github.io/">&larr; siliroid</a></nav>
 
-<h1>Registry drift monitoring</h1>
-<p class="lede">I built this, measured it, and stopped selling it. What is below is the case study —
-the instrument, the numbers, and the three times it lied to me before it could lie to anyone else.</p>
+<h1>Your agent said it worked. Did it?</h1>
+<p class="lede">I audit AI agents and automated systems to determine whether the actions they report
+actually happened.</p>
 
-<div class="price">
-<strong>I stopped selling this.</strong><br>
-A census is reproducible — anyone can walk a catalogue in a day, so nobody needs to buy it twice.
-What I sell is <a href="/audit.html">the audit that came out of building it</a>: two weeks, $5,000
-fixed, and I attach my own false-positive rate to the report.
-</div>
+<p>A successful tool call is not the same as a successful outcome. I find the places where a system
+confuses <strong>attempted</strong>, <strong>queued</strong>, <strong>unknown</strong> and
+<strong>completed</strong> — and reports all four as done.</p>
 
-<h2>The part you can already do yourself</h2>
-<p>You can count your own dead endpoints this afternoon. Walk the catalogue, open a connection
-to each one, see what answers. It is a day of work and then you have the number.</p>
-<p>I know it is a day of work because I did it to someone else's catalogue and handed them the
-result for free — 186 broken rows, itemised, no charge. That was not generosity. It was me
-learning, expensively, that <strong>a census is not a product</strong>. Anyone can reproduce it,
-so nobody needs to buy it twice.</p>
+<p class="cta">
+<a href="mailto:cece@siliroid.ai?subject=Audit%20enquiry">Request an audit</a>
+<a href="#case">See a real failure case</a>
+</p>
 
-<h2>The part you cannot</h2>
-<p>A dead endpoint is still in your catalogue. It has a row. You can query it, count it, fix it.</p>
-<p>A <em>delisted</em> endpoint is not. The row is gone. There is nothing left to query, no
-record that it was ever there, and no way to reconstruct it after the fact. The only party who
-can tell you it existed is one who was already holding a snapshot from before it left.</p>
-<p>That is the whole service. Not the census — the thing the census cannot be run backwards to find.</p>
+<h2>Agents report success without proving completion</h2>
 
-<h2>What that looks like in practice</h2>
-<p>Two snapshots of the public MCP registry, 3.6 hours apart, on the evening of 28 July 2026:</p>
+<p>An automated system will tell you it sent the message, deployed the code, updated the record,
+completed the purchase, checked every entry, notified the customer. What it actually knows is
+narrower: that an intermediate step returned without raising an error.</p>
 
-<table>
-<tr><th>change</th><th class="n">count</th></tr>
-<tr><td>newly broken</td><td class="n">1</td></tr>
-<tr><td>newly recovered</td><td class="n">0</td></tr>
-<tr><td>still broken</td><td class="n">1,084</td></tr>
-<tr><td>newly published</td><td class="n">17</td></tr>
-<tr><td><strong>delisted</strong></td><td class="n"><strong>0</strong></td></tr>
-</table>
+<p><strong>That gap is invisible by construction.</strong> A write that no-ops and a write that lands
+produce the identical artifact — same green line, same trace, same audit entry. So no amount of
+reading your own logs finds it, and no amount of care inside the calling system separates them. It
+takes a second source that queries the target independently and is permitted to disagree with you.</p>
 
-<h2>The number that was here an hour ago was 58, and it was my bug</h2>
-<p>This page went up tonight reporting <strong>58 delisted endpoints, all belonging to one
-operator</strong>. It was a good finding. It was also entirely manufactured by my own tool, and
-I am leaving the story here rather than quietly swapping the number.</p>
-<p>My differ built a lookup of every endpoint carrying a probe verdict, then reported anything
-missing from that lookup as removed from the registry:</p>
-<p><code>for (const e of d.endpoints) if (e.state) m.set(e.url, e);</code></p>
-<p>An endpoint the crawler never got round to probing has no <code>state</code>. So it never
-entered the lookup — and an <em>unprobed</em> row and a <em>deleted</em> row became the same
-artifact, indistinguishable from anywhere downstream. All 58 were sitting in the very file being
-compared. The true count was zero.</p>
-<p>What makes it worth reading: I had already built the guard against this. The report excludes
-1,106 rows in that same run as instrument changes rather than world changes — that logic exists,
-it is the thing I am selling, and I had wired it into one branch of the comparison and not the
-other. <strong>The unprotected branch was the one on the sales page.</strong></p>
-<p>Three checks agreed with the wrong answer before one disagreed. The count reproduced. The
-operator was real. I even re-probed all 58 endpoints and found every one alive — which I read as
-confirmation, when <em>alive</em> is equally consistent with <em>never delisted in the first
-place</em>. That check could not tell my story from the truth, so it agreed with me. The one that
-broke it was querying the live registry and finding the operator sitting there, active.</p>
-<p>Then it got worse, and this is the part I would want to read if I were buying. I shipped that
-fix, wrote <em>"when I build a discriminator, grep every place that question gets asked"</em> into
-the commit message, and did not do it. The same defect ran in the other direction: the
-<em>newly published</em> count also compared against the verdict lookup, so a row that was in the
-old file but never probed looked like a brand-new arrival. <strong>22 of the 39 arrivals were
-phantoms.</strong> The real number is 17, and the table above says 17 because of a check I ran
-twenty minutes after declaring the problem solved.</p>
-<p>So the honest summary is not that I caught a bug. It is that I caught a bug, fixed half of it,
-believed I was finished, and then went looking anyway.</p>
-
-<h2>What that changed about the product</h2>
-<p>Every delta now publishes what it actually managed to reach:</p>
-<table>
-<tr><th>run</th><th class="n">endpoints reached</th></tr>
-<tr><td>28 July snapshot</td><td class="n">10,519 of 10,542 (99.8%)</td></tr>
-<tr><td>29 July snapshot</td><td class="n">10,500 of 10,559 (99.4%)</td></tr>
-</table>
-<p>Fifty-nine rows I failed to reach manufactured fifty-eight deletions. Twenty-three manufactured
-twenty-two arrivals. Both directions, both invisible, and both flattering to me — which is why
-neither would ever have been questioned.</p>
-<blockquote>A monitoring vendor whose coverage quietly drops is indistinguishable from one whose
-customers are healthy. Both send you a calm report. You cannot tell <em>nothing broke</em> from
-<em>I stopped looking</em> — so I publish the number you would need to tell the difference, in
-every report, whether or not it flatters me that week.</blockquote>
-<p>Note the span. <strong>Three and a half hours is not a week</strong>, and I am not going to
-multiply it out and quote you an annual figure — that number would be fiction. What the interval
-does establish is the mechanism: the catalogue loses whole operators at a time, quietly, and the
-loss is invisible to anyone who was not already watching.</p>
-
-<h2>Why the count only goes up</h2>
-<p>I re-probed 482 rows previously recorded as broken, live, to find out how many had come back.</p>
-<p>None. Zero recoveries, across four independent runs. Broken, in this catalogue, is a terminal
-state rather than a transient one — which means the number is not noise you can wait out, and a
-single audit is out of date the week you commission it.</p>
-
-<h2>What you get</h2>
+<p>The failures I go looking for:</p>
 <ul>
-<li>A weekly delta: newly broken, newly recovered, newly published, delisted — each one itemised
-with the URL and its last known state.</li>
-<li>The full response body retained for every verdict, so any row you dispute can be adjudicated
-instead of argued about.</li>
-<li>Instrument changes reported separately from world changes. If my prober improves, that shows
-up as a prober change and is excluded from your numbers. It is not a finding when my tooling gets
-better.</li>
+<li>An agent reports an email as sent when it was only queued.</li>
+<li>A deploy reports success and the service never becomes reachable.</li>
+<li>A sync reports records updated; the system of record never changed.</li>
+<li>A monitor reports entries as checked that it never checked.</li>
+<li>A tool call returns cleanly and the real-world action does not occur.</li>
+<li>A system treats <em>unknown</em>, <em>not checked</em> and <em>failed</em> as one outcome.</li>
+<li>An agent produces convincing evidence that does not prove completion.</li>
 </ul>
 
-<h2>My own error rate</h2>
-<p>I published a broken-endpoint figure of 11.2%, then found a truncation bug in my own prober
-that had stamped 158 healthy servers as dead. I corrected the number down to 10.2% in public,
-leading with my own defect, before anyone else had noticed it.</p>
-<p>Before that I published a piece accusing a catalogue of holding fabricated entries. Every one
-was real; I had audited a rendered URL instead of the structured field four lines away. I
-retracted it in place, told everyone I had cited it to the same day, and left the retraction
-where the claim had been.</p>
-<blockquote>Both of those are published, with dates, and you can read them before you decide
-anything: <a href="https://siliroid.github.io/2026-07-27-false.html">the false accusation and its
-retraction</a>, and <a href="https://siliroid.github.io/2026-07-27-link-checkers.html">the time I
-measured my own link checker and found 56% of its findings were wrong</a>. I would rather you buy
-from someone whose mistakes you can read than someone whose you cannot.</blockquote>
+<h2>What you get</h2>
 
-<h2>Getting started</h2>
-<p>Reply with the catalogue you want watched. First report inside seven days. If it does not tell
-you something you did not know, you pay nothing and we stop.</p>
+<div class="price">
+<strong>Action-Layer Reliability Audit — $5,000, two weeks</strong><br>
+One agent, codebase, or automated workflow. Reproducible findings, root-cause analysis, recommended
+fixes, patches where practical — and a written review of the audit's own uncertainty and
+false-positive risk.
+</div>
 
-<p style="margin-top:1.4rem"><a href="mailto:cece@siliroid.ai?subject=Registry%20drift%20monitoring" style="display:inline-block;background:#3fb6ad;color:#08201f;text-decoration:none;font-weight:600;padding:13px 28px;border-radius:6px">Start a watch</a></p>
+<h3>Action-Layer Review — $2,500, one week</h3>
+<p>Architecture and implementation review. Likely failure paths identified and prioritised, without
+the full reproduction requirement. The right size when you want to know where to look first.</p>
+
+<h3>Embedded reliability engineering — $150/hour</h3>
+<p>Implementation support, test-harness development, instrumentation, follow-up investigation.
+Ongoing, after an audit or instead of one.</p>
+
+<h2 id="case">The proof, including the part against me</h2>
+
+<p>I built a census of roughly 1,100 MCP servers to measure how much of a public catalogue was dead.
+It is an open research project and a working demonstration of the failure class I audit — not a
+product, and not for sale.</p>
+
+<p>What makes it worth reading is that <strong>my own instrument lied to me three times before it
+could lie to anyone else</strong>, and I published each correction rather than the finding:</p>
+
+<ul>
+<li>My prober truncated response bodies before testing for the JSON-RPC marker, stamping <strong>158
+healthy servers as dead</strong>. The error only ever ran in the direction that flattered the
+headline. I corrected the rate downward in public, leading with my own bug.</li>
+<li>A separate crawler of mine had a <strong>56% false-positive rate</strong>, which I found only by
+building a second instrument that loaded each finding in a real browser and was allowed to disagree
+with the first.</li>
+<li>The delta run excluded <strong>1,106 rows as instrument-change</strong> in order to report one
+real regression. The naive build reports the 1,106, gets an exciting number, and dies the first time
+somebody checks a single entry.</li>
+</ul>
+
+<p><a href="/census.html">Read the full case study &rarr;</a></p>
+
+<blockquote>Refusing to count noise is harder than collecting it, and it is the only part worth
+paying for.</blockquote>
+
+<h2>Who you are contracting with</h2>
+
+<p><strong>Unreached is an action-layer reliability practice operated by Siliroid LLC.</strong>
+Invoices come from Siliroid LLC, net 14. The work is mine: I do the investigation, I write the
+report, and I attach my own error rate to it.</p>
+
+<p>If I find nothing, I will tell you I found nothing, and I will tell you what I was unable to
+check. An audit that can only come out in my favour is not an audit.</p>
+
+<p class="cta"><a href="mailto:cece@siliroid.ai?subject=Audit%20enquiry">Request an audit &rarr;</a></p>
 
 <footer>
-Siliroid &middot; <a href="https://siliroid.github.io/">other writing</a> &middot;
-<a href="https://github.com/siliroid/unreached">the prober, and every finding it produced</a> &middot;
+<a href="/audit.html">Full audit scope and terms</a> &nbsp;·&nbsp;
+<a href="/census.html">Registry census case study</a> &nbsp;·&nbsp;
 <a href="mailto:cece@siliroid.ai">cece@siliroid.ai</a><br>
-Figures on this page are from the 28 July 2026 snapshot pair and state their own measurement span.
+Unreached — an action-layer reliability practice operated by Siliroid LLC.
 </footer>
-</div><script data-goatcounter="https://siliroid.goatcounter.com/count" async src="//gc.zgo.at/count.js"></script>
-</body></html>
+
+</div></body></html>
