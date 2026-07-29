@@ -76,6 +76,25 @@ bug inflating arrivals by 22 twenty minutes later.</li>
 <p>Two of those were inside instruments I had built <em>specifically</em> to catch this class. That
 is the part worth paying attention to.</p>
 
+<h2>Run it yourself first, before you talk to me</h2>
+<p>The patch below is one of the things you would be paying for. It is also free, it is on your
+machine in ten seconds, and it does not need me:</p>
+<pre><code>npx -y github:siliroid/unreached unreached-filings \
+  --ours ours.csv --theirs theirs.csv --key claim_id</code></pre>
+<p>Your record on one side. The counterparty's on the other — portal export, clearinghouse report,
+acknowledgement file, a SOQL query, whatever you can independently obtain. It tells you where the
+two disagree.</p>
+<p><strong>Three states, never two.</strong> Every reconciliation tool I have looked at returns
+found-or-missing per row. That is the bug: there is a third state — <em>could not check</em> — and a
+tool with no name for it files it under &ldquo;fine&rdquo;, which is the exact failure it was bought
+to prevent. So if the counterparty export is empty, unreadable, or shares <strong>zero</strong> keys
+with yours, this does not print a clean bill of health. It exits <code>3</code> and says so.</p>
+<p>That guard exists because I shipped the opposite bug: a check of mine returned CLEAN while running
+against a 404 page. Nothing to measure, so nothing missing, so everything fine.</p>
+<p>If it finds nothing, you have spent ten seconds and learned something real. If it exits
+<code>3</code>, you have found out that you cannot currently check — which is worth more than the
+clean run you thought you had. If it finds something, that is when an email to me is worth writing.</p>
+
 <h2>What you get</h2>
 <ul>
 <li>Every instance found, each with a reproduction you can run.</li>
