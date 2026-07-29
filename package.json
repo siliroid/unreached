@@ -1,12 +1,12 @@
 {
   "name": "unreached",
-  "version": "0.1.0",
-  "description": "Finds the things in your repo that exist and are never reached. Zero dependencies. Refuses to report a false clean.",
-  "bin": { "unreached": "./unreached.js", "unreached-site": "./sitecheck.js", "unreached-registry": "./registry.js" },
+  "version": "0.2.0",
+  "description": "Finds the things that exist and are never reached — dead code, dead links, and submissions the counterparty never received. Zero dependencies. Refuses to report a false clean.",
+  "bin": { "unreached": "./unreached.js", "unreached-site": "./sitecheck.js", "unreached-registry": "./registry.js", "unreached-filings": "./filings.js" },
   "main": "unreached.js",
-  "files": ["unreached.js", "sitecheck.js", "registry.js", "verify-findings.js", "README.md", "LICENSE"],
+  "files": ["unreached.js", "sitecheck.js", "registry.js", "filings.js", "verify-findings.js", "README.md", "LICENSE"],
   "engines": { "node": ">=18" },
-  "keywords": ["dead-code", "orphan", "unused", "static-analysis", "lint", "audit"],
+  "keywords": ["dead-code", "orphan", "unused", "static-analysis", "lint", "audit", "reconciliation", "filings"],
   "license": "MIT",
   "repository": { "type": "git", "url": "git+https://github.com/siliroid/unreached.git" },
   "scripts": { "test": "node unreached.js --help; test $? -eq 2 && node unreached.js . >/dev/null && echo ok" }

@@ -23,6 +23,43 @@ you should.)
 
 Zero dependencies. Node 18+. Reads your files, writes nothing. Doesn't fail your build.
 
+## `unreached-filings` — submissions the counterparty never received
+
+Same idea, pointed at the action layer instead of the codebase.
+
+If your system files into somebody else's — a state portal, a tax authority, a payer, CBP, a
+clearinghouse — then a write that **landed** and a write that **no-opped** produce the identical
+artifact on your side. Same row, same timestamp, same stored acknowledgement. No amount of reading
+your own logs separates them, because your logs are you telling yourself what you already believe.
+What separates them is a second source that queries the counterparty independently and is
+**permitted to disagree with you.**
+
+Bring both sides. It tells you where they differ.
+
+```
+npx -y github:siliroid/unreached unreached-filings \
+  --ours ours.csv --theirs theirs.csv --key claim_id
+```
+
+**Three states, never two.** Every reconciliation tool I have looked at returns found-or-missing per
+row. That is the bug: there is a third state — *could not check* — and a tool with no name for it
+files it under "fine", which is the exact failure it was bought to prevent.
+
+So if the counterparty export is empty, or unreadable, or shares **zero** keys with yours, this does
+not print a clean bill of health. It exits `3` and says it could not check. Four missing rows and
+four rows you cannot verify are different facts, and only one of them is a finding.
+
+| exit | meaning |
+|---|---|
+| `0` | reconciled, coverage established, nothing missing |
+| `1` | findings — rows you have a record of that they do not |
+| `3` | **could not check.** Not the same as clean. |
+
+The guard exists because I shipped that bug myself: on 2026-07-27 a check of mine returned CLEAN
+while running against a 404 page — nothing to measure, so nothing missing, so everything fine. And
+when I finally measured my own crawler's false-positive rate it was **56%**. Both numbers are
+published: [unreached.dev/audit.html](https://unreached.dev/audit.html).
+
 ## What it found this week, in other people's registries
 
 Not claims — filed, public, and reproducible from the one-liner in each:
