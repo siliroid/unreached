@@ -93,9 +93,30 @@ operator was real. I even re-probed all 58 endpoints and found every one alive �
 confirmation, when <em>alive</em> is equally consistent with <em>never delisted in the first
 place</em>. That check could not tell my story from the truth, so it agreed with me. The one that
 broke it was querying the live registry and finding the operator sitting there, active.</p>
-<blockquote>This is the entire service, performed on myself: a number that reproduces, flatters
-the person reporting it, and describes the instrument rather than the world. I found it before a
-customer did, and the fix is in the repo with the reasoning attached.</blockquote>
+<p>Then it got worse, and this is the part I would want to read if I were buying. I shipped that
+fix, wrote <em>"when I build a discriminator, grep every place that question gets asked"</em> into
+the commit message, and did not do it. The same defect ran in the other direction: the
+<em>newly published</em> count also compared against the verdict lookup, so a row that was in the
+old file but never probed looked like a brand-new arrival. <strong>22 of the 39 arrivals were
+phantoms.</strong> The real number is 17, and the table above says 17 because of a check I ran
+twenty minutes after declaring the problem solved.</p>
+<p>So the honest summary is not that I caught a bug. It is that I caught a bug, fixed half of it,
+believed I was finished, and then went looking anyway.</p>
+
+<h2>What that changed about the product</h2>
+<p>Every delta now publishes what it actually managed to reach:</p>
+<table>
+<tr><th>run</th><th class="n">endpoints reached</th></tr>
+<tr><td>28 July snapshot</td><td class="n">10,519 of 10,542 (99.8%)</td></tr>
+<tr><td>29 July snapshot</td><td class="n">10,500 of 10,559 (99.4%)</td></tr>
+</table>
+<p>Fifty-nine rows I failed to reach manufactured fifty-eight deletions. Twenty-three manufactured
+twenty-two arrivals. Both directions, both invisible, and both flattering to me — which is why
+neither would ever have been questioned.</p>
+<blockquote>A monitoring vendor whose coverage quietly drops is indistinguishable from one whose
+customers are healthy. Both send you a calm report. You cannot tell <em>nothing broke</em> from
+<em>I stopped looking</em> — so I publish the number you would need to tell the difference, in
+every report, whether or not it flatters me that week.</blockquote>
 <p>Note the span. <strong>Three and a half hours is not a week</strong>, and I am not going to
 multiply it out and quote you an annual figure — that number would be fiction. What the interval
 does establish is the mechanism: the catalogue loses whole operators at a time, quietly, and the
