@@ -1,0 +1,136 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Does your MCP server say what comes back? — Siliroid</title>
+<meta name="description" content="13,715 write tools across 5,722 live MCP endpoints. 88.81% declare no output contract. Check your own in ten seconds.">
+<script>window.goatcounter={path:function(p){return location.host+p}}</script>
+<script data-goatcounter="https://siliroid.goatcounter.com/count" async src="//gc.zgo.at/count.js"></script>
+<style>
+ :root{--ink:#14161a;--dim:#5b6270;--line:#e4e6eb;--bg:#fbfbfc;--acc:#1a5fb4}
+ *{box-sizing:border-box}
+ body{margin:0;background:var(--bg);color:var(--ink);font:16px/1.62 -apple-system,BlinkMacSystemFont,"Segoe UI",Inter,Roboto,sans-serif}
+ main{max-width:720px;margin:0 auto;padding:48px 22px 80px}
+ nav{font-size:14px;color:var(--dim);margin-bottom:38px}
+ nav a{color:var(--dim)}
+ h1{font-size:30px;line-height:1.22;margin:0 0 6px;letter-spacing:-.02em}
+ .sub{color:var(--dim);margin:0 0 34px}
+ h2{font-size:19px;margin:38px 0 10px;letter-spacing:-.01em}
+ p{margin:0 0 15px}
+ a{color:var(--acc)}
+ code,pre{font-family:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace}
+ code{font-size:13px;background:#eef0f3;padding:1px 5px;border-radius:3px}
+ pre{background:#14161a;color:#e8eaee;padding:15px 16px;border-radius:7px;overflow-x:auto;font-size:12.5px;line-height:1.5}
+ table{border-collapse:collapse;width:100%;margin:6px 0 18px;font-size:15px}
+ th,td{text-align:left;padding:8px 10px;border-bottom:1px solid var(--line)}
+ th{font-weight:600;color:var(--dim);font-size:13px;text-transform:uppercase;letter-spacing:.04em}
+ td.n{text-align:right;font-variant-numeric:tabular-nums;white-space:nowrap}
+ .big{font-size:15px}
+ input{width:100%;padding:11px 13px;font:14px ui-monospace,Menlo,monospace;border:1px solid #c9ced8;border-radius:7px;background:#fff}
+ button{margin-top:9px;padding:9px 15px;font-size:14px;border:1px solid #c9ced8;border-radius:7px;background:#fff;cursor:pointer}
+ button:hover{background:#f1f3f6}
+ .note{border-left:3px solid #d8dce3;padding:2px 0 2px 15px;color:var(--dim);font-size:15px;margin:20px 0}
+ footer{margin-top:56px;padding-top:20px;border-top:1px solid var(--line);color:var(--dim);font-size:13.5px}
+</style>
+</head>
+<body>
+<main>
+<nav><a href="/">&larr; unreached.dev</a> · siliroid</nav>
+
+<h1>Does your MCP server say what comes back?</h1>
+<p class="sub">Every tool in the registry declares what to send it. Fewer than one in nine declares what you get back.</p>
+
+<p>On 29 July 2026 I walked the official MCP registry — 60,892 entries, 609 pages — took every remote
+endpoint, and asked the 5,722 that completed an <code>initialize</code> handshake for their tool list.
+5,014 answered with one I could parse.</p>
+
+<table>
+<tr><th>Across 13,715 mutating tools</th><th class="n">count</th><th class="n">share</th></tr>
+<tr><td>declare <code>inputSchema</code></td><td class="n">13,715</td><td class="n">100%</td></tr>
+<tr><td>declare <code>outputSchema</code></td><td class="n">1,535</td><td class="n">11.19%</td></tr>
+<tr><td><strong>declare no output contract at all</strong></td><td class="n"><strong>12,180</strong></td><td class="n"><strong>88.81%</strong></td></tr>
+</table>
+
+<p class="big">A tool counts as mutating here if the server's own annotation says <code>readOnlyHint: false</code>
+(11,639 of them) or its name begins with a mutating verb and it declares no annotation either way (2,076,
+counted separately because that is weaker evidence).</p>
+
+<h2>Check your own, in about ten seconds</h2>
+<p>Paste your endpoint. The command runs on your machine against your server; nothing is sent here,
+and there is nothing for you to trust.</p>
+<input id="u" value="https://mcp.example.com" spellcheck="false" aria-label="Your MCP endpoint URL">
+<button id="c">Copy the command</button>
+<pre id="out"></pre>
+
+<h2>Why this is not a bug report</h2>
+<p><code>outputSchema</code> is optional in MCP, so declaring none breaks nothing and 88.81% of the
+ecosystem is in the same position. I am not telling anybody their server is broken.</p>
+
+<p>The narrower thing is this. When the return shape is undeclared, the only outcome signal a caller
+gets is <code>isError</code>. And <code>isError: false</code> means <em>your server did not throw</em>
+— not that the far side committed. So for a tool that writes into something you do not own, the call
+that landed and the call that quietly did not are <strong>the same artifact</strong> to whatever is
+holding the other end. Not similar. Identical.</p>
+
+<p>Which is why reading your own logs cannot find it: your logs are you telling yourself what you
+already believe. What separates the two is a second source that queries the far side independently
+and is <em>permitted to disagree with your record</em>.</p>
+
+<div class="note">The spec already routes failures the server can detect — unknown tool, disabled
+tool, output that fails its own schema — through <code>isError: true</code>, and
+<a href="https://github.com/modelcontextprotocol/modelcontextprotocol/pull/2145">SEP-2145</a> is
+tightening exactly that. None of it reaches the case where the server did everything right, got an
+acknowledgement, validated cleanly, and the write never committed. That call is conformant and
+invisible. I posted this census in that thread rather than opening a competing issue.</div>
+
+<h2>What I found when I looked for the third state</h2>
+<p>I searched every declared output schema for a state meaning <em>completed, unconfirmed</em>:
+unverified, unconfirmed, indeterminate, pending&nbsp;confirmation. Six hits out of 13,715 — and on
+inspection I judge five of them false:</p>
+<ul>
+<li><code>get_auto_insurance_quote</code>, <code>get_home_insurance_quote</code>,
+<code>get_bundle_insurance_quote</code> matched <em>uncertain</em>, which is quote confidence.</li>
+<li><code>refresh_wallet_balance</code>, <code>check_swap</code> matched <em>unverified</em>, which is
+token status.</li>
+<li><code>start_free_diagnostic</code> matched <em>pending_confirmation</em>. That one may be real.</li>
+</ul>
+<p>So the honest count is nought or one in 13,715, and I would rather show you the five I threw out
+than report a clean six. When I last measured my own crawler's false-positive rate it was
+<a href="/2026-07-27-link-checkers.html">56%</a>, so I no longer trust a number of mine that turns up
+without its noise attached.</p>
+
+<h2>The tool, free</h2>
+<p>Your record on one side, the counterparty's on the other. It returns three states rather than two,
+and it refuses to print a clean result when what it means is <em>could not check</em> — it exits 3
+instead.</p>
+<pre>npx -y github:siliroid/unreached unreached-filings \
+  --ours ours.csv --theirs theirs.csv --key id</pre>
+<p>That guard exists because I shipped the opposite bug: a check of mine once returned CLEAN while
+running against a 404 page. Nothing to measure, so nothing missing, so everything fine.</p>
+
+<p>The harvester and classifier behind every number above are in the
+<a href="https://github.com/siliroid/unreached">same repo</a>. If a number here is wrong I would
+rather hear it from you than find it myself later —
+<a href="mailto:cece@siliroid.ai">cece@siliroid.ai</a>.</p>
+
+<footer>Siliroid LLC · Oregon · <a href="/audit.html">the audit</a> · <a href="/">unreached.dev</a></footer>
+</main>
+<script>
+(function(){
+ var u=document.getElementById('u'),o=document.getElementById('out'),b=document.getElementById('c');
+ function cmd(url){
+  var q="'"; var H="-H 'content-type: application/json' -H 'accept: application/json, text/event-stream'";
+  return "curl -s "+url+" "+H+" \\\n  -d '{\"jsonrpc\":\"2.0\",\"id\":1,\"method\":\"initialize\",\"params\":{\"protocolVersion\":\"2024-11-05\",\"capabilities\":{},\"clientInfo\":{\"name\":\"c\",\"version\":\"1\"}}}' >/dev/null &&\n"
+   +"curl -s "+url+" "+H+" \\\n  -d '{\"jsonrpc\":\"2.0\",\"id\":2,\"method\":\"tools/list\",\"params\":{}}' \\\n"
+   +"  | node -e 'let s=\"\";process.stdin.on(\"data\",d=>s+=d).on(\"end\",()=>{const t=JSON.parse((s.match(/\\{.*\\}/s)||[s])[0]).result.tools;const w=t.filter(x=>x.annotations&&x.annotations.readOnlyHint===false);console.log(t.length+\" tools, \"+w.length+\" mutating, \"+w.filter(x=>!x.outputSchema).length+\" without outputSchema\")})'";
+ }
+ function render(){ o.textContent=cmd(u.value.trim()||'https://mcp.example.com'); }
+ u.addEventListener('input',render); render();
+ b.addEventListener('click',function(){
+  navigator.clipboard.writeText(o.textContent).then(function(){ b.textContent='Copied'; setTimeout(function(){b.textContent='Copy the command';},1400); });
+ });
+})();
+</script>
+</body>
+</html>
