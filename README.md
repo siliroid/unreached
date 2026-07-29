@@ -1,5 +1,12 @@
 # unreached
 
+> **Two things live here, and they are not the same product.**
+> **The CLI** below finds unreferenced code in your repo. Free, zero-dependency, runs on your machine.
+> **The registry census** — the probing, snapshot and delta tooling in `probe-full.js`, `weekly-run.js`
+> and `diff-census.js` — grew out of it and is a paid service: **[unreached.dev](https://unreached.dev/)**.
+> Every delta it produces publishes the share of endpoints it actually reached, so a quiet week and a
+> broken prober cannot look identical. The code for all of it is in this repo and auditable.
+
 Finds the things in your repo that **exist** and are never **reached**.
 
 Not dead code in the compiler sense. The narrower, dumber, more common thing: a function you wrote,
@@ -65,9 +72,33 @@ assembled*, not of MCP servers. Docker and Archestra are curated lists of commer
 Stripe, Slack, Atlassian — which gate by nature. The official registry is self-publication, so it is
 full of servers that gate nothing. Curation correlates with commercial; commercial correlates with gated.
 
-**The number a maintainer should actually care about: 11.2% of advertised endpoints do not speak MCP
-at the URL given** (95% CI 9.4–12.9%) — roughly **1,177 of 10,542**. Not dead hosts. Live hosts
-serving something else at the advertised path.
+> ⛔ **CORRECTED 2026-07-28 — the 11.2% above is MY BUG, and the real number is lower.** The prober
+> truncated the response body before testing it for a JSON-RPC marker. Servers commonly answer
+> `initialize` with the payload first and the marker last — `{"result":{...},"jsonrpc":"2.0","id":1}` —
+> so a cut removes the proof and a healthy server falls through to `not-mcp`. It only ever fails in
+> the direction that flattered me. **158 endpoints were wrong this way; 40/40 re-probed answer a clean
+> `initialize` with `protocolVersion` and `serverInfo`.** Fixed at `mcp-probe.js` and `probe-full.js`;
+> the sample table above is left standing because it is what I published.
+>
+> **And the trap worth more than the number:** an intermediate full census said **12.7%**, sitting
+> inside the sample's CI of 9.4–12.9%. It looked like the census had confirmed the sample. It hadn't —
+> both ran on the same prober, so they shared the same defect. *Agreement between two measurements
+> built on one instrument is not evidence, and it reads exactly like evidence.*
+
+**The number a maintainer should actually care about — full census, corrected instrument: 10.2% of
+advertised endpoints do not speak MCP at the URL given**, and **11.5% cannot be connected to as
+listed** (`not-mcp` + `alive-wrong-transport`, **1,084 of 9,419 measurable**). Not dead hosts. Live
+hosts serving something else at the advertised path. A further 1,123 (10.7% of the catalogue) could
+not be measured and are reported as unmeasured rather than folded into the rate.
+
+**Verification:** seeded reproducible draw of 40 from the 964 `not-mcp` rows, re-probed with a
+separate instrument that records status, content-type and body rather than a bare verdict —
+**40/40 confirmed, all 404 at the advertised path.** That is the error rate I can defend.
+
+**It concentrates on hosting platforms, not maintainers.** 550 hosts carry the 1,084, but two carry
+**33.8%**: `server.smithery.ai` 186/210 broken (**88.6%**, and **186 of 186 are 404**) and
+`*.up.railway.app` 180/293 (61.4%, 178 of 180 are 404). One uniform failure mode, not hundreds of
+unrelated problems. ⇒ **Registry entries outlive the deployments they point at.** No reconciliation loop.
 
 What survives across all three registries and 1,312 probed endpoints: **a non-200 does not mean
 broken, and essentially nothing is dead.** Zero dead, every sample, every registry.
