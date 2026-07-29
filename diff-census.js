@@ -103,7 +103,14 @@ const index = (file) => {
     const before = A.rows.get(url);
     const cNow = cls(now.state);
 
+    /* ⛔ THE MIRROR OF THE DELISTED BUG, and I shipped the delisted fix an hour before
+       finding this one. `A.rows` excludes rows the previous run never probed, so a row
+       that WAS in the old file but carried no verdict looked like a brand-new arrival.
+       22 of the 39 "newly published" on 2026-07-29 were phantoms of exactly that kind.
+       Absent-from-the-file is a world change. Present-but-unprobed is an instrument
+       change, in BOTH directions, and it has to be asked against `seen` either way. */
     if (!before) {
+      if (A.seen.has(url)) { out.measurementOnly++; continue; }   // was there, we just never looked
       if (cNow !== 'unmeasured') out.newEndpoint.push({ url, state: now.state, servers: now.servers });
       continue;
     }
@@ -156,6 +163,34 @@ const index = (file) => {
   L.push('');
   L.push(`${out.measurementOnly} rows moved to or from unmeasurable and are excluded — that is a`);
   L.push(`change in the instrument, not in anyone's infrastructure.`);
+  L.push('');
+
+  /* ★ COVERAGE IS A PRODUCT SURFACE, NOT AN IMPLEMENTATION DETAIL — and it is the one line
+     that separates this from every other monitor in the category.
+
+     A vendor whose coverage silently drops is INDISTINGUISHABLE from a vendor whose customers
+     are healthy: both send a quiet report. The buyer cannot tell "nothing broke" from "I
+     stopped looking." That is the exact failure I sell against, and I committed it twice in
+     one night — 59 unprobed rows manufactured 58 delistings, 23 unprobed rows manufactured
+     22 arrivals. Both directions, both invisible, both flattering.
+
+     So the delta states what it managed to look at, per run, on its face. A delta's
+     trustworthiness is bounded by the WORSE of its two snapshots, so both get published and
+     the customer holds me to the number. Same move as publishing my false-positive rate,
+     except structural rather than confessional: it ships in every report, forever, without
+     anyone deciding to be honest that day. */
+  const cov = (s) => `${(s.seen.size - s.unprobed).toLocaleString()} of ${s.seen.size.toLocaleString()} (${(100 * (s.seen.size - s.unprobed) / s.seen.size).toFixed(1)}%)`;
+  L.push(`## Coverage — what I actually managed to look at`);
+  L.push('');
+  L.push(`| run | endpoints reached |`);
+  L.push(`|---|---:|`);
+  L.push(`| ${path.basename(fOld)} | ${cov(A)} |`);
+  L.push(`| ${path.basename(fNew)} | ${cov(B)} |`);
+  L.push('');
+  L.push(`A row I did not reach is not a row that changed. Unreached rows are excluded from every`);
+  L.push(`count above rather than being read as an arrival or a removal, and the totals here are`);
+  L.push(`what that exclusion is measured against. If this number falls, trust the delta less —`);
+  L.push(`that is what it is published for.`);
   L.push('');
 
   if (out.newlyBroken.length) {
