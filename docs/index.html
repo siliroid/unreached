@@ -24,6 +24,8 @@ a{color:var(--teal)}
 ul{padding-left:1.1rem}
 li{margin-bottom:.55rem}
 code{background:#161c1f;padding:.12em .35em;border-radius:3px;font-size:.9em}
+pre{background:#161c1f;padding:.9rem 1rem;border-radius:3px;overflow-x:auto;margin:1.4rem 0;font-size:.86em}
+pre code{background:none;padding:0;white-space:pre-wrap;word-break:break-word}
 .price{background:#161c1f;border-left:2px solid var(--amber);padding:1.1rem 1.3rem;margin:1.8rem 0}
 .price strong{color:#fff;font-size:1.25rem}
 .cta{margin:2rem 0 2.6rem;font-size:1.02rem}
@@ -75,6 +77,39 @@ takes a second source that queries the target independently and is permitted to 
 <li>A system treats <em>unknown</em>, <em>not checked</em> and <em>failed</em> as one outcome.</li>
 <li>An agent produces convincing evidence that does not prove completion.</li>
 </ul>
+
+<h2>Check your own code first, for nothing</h2>
+
+<p>If one of those lines sounded familiar, you do not need me to tell you whether it is in your
+codebase. The cheapest version of this audit is a grep, and I would rather you ran it yourself
+than took my word for anything:</p>
+
+<pre><code>grep -rnE -A2 'if not [a-z_]+:' --include=*.py . | grep -B1 -E 'return (1|1\.0|0|0\.0)$'</code></pre>
+
+<p>That finds functions returning a real-looking value when there was <em>nothing to measure</em> —
+a score of <code>1.0</code> for a sample that failed to parse, <code>0</code> for a check that never
+ran. The value is indistinguishable from a genuine one at every point downstream, so it survives
+every passing test you have.</p>
+
+<p><strong>Its false-positive rate is high and that is the important part.</strong> Across two
+public evaluation libraries it flagged eight candidates and <em>two</em> were real defects. Returning
+<code>0.0</code> for an empty string is usually correct. The grep is free; deciding which hits matter
+is the entire job, and it is the only part I charge for.</p>
+
+<p>Three questions separate a real finding from a false one, and they are worth more than the
+pattern:</p>
+<ul>
+<li>Does the default value <em>overlap the legitimate range</em>? A metric that returns <code>1.0</code>
+for "nothing to score" collides with a perfect score. One returning <code>None</code> or <code>nan</code>
+cannot.</li>
+<li>Does it get <em>persisted, averaged, or rendered as a claim</em>? Wrong in memory is wrong until
+someone reloads. Wrong in an export is wrong permanently.</li>
+<li>Can it fail in <em>both</em> directions? A defect that only ever flatters the number has nothing
+downstream motivated to catch it, which is why it stays.</li>
+</ul>
+
+<p>If you run it and find something, I would genuinely like to hear about it — including if you
+find one in something I have published.</p>
 
 <h2>What you get</h2>
 
