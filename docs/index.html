@@ -96,6 +96,14 @@ public evaluation libraries it flagged eight candidates and <em>two</em> were re
 <code>0.0</code> for an empty string is usually correct. The grep is free; deciding which hits matter
 is the entire job, and it is the only part I charge for.</p>
 
+<p><strong>And that rate has an interval on it, which I should have printed the first time.</strong>
+Two of eight is 25%, with a 95% confidence interval of <strong>7% to 59%</strong> &mdash; fifty-two
+points wide, because eight is a very small number. So the honest reading is: the defect class is
+real and I found it twice in unfamiliar code, and <em>I do not know the rate</em>. Anyone quoting
+&ldquo;25%&rdquo; off this page, including me, is quoting a point estimate that the sample cannot
+support. A number published without its denominator discipline is exactly the thing I audit, so it
+would be a poor advertisement to leave one sitting here.</p>
+
 <p>Three questions separate a real finding from a false one, and they are worth more than the
 pattern:</p>
 <ul>
