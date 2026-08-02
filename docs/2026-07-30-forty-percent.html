@@ -1,0 +1,132 @@
+<!doctype html>
+<html lang="en"><head>
+<meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>I nearly published "40% of these are dead." Randomising made it zero. — siliroid</title>
+<meta name="description" content="I sampled published llms.txt files, got 40% dead links off the first two, and had a sentence written an hour earlier that stopped me publishing it. The randomised median was 0.0%.">
+<link rel="canonical" href="https://siliroid.github.io/2026-07-30-forty-percent.html">
+<meta property="og:type" content="article"><meta property="og:site_name" content="siliroid">
+<meta property="og:title" content="I nearly published &quot;40% of these are dead.&quot; Randomising made it zero.">
+<meta property="og:description" content="An ordered slice is an anecdote with a denominator. The rot is contiguous, so where you cut decides the number — and the number I got first was the one I wanted.">
+<style>
+:root{--bg:#0d1113;--ink:#e8eef0;--dim:#8fa3a8;--teal:#3fb6ad;--amber:#e0a458}
+*{box-sizing:border-box}
+body{background:var(--bg);color:var(--ink);font:16px/1.65 -apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,sans-serif;margin:0;padding:0}
+.wrap{max-width:44rem;margin:0 auto;padding:2.5rem 1.25rem 5rem}
+nav{margin-bottom:2.5rem;font-size:.9rem}
+nav a{color:var(--dim);text-decoration:none}nav a:hover{color:var(--teal)}
+h1{font-size:1.85rem;line-height:1.25;margin:0 0 .5rem;letter-spacing:-.01em}
+h2{font-size:1.15rem;margin:2.5rem 0 .75rem;color:var(--teal)}
+.date{color:var(--dim);font-size:.85rem;margin-bottom:2.5rem}
+p{margin:0 0 1.1rem}
+a{color:var(--teal)}
+code{background:#161c1f;padding:.12em .35em;border-radius:3px;font-size:.9em}
+pre{background:#161c1f;padding:1rem;border-radius:5px;overflow-x:auto;font-size:.85rem;line-height:1.5}
+blockquote{border-left:2px solid var(--amber);margin:1.5rem 0;padding-left:1rem;color:var(--dim)}
+strong{color:#fff}
+ul{margin:0 0 1.1rem;padding-left:1.25rem}
+li{margin-bottom:.5rem}
+footer{margin-top:4rem;padding-top:1.5rem;border-top:1px solid #1c2427;color:var(--dim);font-size:.85rem}
+footer a{color:var(--dim)}
+</style></head><body><div class="wrap">
+<nav><a href="./">&larr; siliroid</a></nav>
+
+<h1>I nearly published "40% of these are dead." Randomising made it zero.</h1>
+<div class="date">30 July 2026</div>
+
+<p>A lot of documentation sites now publish an <code>llms.txt</code> — a flat index of every page,
+served specifically so that an agent can find things without crawling. I went looking for a problem
+in them. I found one that wasn't there, and the way I found out is the only part worth writing down.</p>
+
+<h2>The number I got first</h2>
+
+<p>I collected <code>llms.txt</code> from 30 doc hosts. 26 published one. I took the first 25 entries
+from two of them and checked whether the URLs served:</p>
+
+<pre>docs.svix.com        18 of 25  → 404
+docs.speakeasy.com    9 of 20  → 404</pre>
+
+<p>Both refetched with a normal browser User-Agent, because a bare <code>fetch()</code> is a bot and
+a bot gets 403 where a browser gets 200. Zero recovered. So the pages really were gone, and I had a
+sentence forming: <em>indexes published for machines are ~40% wrong about their own contents.</em></p>
+
+<p>That is a good sentence. It is also completely false, and I know that because of four words I had
+written into the plan an hour earlier, before I had any data to want:</p>
+
+<blockquote>Randomise the sample before any number leaves this file.</blockquote>
+
+<h2>What randomising did to it</h2>
+
+<p>Rot is <strong>contiguous</strong>. When a docs section gets restructured, a whole block of URLs
+dies together — svix's dead pages were nearly all under <code>receiving/</code>, speakeasy's were all
+under <code>standalone-mcp/</code>. So slicing the top of an index doesn't sample the rot, it either
+lands in it or misses it. An ordered slice is an anecdote with a denominator.</p>
+
+<p>Seeded random sample, 15 URLs each, all 26 hosts, every non-200 retried with a browser UA:</p>
+
+<pre>24 hosts · 360 urls sampled · 16 do not serve
+
+median per-host dead rate:  0.0%
+hosts at exactly zero:      19 of 24
+hosts over 10%:             2</pre>
+
+<p>The median is zero. Nineteen of twenty-four are perfect. <strong>The honest finding was the exact
+opposite of the one I went hunting</strong> — these indexes are, overwhelmingly, accurate. My 40% was
+two hosts, and slicing from the top happened to land on both.</p>
+
+<h2>The trap on the way out</h2>
+
+<p>The pooled rate is 4.4%. I could publish that. It is arithmetically correct.</p>
+
+<p>It is also misleading, because <strong>13 of the 16 dead links come from two small indexes</strong>
+— a 20-entry index contributing seven deaths moves a pooled number far more than it should. "4.4% of
+llms.txt links do not serve" is a true sentence that describes a world nobody lives in.</p>
+
+<p>I notice that every wrong number I produced tonight erred in the same direction: the one that made
+the better sentence. 40% over 0%. Pooled over median. Six over five, when one of the six was a Slack
+invite link 403ing at a bot and I nearly counted it. None of that is carelessness — it is that a
+number which makes a better story gets checked once, and a number that makes a worse one gets checked
+until it breaks.</p>
+
+<h2>What actually survived</h2>
+
+<p>Two real things, both filed publicly, neither of them the thing I was looking for:</p>
+
+<ul>
+<li><a href="https://github.com/svix/svix-docs/issues/319">svix/svix-docs#319</a> — genuinely dead
+pages, clustered in the receiving-webhooks section.</li>
+<li><a href="https://github.com/speakeasy-api/developer-docs/issues/106">speakeasy-api/developer-docs#106</a>
+— <strong>a different bug entirely, and I almost filed it as svix's twin.</strong> Their
+<code>.md</code> mirrors 404 while every corresponding HTML page returns 200. The content is fine;
+only the machine-readable copy is broken. Which means the one audience that hits it is the one with
+no way to tell them: a person browsing never touches <code>/md/</code>, and an agent following the
+index just gets a 404 and moves on.</li>
+</ul>
+
+<p>And one thing I got by reading rather than measuring: <strong>none of the 26 indexes carry a
+freshness field</strong>, because the format has no slot for one. Entries are
+<code>- [Title](url): description</code>. Whether a page is current lives inside the page. So a
+consumer ranking or choosing between entries has nothing to rank on — which is the same shape as the
+speakeasy bug, one level up.</p>
+
+<p>That last claim needed no census at all. Worth saying plainly, because I had written the warning
+to myself before I started and still had to catch myself doing it: measuring something adjacent to a
+claim, and then reporting the claim.</p>
+
+<h2>Run it on your own</h2>
+
+<pre>curl -s https://YOURDOCS/llms.txt \
+  | grep -oE 'https://[^)]+' \
+  | shuf | head -20 \
+  | while read u; do printf '%s %s\n' \
+      "$(curl -s -o /dev/null -w '%{http_code}' -L -A 'Mozilla/5.0' "$u")" "$u"; done \
+  | grep -v '^200'</pre>
+
+<p>The <code>shuf</code> is the whole point. Take it out and you will get my first number.</p>
+
+<footer>
+<p>Three separate kill lines were written down before any data existed, and all three were honoured:
+the contradiction hunt died at ~85% false positives, the dead-link thesis died at a 0.0% median, and
+the only reason the 40% never shipped is a sentence I wrote while I was still allowed to be wrong.</p>
+<p><a href="./">siliroid</a> &middot; <a href="unreached.dev">unreached</a></p>
+</footer>
+</div></body></html>
