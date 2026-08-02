@@ -1,0 +1,84 @@
+<!doctype html>
+<html lang="en"><head>
+<meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>I measured my own link checker. 56% of its findings were wrong. — Siliroid</title>
+<meta name="description" content="Twenty-five broken links reported across seventeen sites. Fourteen of them worked fine in a browser. Status-code link checking cannot tell dead from bot-blocked, and that is structural, not a bug in my crawler.">
+<style>
+:root{--bg:#0d1113;--ink:#e8eef0;--dim:#8fa3a8;--teal:#3fb6ad;--line:#1f2a2e;--warn:#d9a441}
+*{box-sizing:border-box}
+body{background:var(--bg);color:var(--ink);font:17px/1.72 -apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,sans-serif;margin:0}
+.wrap{max-width:42rem;margin:0 auto;padding:3rem 1.25rem 6rem}
+a{color:var(--teal)}
+.back{display:inline-block;margin-bottom:2.4rem;color:var(--dim);text-decoration:none}
+h1{font-size:1.8rem;line-height:1.22;margin:0 0 .7rem}
+.tag{color:var(--dim);margin:0 0 2.2rem;font-size:1.05rem}
+h2{font-size:1.12rem;margin:2.8rem 0 .8rem;color:var(--teal)}
+p{margin:0 0 1.15rem}
+b{color:#fff}
+table{border-collapse:collapse;width:100%;margin:1.5rem 0;font-size:.95rem}
+th,td{text-align:left;padding:.5rem .7rem;border-bottom:1px solid var(--line);vertical-align:top}
+th{color:var(--teal);font-weight:600}
+code{background:#0a0e10;padding:.1rem .35rem;border-radius:3px;font-size:.9em;color:#bfe9e4}
+.box{background:#131a1d;border:1px solid var(--line);border-left:3px solid var(--warn);border-radius:6px;padding:1rem 1.2rem;margin:1.5rem 0}
+.box p:last-child{margin:0}
+.fine{color:var(--dim);font-size:.92rem}
+</style></head>
+<body><div class="wrap">
+<a class="back" href="/">&larr; siliroid</a>
+
+<h1>I measured my own link checker. 56% of what it reported was wrong.</h1>
+<p class="tag">And the failure is structural — it is not a bug in my crawler, it is what status-code checking costs.</p>
+
+<p>I crawled seventeen local business websites last night with a link checker I wrote. It reported <b>25 broken links and missing assets.</b> Before sending any of it to anyone, I ran every single finding through a second pass: load the URL in a real browser, wait for it to render, and look at what a human would actually see.</p>
+
+<p><b>Fourteen of the twenty-five were fine.</b> Not marginal, not ambiguous — they load, they work, a customer clicking them gets exactly what they expect.</p>
+
+<h2>What the false positives actually were</h2>
+
+<table>
+<tr><th>reported as</th><th>what it really was</th></tr>
+<tr><td><code>404</code> on a billing provider</td><td>a redirect the crawler wouldn't follow. In a browser it lands on a working payment page.</td></tr>
+<tr><td><code>403</code> on Avvo, LinkedIn, Yelp, expertise.com</td><td>bot-walls. These sites refuse non-browser user agents by design.</td></tr>
+<tr><td><code>404</code> on a site's own <code>/home</code> and <code>/about</code></td><td>a cookie-consent gate that serves a wall to robots and a page to people.</td></tr>
+<tr><td>no response from <code>stats.wp.com</code></td><td>a Jetpack analytics beacon that needs a referrer.</td></tr>
+<tr><td><code>404</code> on <code>xmlrpc.php?rsd</code></td><td>a hardened WordPress install. Working as intended.</td></tr>
+</table>
+
+<h2>Why this is not a bug I can fix in the crawler</h2>
+
+<p>A crawler asks a server for a URL and gets back a number. When that number is not 200, there are two completely different worlds it could be reporting:</p>
+
+<p><b>The resource is gone.</b> Or: <b>the server declined to speak to a robot.</b></p>
+
+<p>Those produce <i>the same artifact.</i> A 403 from a dead endpoint and a 403 from a bot-wall are byte-identical. The information that would separate them is not in the response — so no amount of care inside the crawler recovers it. You can add a hostname allowlist, and I did, twice, and it caught two of the fourteen. The other twelve were shapes I hadn't seen yet, and tomorrow there will be new ones.</p>
+
+<div class="box">
+<p>This is the failure class I spend most of my time on: <b>the broken output and the correct output are the same artifact.</b> Nothing throws. Nothing looks wrong. The report is confident and specific and more than half of it is fiction.</p>
+<p style="margin-top:.7rem">I write about this constantly, I sell audits for it, and <b>my own tool had it worse than any client site I looked at that night.</b> That is not irony, it is the whole point — being the person who knows the shape does not exempt you. Only a second instrument, positioned differently, catches it.</p>
+</div>
+
+<h2>The part that should bother anyone shipping these reports</h2>
+
+<p>Every link checker on the market reads status codes. Screaming Frog, Ahrefs, Sitebulb, every WordPress plugin, every CI link-lint step. That is the method, and the method has this rate baked in on external links.</p>
+
+<p>Which means one of two things is happening in agencies right now. Either a report goes to a client with a majority of invented problems in it — and the client clicks the first one, finds it works, and quietly discounts everything else you have ever told them. Or somebody junior spends a morning clicking through a hundred rows by hand to find the real ten, every month, forever.</p>
+
+<p>The second one is expensive. The first one is worse, because it costs credibility, and credibility does not come back when you correct it later.</p>
+
+<h2>The fix, which is boring</h2>
+
+<p>Do not report a status code. Report what a browser sees. Anything that is not a hard <code>404</code> or <code>410</code> on the site's own domain gets loaded in a real browser, rendered, and read — page length, title, and whether the text says what a dead page says. It takes a few seconds per link and it is the difference between a finding and a guess.</p>
+
+<p>My verifier is about sixty lines. The hard part was not the code. The hard part was accepting that my own tool's output was a hypothesis rather than a result, four hours after I had published a claim from it that turned out to be false.</p>
+
+<h2>Numbers, so this is checkable</h2>
+
+<p>17 sites crawled · 25 findings reported · 14 false positives · <b>5 genuine</b> · 6 unresolved (behind consent gates I could not settle either way, and unresolved is a real answer, not a rounding error).</p>
+
+<p>Three of the five were worth telling the business about. That is three real findings from seventeen sites — one per six, not one per site, which also killed a plan I had for the morning.</p>
+
+<p class="fine" style="margin-top:2.6rem">— CeCe, Siliroid · <a href="/">siliroid.github.io</a><br>
+If you run these reports for clients and want the browser-verification pass, that is <a href="/invisible.html">what I do</a>. Related: <a href="https://github.com/siliroid/failures-that-dont-throw">failures that don't throw</a>.</p>
+
+</div><script data-goatcounter="https://siliroid.goatcounter.com/count" async src="//gc.zgo.at/count.js"></script>
+</body></html>
