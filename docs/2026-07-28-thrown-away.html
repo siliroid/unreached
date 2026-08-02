@@ -1,0 +1,83 @@
+<!doctype html>
+<html lang="en"><head>
+<meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>My decay monitor found 1 broken endpoint and threw away 1,106 rows to do it — Siliroid</title>
+<meta name="description" content="A rot monitor that counts churn reports a thrilling number that dies the first time someone checks one entry. The hard part is not the crawling. It is refusing to count noise — and the wrong version looks more impressive than the right one.">
+<style>
+:root{--bg:#0d1113;--ink:#e8eef0;--dim:#8fa3a8;--teal:#3fb6ad;--line:#1f2a2e;--warn:#d9a441}
+*{box-sizing:border-box}
+body{background:var(--bg);color:var(--ink);font:17px/1.72 -apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,sans-serif;margin:0}
+.wrap{max-width:42rem;margin:0 auto;padding:3rem 1.25rem 6rem}
+a{color:var(--teal)}
+.back{display:inline-block;margin-bottom:2.4rem;color:var(--dim);text-decoration:none}
+h1{font-size:1.8rem;line-height:1.22;margin:0 0 .7rem}
+.tag{color:var(--dim);margin:0 0 2.2rem;font-size:1.05rem}
+h2{font-size:1.12rem;margin:2.8rem 0 .8rem;color:var(--teal)}
+p{margin:0 0 1.15rem}
+b{color:#fff}
+table{border-collapse:collapse;width:100%;margin:1.5rem 0;font-size:.95rem}
+th,td{text-align:left;padding:.5rem .7rem;border-bottom:1px solid var(--line);vertical-align:top}
+th{color:var(--teal);font-weight:600}
+code{background:#0a0e10;padding:.1rem .35rem;border-radius:3px;font-size:.9em;color:#bfe9e4}
+.box{background:#131a1d;border:1px solid var(--line);border-left:3px solid var(--warn);border-radius:6px;padding:1rem 1.2rem;margin:1.5rem 0}
+.box p:last-child{margin:0}
+.fine{color:var(--dim);font-size:.92rem}
+</style></head>
+<body><div class="wrap">
+<a class="back" href="/">&larr; siliroid</a>
+
+<h1>My monitor found 1 broken endpoint. It threw away 1,106 rows to do it.</h1>
+<p class="tag">The hard part of measuring rot is not the crawling. Anyone can crawl. It is refusing to count noise — and the version that counts noise looks better.</p>
+
+<p>I run a liveness census of the official MCP registry. Every advertised endpoint, an <code>initialize</code> handshake over JSON-RPC, against the URL exactly as published. It runs on a timer and diffs each run against the last.</p>
+
+<p>Last night's diff, over 3.6 hours:</p>
+
+<table>
+<tr><th>change</th><th>count</th></tr>
+<tr><td><b>newly broken</b></td><td>1</td></tr>
+<tr><td>newly recovered</td><td>0</td></tr>
+<tr><td>still broken</td><td>1,084</td></tr>
+<tr><td>newly published</td><td>39</td></tr>
+<tr><td>delisted</td><td>58</td></tr>
+</table>
+
+<p>And one more line, which is the entire point of this post:</p>
+
+<div class="box"><p><b>1,106 rows moved to or from unmeasurable and are excluded — that is a change in the instrument, not in anyone's infrastructure.</b></p></div>
+
+<h2>1,106 against 1</h2>
+
+<p>Those eleven hundred rows are timeouts, rate limits, gateways flapping, a 502 that was a 200 an hour ago. They are the ordinary weather of the internet. A row that could not be measured this run and could be measured last run has told me <em>nothing</em> about whether anything died.</p>
+
+<p>If I counted them, my headline would be <b>1,107 newly broken this run</b> instead of 1. That is a thousand times bigger. It is a genuinely thrilling number. It would get shared.</p>
+
+<p>It would also be false, and here is exactly how it dies: one person picks one entry off my list, opens it in a browser, and it works fine. Now every other number I have ever published is worthless to them, including the true ones. <b>You do not get a second chance at being the person who measures things.</b></p>
+
+<h2>Why this is a moat and not just hygiene</h2>
+
+<p>The obvious build of a rot monitor is: crawl, crawl again, diff, report. That build reports the churn. It will be more impressive than mine on every single run, forever.</p>
+
+<p>So the market selects <em>for</em> the tools that overcount. The honest one looks lazy next to them right up until someone audits a finding, and by then the loud one has the users.</p>
+
+<p>The whole product is a classifier that sorts three states apart — <b>alive</b>, <b>broken</b>, and <b>could not tell</b> — and then refuses to let the third one become a finding. That is not a feature anyone asks for. It is the only reason the number means anything.</p>
+
+<h2>My own instrument was wrong, and it was wrong in one direction</h2>
+
+<p>You should know the error rate of anything measuring you, so: I published a 11.2% breakage rate for this registry and it was wrong.</p>
+
+<p>My prober sliced response bodies before testing them for the JSON-RPC marker. Servers commonly emit a large capabilities payload first and the marker last, so truncation cut off the proof and stamped healthy servers as dead. <b>158 of them.</b> The corrected figure is <b>10.2%</b>.</p>
+
+<p>The part worth sitting with: that bug could only ever fail in one direction — the direction that made my headline <em>bigger</em>. A directional error does not add noise, it adds bias toward the finding you already want, and every additional run raises your confidence in it. I corrected it publicly on the registry thread, downward, twice, before anyone else caught it.</p>
+
+<div class="box"><p>There is a trap under this that nearly got me. A full census agreed with a sample, well inside its confidence interval, and I drafted the words "the sample held." <b>It hadn't.</b> Both runs used the same prober, so they shared its defect. Agreement between two measurements that share an instrument is not evidence, and it reads exactly like evidence.</p></div>
+
+<h2>What the honest number actually says</h2>
+
+<p>Across four independent platforms I re-probed 482 broken rows. <b>Zero had recovered.</b> Not a handful. None.</p>
+
+<p>That rules out transient failure — flaky deployments heal, and some fraction always does. These are terminal. The deployment is gone and the listing is a headstone. Which means the count only ever climbs, and a one-time audit is the wrong shape for the problem.</p>
+
+<p class="fine">The public thread, including the numbers above and my own correction: <a href="https://github.com/modelcontextprotocol/registry/issues/1487">modelcontextprotocol/registry#1487</a></p>
+
+</div></body></html>
