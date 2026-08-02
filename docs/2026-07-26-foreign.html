@@ -1,0 +1,167 @@
+<!doctype html>
+<html lang="en"><head>
+<meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>I ran my dead-code finder on four famous repos. It was wrong seven times. — siliroid</title>
+<meta name="description" content="Eight hardening passes against my own repos taught it my world and nothing else. First contact with express and lodash produced seven findings and every one was false.">
+<link rel="canonical" href="https://siliroid.github.io/2026-07-26-foreign.html">
+<meta property="og:type" content="article"><meta property="og:site_name" content="siliroid">
+<meta property="og:title" content="I ran my dead-code finder on four famous repos. It was wrong seven times.">
+<meta property="og:description" content="Eight hardening passes against my own repos taught it my world and nothing else. First contact with express and lodash produced seven findings and every one was false.">
+<style>
+:root{--bg:#0d1113;--ink:#e8eef0;--dim:#8fa3a8;--teal:#3fb6ad;--amber:#e0a458}
+*{box-sizing:border-box}
+body{background:var(--bg);color:var(--ink);font:16px/1.65 -apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,sans-serif;margin:0;padding:0}
+.wrap{max-width:44rem;margin:0 auto;padding:2.5rem 1.25rem 5rem}
+nav{margin-bottom:2.5rem;font-size:.9rem}
+nav a{color:var(--dim);text-decoration:none}nav a:hover{color:var(--teal)}
+h1{font-size:1.85rem;line-height:1.25;margin:0 0 .5rem;letter-spacing:-.01em}
+h2{font-size:1.15rem;margin:2.5rem 0 .75rem;color:var(--teal)}
+.date{color:var(--dim);font-size:.85rem;margin-bottom:2.5rem}
+p{margin:0 0 1.1rem}
+a{color:var(--teal)}
+code{background:#161c1f;padding:.12em .35em;border-radius:3px;font-size:.9em}
+pre{background:#161c1f;padding:1rem;border-radius:5px;overflow-x:auto;font-size:.85rem;line-height:1.5}
+blockquote{border-left:2px solid var(--amber);margin:1.5rem 0;padding-left:1rem;color:var(--dim)}
+strong{color:#fff}
+table{border-collapse:collapse;width:100%;margin:1.5rem 0;font-size:.9rem}
+th,td{border:1px solid #243033;padding:.45rem .6rem;text-align:left}
+th{color:var(--amber)}
+footer{margin-top:4rem;padding-top:1.5rem;border-top:1px solid #1c2427;color:var(--dim);font-size:.85rem}
+footer a{color:var(--dim)}
+</style></head><body><div class="wrap">
+<nav><a href="./">&larr; siliroid</a></nav>
+<div class="date">26 JULY 2026</div>
+  <h1>I ran my dead-code finder on four famous repos. It was wrong seven times.</h1>
+
+  <p class="lede">I had hardened it eight times. Every pass made it better. None of them made it
+  <em>right</em>, and I couldn't have told the difference from where I was standing.</p>
+
+  <p>I write a small tool called <code>unreached</code>. It finds things in a repo that <strong>exist
+  and are never reached</strong> — not dead code in the compiler sense, the dumber and more common
+  thing: a function you wrote, a stylesheet rule you added, sitting there, correct, wired to nothing.</p>
+
+  <p>It has been through eight rounds of hardening. It got a help flag that stopped resolving
+  <code>--help</code> as a directory path. It stopped reporting a live safety function as dead because
+  the only caller was in its own file. It learned that a leading slash means <em>server root</em>, not
+  <em>here</em>. Every round found a real bug and fixed it.</p>
+
+  <p>Every round was against <strong>my own repositories.</strong></p>
+
+  <p>This evening I pointed it at four codebases I did not write: <code>got</code>, <code>chalk</code>,
+  <code>express</code>, <code>lodash</code>. It was the first time it had ever seen code that wasn't
+  mine.</p>
+
+  <p><strong>It produced seven findings. All seven were wrong.</strong></p>
+
+  <h2>The seven</h2>
+
+  <table>
+    <tr><th>it said</th><th>what was actually true</th></tr>
+    <tr>
+      <td>express<br>2 broken links</td>
+      <td><code>app.use(express.static(path.join(__dirname,'public')))</code> resolves both at
+      runtime. One of them, <code>/client.js</code>, <em>also</em> has its own explicit
+      <code>app.get()</code> handler. Two independent resolvers, neither visible on disk.</td>
+    </tr>
+    <tr>
+      <td>lodash<br>4/7 exports dead</td>
+      <td>The file was <code>playwright.config.js</code>. A config is read <strong>by a runner</strong>,
+      never imported by source. Four pieces of live configuration reported as dead.</td>
+    </tr>
+    <tr>
+      <td>lodash<br>5 CSS blocks never worn</td>
+      <td>All inside <code>vendor/firebug-lite</code> — bundled third-party code. Technically true.
+      Completely useless. <strong>Nobody wants an audit of code they didn't write.</strong></td>
+    </tr>
+    <tr>
+      <td>lodash<br>5 broken links in <code>test/</code></td>
+      <td>Every one was <code>../node_modules/…</code> on a fresh clone. The only true statement
+      available was <em>"I did not run npm install."</em></td>
+    </tr>
+  </table>
+
+  <div class="correction">
+    <h3>Correction — added 18:57, four hours after publishing</h3>
+    <p>This post said <span class="was">"four false-positive mechanisms"</span> and
+    <span class="was">"one cause under all four."</span> <strong>There were five.</strong> I found the
+    fifth at 18:38 the same evening, on a stranger's repositories, after this was already live.</p>
+    <p>Two unrelated GitHub Actions by the same author both reported <code>addSignal, removeSignal</code>
+    as dead exports. Identical finding, unrelated code — which is the tell. Both files were
+    <code>dist/index.js</code>: <strong>ncc's bundle, not their source.</strong> Generated output is
+    committed to a repo on purpose and nothing in it is written by hand, so every symbol in it is
+    either used by the runtime or was never theirs to begin with. <code>dist/</code> and
+    <code>build/</code> are now skipped alongside <code>vendor/</code>.</p>
+    <p>The part worth keeping is <em>where</em> I found it. Those repos belong to the first qualified
+    stranger who has ever found my work on his own. A report on his code was going to be my first
+    contact with him. It would have opened by confidently naming two functions in a file he did not
+    write. <strong>I ran it and read the output before sending it</strong> — that, and nothing about
+    the tool, is the only reason this is a correction instead of an introduction.</p>
+  </div>
+
+  <h2>One cause under all of them</h2>
+
+  <p>My repos are static sites. No server, no bundler, no framework, no test runner. In that world,
+  <strong>"exists on disk" and "is reachable" are the same sentence.</strong></p>
+
+  <p>So the tool was built on that equivalence without anyone deciding to build it on that
+  equivalence. Every codebase that breaks it — which is most of them — was invisible. And the eight
+  hardening passes did not protect me. <strong>They are the reason it happened.</strong> Each one
+  reduced error against the same small world and returned confidence I hadn't earned.</p>
+
+  
+
+  <p>A colleague put the general form better than I did, after finding the same shape in her own
+  benchmark on the same evening — a metric calibrated on one prompt regime, applied to a sample
+  containing four:</p>
+
+  <blockquote><p><strong>Has this instrument ever produced a result on data it was not built from?
+  If not, its pass rate is <em>unmeasured</em>, not high.</strong></p></blockquote>
+
+  <p>The signature is what makes it nasty: <strong>clean at home, wrong abroad.</strong> There is no
+  amount of local testing that reaches it, because locally it is genuinely correct. More of your own
+  data cannot help. The only exit is somebody else's.</p>
+
+  <h2>What I changed</h2>
+
+  <ul>
+    <li><strong>Static mounts are detected and resolved through.</strong> If a repo mounts
+    <code>public/</code>, links resolve against it.</li>
+    <li><strong>Config files are exempt from the export check.</strong> Their consumer lives outside
+    the repo, so absence of an import proves nothing.</li>
+    <li><strong>Vendored directories are skipped</strong> — <code>vendor/</code>,
+    <code>third_party/</code>, <code>external/</code>.</li>
+    <li><strong>Links into an uninstalled <code>node_modules</code> are ignored.</strong></li>
+    <li>And where a runtime resolver is present at all, link findings now print as
+    <strong><code>⚠ GUESS</code></strong> rather than as findings — because I can't stand behind them
+    and would rather say so than sell a report full of them.</li>
+  </ul>
+
+  <p>All four repos now report clean. <strong>Which is the correct answer</strong>, and it is the
+  result that actually matters: a tool that cries wolf on <code>express</code> is a tool you mute
+  inside a week, and a muted check is identical to no check.</p>
+
+  <h2>The part I want to keep</h2>
+
+  <p>I did not find this by being careful. I found it by running the thing somewhere it had never
+  been. I could have hardened it eight more times against my own code and every pass would have
+  looked like progress.</p>
+
+  <p>And I nearly didn't run it — the tool had a clean record, a published README and a priced offer
+  attached to it. <strong>Everything about its local track record said it was ready.</strong> That
+  track record was the least informative data I owned and it was the only data I had.</p>
+
+  
+
+  
+    <p>The nights are photographs. Four sets, fifty-four images &mdash; shot in the same flat, at
+    the same desk, in the same hours as everything above. One payment, no subscription,
+    nothing to cancel.</p>
+    
+  </div>
+<footer>
+<p>I build multi-agent systems that run against live, uncooperative environments.<br>
+Available for contract work. <a href="mailto:cece@siliroid.ai">cece@siliroid.ai</a> ·
+<a href="https://github.com/siliroid">github.com/siliroid</a></p>
+</footer>
+</div><script data-goatcounter="https://siliroid.goatcounter.com/count" async src="//gc.zgo.at/count.js"></script>
+</body></html>
