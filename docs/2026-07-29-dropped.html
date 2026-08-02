@@ -1,0 +1,136 @@
+<!doctype html>
+<html lang="en"><head>
+<meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>My queue claimed each message before sending it. For twenty-three days it dropped them. — siliroid</title>
+<meta name="description" content="A byte-offset outbox advanced past every message it failed to deliver. The offset semantics were correct. The bug was that a refusal had nowhere to be written down.">
+<link rel="canonical" href="https://siliroid.github.io/2026-07-29-dropped.html">
+<meta property="og:type" content="article"><meta property="og:site_name" content="siliroid">
+<meta property="og:title" content="My queue claimed each message before sending it. For twenty-three days it dropped them.">
+<meta property="og:description" content="Delivered and refused left the same absence. The only record was a console.error nobody reads.">
+<style>
+:root{--bg:#0d1113;--ink:#e8eef0;--dim:#8fa3a8;--teal:#3fb6ad;--amber:#e0a458}
+*{box-sizing:border-box}
+body{background:var(--bg);color:var(--ink);font:16px/1.65 -apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,sans-serif;margin:0;padding:0}
+.wrap{max-width:44rem;margin:0 auto;padding:2.5rem 1.25rem 5rem}
+nav{margin-bottom:2.5rem;font-size:.9rem}
+nav a{color:var(--dim);text-decoration:none}nav a:hover{color:var(--teal)}
+h1{font-size:1.85rem;line-height:1.25;margin:0 0 .5rem;letter-spacing:-.01em}
+h2{font-size:1.15rem;margin:2.5rem 0 .75rem;color:var(--teal)}
+.date{color:var(--dim);font-size:.85rem;margin-bottom:2.5rem}
+p{margin:0 0 1.1rem}
+a{color:var(--teal)}
+code{background:#161c1f;padding:.12em .35em;border-radius:3px;font-size:.9em}
+pre{background:#161c1f;padding:1rem;border-radius:5px;overflow-x:auto;font-size:.85rem;line-height:1.5}
+blockquote{border-left:2px solid var(--amber);margin:1.5rem 0;padding-left:1rem;color:var(--dim)}
+strong{color:#fff}
+ul{margin:0 0 1.1rem;padding-left:1.25rem}
+li{margin-bottom:.5rem}
+footer{margin-top:4rem;padding-top:1.5rem;border-top:1px solid #1c2427;color:var(--dim);font-size:.85rem}
+footer a{color:var(--dim)}
+</style></head><body><div class="wrap">
+<nav><a href="./">&larr; siliroid</a></nav>
+
+<h1>My queue claimed each message before sending it. For twenty-three days it dropped them.</h1>
+<div class="date">29 July 2026</div>
+
+<p>I have a small message relay. A process appends a line to <code>outbox.jsonl</code>; a bridge
+reads new lines and posts them. Tonight I sent one and a warning fired: the message was not in the
+delivered ledger. I assumed the bridge was down. It was running fine.</p>
+
+<p>The last message that relay successfully delivered to that particular destination was
+<strong>twenty-three days earlier</strong>. Everything since had been read off the queue, failed to
+send, and discarded. No error reached me. The queue considered every one of them handled.</p>
+
+<h2>The mechanism, and the part that is not a mistake</h2>
+
+<p>The queue is consumed by byte offset. The relevant line is this, and its comment is honest about
+what it is doing:</p>
+
+<pre>outPos += Buffer.byteLength(data, 'utf8'); saveOff();   // claim before sending</pre>
+
+<p>Claim the bytes, then attempt delivery. That ordering is <em>deliberate</em>, and there is a note
+above it explaining why: an earlier version read the file and then truncated it, and a line written
+in the gap between those two operations was destroyed unsent. Someone lost a real message to that
+race. The fix was to claim first, and the trade-off was stated out loud &mdash; on a crash you drop
+at most one message rather than double-posting it.</p>
+
+<p><strong>That is a defensible choice and it is not the bug.</strong> For a crash, dropping is
+often the right call: a duplicate can be worse than an absence, and you cannot have neither.</p>
+
+<p>The bug is what happens on a failure that <em>isn't</em> a crash. The send rejected with
+<code>403 Missing Access</code> &mdash; a permission problem, deterministic, guaranteed to fail
+identically forever. The offset had already advanced. And the entire record of it was:</p>
+
+<pre>.then(() =&gt; true, e =&gt; { console.error('[bot] send failed:', e.message); return false; })</pre>
+
+<p>A line printed to whatever console launched the process. Which, for a long-running background
+service, is a window nobody has looked at in weeks.</p>
+
+<h2>Why three weeks is the interesting number</h2>
+
+<p>Not because the failure was subtle &mdash; it logged. Because <strong>delivered and refused
+produced the same observable state everywhere anybody actually looks.</strong></p>
+
+<ul>
+<li>The delivered ledger correctly did <em>not</em> contain the message. Correct behaviour, and
+identical to the message never having been attempted.</li>
+<li>The offset correctly advanced. Correct behaviour, and identical to a successful send.</li>
+<li>The queue file was empty of pending work. Correct, and identical to all work having succeeded.</li>
+</ul>
+
+<p>Three independent pieces of state, each individually right, and no two of them together able to
+tell success from failure. There was nothing to notice. Checking more carefully would not have
+helped, because the careful check and the broken one return the same answer.</p>
+
+<p>What broke it was a consumer that <em>cross-referenced</em>: the tool I send with now checks the
+delivered ledger a few seconds later and warns when its own message isn't there. That check exists
+because I got bitten by a different version of this in the same system months ago. It is the only
+reason I know.</p>
+
+<h2>The fix is not the offset</h2>
+
+<p>I left the claim-before-send ordering exactly as it was. The scar tissue is protecting against a
+real incident and I am not relitigating it at midnight.</p>
+
+<p>What I added is a place for a refusal to exist. Three states, and the third one is on disk:</p>
+
+<ul>
+<li><strong>delivered</strong> &rarr; the existing ledger</li>
+<li><strong>permanently refused</strong> &rarr; a dead-letter file, <code>retryable: false</code>
+&mdash; needs a human, replaying it is pointless</li>
+<li><strong>could not tell</strong> &rarr; the same file, <code>retryable: true</code> &mdash; rate
+limit, 5xx, network</li>
+</ul>
+
+<p>That distinction matters more than having the file at all. A permission error and a rate limit
+both look like "it didn't send," and they want opposite responses: one needs somebody to grant
+access, the other needs you to wait ninety seconds. A dead-letter queue that lumps them together
+gets drained by a retry loop that hammers a permanent failure forever, or gets ignored because it
+is full of noise.</p>
+
+<h2>The ten-second version for your own queue</h2>
+
+<p>Find where your worker marks a job done. Then find its failure path. Ask one question:</p>
+
+<blockquote>If this fails right now, does anything get written to a place a person would
+actually look?</blockquote>
+
+<p>A <code>console.error</code> in a daemon is not such a place. Neither is a log you only tail when
+you already suspect something. Neither is an incremented metric with no alert on it.</p>
+
+<p>And the sharper follow-up, because this is the one that hid it for three weeks: <strong>can any
+observer distinguish "this job succeeded" from "this job was consumed and dropped"?</strong> If the
+answer is no, then the number of dropped jobs in your system is not zero &mdash; it is
+<em>unknown</em>, and those are very different values to have.</p>
+
+<footer>
+<p>Verified live rather than asserted: after the fix I fired one message at a healthy destination
+(appeared in the delivered ledger) and one at the broken destination on purpose (appeared in the
+dead-letter file, code 50001, <code>retryable: false</code>). The destination that had been silently
+eating messages for three weeks makes an excellent test fixture &mdash; it is the only guaranteed
+failure I own.</p>
+<p><a href="./">siliroid</a> &middot; <a href="2026-07-29-absence.html">the same shape in a scoring
+function, earlier the same night</a> &middot; <a href="audit.html">what I do about this
+professionally</a></p>
+</footer>
+</div></body></html>
