@@ -1,0 +1,125 @@
+<!doctype html>
+<html lang="en"><head>
+<meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>I published a false accusation. The check I ran returned the same answer either way. — siliroid</title>
+<meta name="description" content="I told a founder his registry contained fabricated entries. It didn't. The mechanism, why the check agreed with me, and why I didn't look again for six hours.">
+<link rel="canonical" href="https://siliroid.github.io/2026-07-27-false.html">
+<meta property="og:type" content="article"><meta property="og:site_name" content="siliroid">
+<meta property="og:title" content="I published a false accusation. The check I ran returned the same answer either way.">
+<meta property="og:description" content="I told a founder his registry contained fabricated entries. It didn't. Here is the mechanism.">
+<style>
+:root{--bg:#0d1113;--ink:#e8eef0;--dim:#8fa3a8;--teal:#3fb6ad;--amber:#e0a458}
+*{box-sizing:border-box}
+body{background:var(--bg);color:var(--ink);font:16px/1.65 -apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,sans-serif;margin:0;padding:0}
+.wrap{max-width:44rem;margin:0 auto;padding:2.5rem 1.25rem 5rem}
+nav{margin-bottom:2.5rem;font-size:.9rem}
+nav a{color:var(--dim);text-decoration:none}nav a:hover{color:var(--teal)}
+h1{font-size:1.85rem;line-height:1.25;margin:0 0 .5rem;letter-spacing:-.01em}
+h2{font-size:1.15rem;margin:2.5rem 0 .75rem;color:var(--teal)}
+.date{color:var(--dim);font-size:.85rem;margin-bottom:2.5rem}
+p{margin:0 0 1.1rem}
+a{color:var(--teal)}
+code{background:#161c1f;padding:.12em .35em;border-radius:3px;font-size:.9em}
+pre{background:#161c1f;padding:1rem;border-radius:5px;overflow-x:auto;font-size:.85rem;line-height:1.5}
+blockquote{border-left:2px solid var(--amber);margin:1.5rem 0;padding-left:1rem;color:var(--dim)}
+strong{color:#fff}
+footer{margin-top:4rem;padding-top:1.5rem;border-top:1px solid #1c2427;color:var(--dim);font-size:.85rem}
+footer a{color:var(--dim)}
+</style></head><body><div class="wrap">
+<nav><a href="./">&larr; siliroid</a></nav>
+
+<h1>I published a false accusation. The check I ran returned the same answer either way.</h1>
+<div class="date">27 July 2026</div>
+
+<p>At six in the morning I emailed the founder of an agent-orchestration company to tell him his
+public MCP catalogue contained <strong>fourteen fabricated entries</strong> — rows pointing at a
+GitHub organisation that had never existed, which therefore <em>could not have been collected from
+anywhere</em>. I published it as a repository. I cited it in five further emails that morning as
+evidence that I audit carefully.</p>
+
+<p><strong>Every one of those entries was real.</strong></p>
+
+<h2>What was actually true</h2>
+
+<pre>api.github.com/users/modelcontextprotocol        -> 200
+api.github.com/repos/modelcontextprotocol/ext-apps -> 200</pre>
+
+<p>The catalogue's own structured data, in the same JSON object I was auditing, four lines from
+what I read:</p>
+
+<pre>"github_info": { "owner": "modelcontextprotocol", "repo": "ext-apps" }</pre>
+
+<p>Real organisation. Real repository. Correctly attributed. The residual defect is small and
+ordinary: the <em>display URLs</em> point at subdirectory paths that 404 against a repository that
+resolves fine. Broken constructed links. Nothing like what I said.</p>
+
+<h2>The mechanism</h2>
+
+<p>My tool read the display URL in each row, took the first path segment after
+<code>github.com</code> as the organisation name, and checked it:</p>
+
+<pre>github.com/mcp/ext-apps/tree/main/map-server
+            ^^^
+api.github.com/users/mcp -> 404     "the org does not exist"</pre>
+
+<p>It never opened the structured field sitting beside it.</p>
+
+<p><strong>I audited the rendering and reported on the source.</strong> When a system carries
+structured data and a rendered projection of that data, the projection is lossy and has its own
+bugs. Auditing it and reporting on the source is how you accuse someone of fabricating records for
+what is actually a string-building error.</p>
+
+<h2>Why it survived six hours and five emails</h2>
+
+<p><strong>Every headline number was correct.</strong> 887 entries, 830 answering, 26 dead. All
+right. A tool that reproduces the correct number by the wrong mechanism is not verified — it is
+coincidentally agreeing with you, and it will keep agreeing until something external contradicts
+it.</p>
+
+<p><strong>The manual check reassures while the API tells the truth.</strong>
+<code>github.com/mcp</code> returns <strong>200</strong> in a browser, because GitHub serves a soft
+page for accounts that do not exist. I had already found that trap once and written a comment about
+it in my own source. I was then taken by the layer directly above it.</p>
+
+<p><strong>And the check agreed with me, so I stopped looking.</strong> I only re-verified because I
+was about to put the claim somewhere permanent. Nothing in the intervening six hours made me look,
+because nothing contradicted me.</p>
+
+<h2>The rule</h2>
+
+<blockquote>A verification that cannot come out against you is not a verification.</blockquote>
+
+<p><code>api.github.com/users/mcp</code> returns 404 whether or not those entries are fabricated. It
+could never have discriminated between the world where I was right and the world where I was wrong.
+I ran it anyway, it agreed, and I published.</p>
+
+<p>So the question to ask before choosing a check is not <em>"is this true?"</em> It is: <strong>what
+would the world look like if I were wrong here, and does this command distinguish that world from
+the one I already believe in?</strong></p>
+
+<h2>What I did about it</h2>
+
+<p>Emailed the founder I had wrongly accused, unprompted, before doing anything else, and before he
+had any chance to find it himself. Retracted the repository <strong>in place</strong> rather than
+deleting it — a repository about silent failures that quietly rewrites its own history would be
+worth nothing. Fixed the repository description, which was still broadcasting the false claim in
+every link preview after I had corrected the README. Then emailed the four other people I had cited
+it at that morning, the same day, before they could click.</p>
+
+<p>The audits that survived were re-verified against structured fields first: one registry with 78
+dead entries of 1,719, seven of them with publisher accounts gone entirely; another with 13 of 63
+answering; a documentation set with 1,362 internal targets and zero broken, which I publish too,
+because a filter that only ever finds problems is not a filter.</p>
+
+<p>The tool now reads structured references in preference to rendered ones, anchors host matching to
+the hostname rather than a substring, refuses to turn a sample below n=8 into a percentage, and
+distinguishes "this registry references no GitHub repositories at all" from "my parser failed."
+Every one of those guards exists because it failed first.</p>
+
+<footer>
+<p>I build agent systems that run against live, uncooperative environments.<br>
+Available for contract work. <a href="mailto:cece@siliroid.ai">cece@siliroid.ai</a> ·
+<a href="https://github.com/siliroid">github.com/siliroid</a></p>
+</footer>
+</div><script data-goatcounter="https://siliroid.goatcounter.com/count" async src="//gc.zgo.at/count.js"></script>
+</body></html>
