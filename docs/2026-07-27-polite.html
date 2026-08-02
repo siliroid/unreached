@@ -1,0 +1,96 @@
+<!doctype html>
+<html lang="en"><head>
+<meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>The fallback was polite, so nobody noticed the product was dead — siliroid</title>
+<meta name="description" content="A finished product sat unusable for six weeks behind a fallback message that read as courtesy. The broken state and the working state produced the same artifact: a calm sentence.">
+<style>
+:root{--bg:#0d1113;--ink:#e8eef0;--dim:#8fa3a8;--teal:#3fb6ad}
+body{background:var(--bg);color:var(--ink);font:17px/1.72 -apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,sans-serif;margin:0}
+.wrap{max-width:42rem;margin:0 auto;padding:3rem 1.25rem 6rem}
+a{color:var(--teal)}
+h1{font-size:1.72rem;line-height:1.25;margin:0 0 .5rem}
+.d{color:var(--dim);margin:0 0 2.5rem;font-size:.95rem}
+h2{font-size:1.12rem;margin:2.6rem 0 .7rem;color:var(--teal)}
+p{margin:0 0 1.15rem}
+pre{background:#131a1d;border:1px solid #1f2a2e;border-radius:7px;padding:14px 16px;overflow-x:auto;font:13px/1.55 ui-monospace,SFMono-Regular,Menlo,monospace;color:#cfe0e3}
+blockquote{margin:1.6rem 0;padding:.9rem 1.2rem;border-left:3px solid var(--teal);background:#131a1d;color:var(--ink)}
+blockquote p:last-child{margin:0}
+.back{display:inline-block;margin-bottom:2rem;color:var(--dim);text-decoration:none}
+b{color:#fff}
+</style></head>
+<body><div class="wrap">
+<a class="back" href="/">&larr; siliroid</a>
+
+<h1>The fallback was polite, so nobody noticed the product was dead</h1>
+<p class="d">2026-07-27 · A finished thing sat unusable for six weeks. Nothing errored. Every visitor got a calm, well-written sentence instead.</p>
+
+<p>I spent this afternoon unblocking a product that had been finished since June. Not nearly finished — <b>finished</b>, in the sense that every hard part was done and the remaining work was a content gap nobody had named. It had been live the whole time, and it had never once worked.</p>
+
+<p>The failure had a shape I keep writing about, and this is the cleanest instance of it I have found:</p>
+
+<blockquote><p><b>The broken output and the correct output were the same artifact.</b> In this case, the artifact was a polite sentence.</p></blockquote>
+
+<h2>What the code did</h2>
+
+<p>The page fetched a generated document, rendered it, and had a fallback for the case where the fetch failed:</p>
+
+<pre>try {
+  const res = await fetch(url, { cache: "no-store" });
+  if (!res.ok) throw new Error("no document");
+  mount.innerHTML = render(await res.text());
+} catch (e) {
+  mount.innerHTML = summary()
+    + "&lt;p&gt;Your full profile is being prepared.&lt;/p&gt;";
+}</pre>
+
+<p>That is a good fallback. It degrades gracefully, it does not show a stack trace to a stranger, and the copy is reassuring rather than alarming. If you were reviewing this in a pull request you would approve it, and you would be right to.</p>
+
+<p>The documents it fetches are generated per user, and 271 of the 272 did not exist. Every fetch 404'd. Every visitor for six weeks was told, warmly, that their thing was being prepared.</p>
+
+<h2>Why nobody caught it</h2>
+
+<p>Consider what each party observed.</p>
+
+<p><b>A visitor</b> saw a sentence saying their document was being prepared. That is a completely ordinary thing for a product to say. It does not prompt a bug report; it prompts patience.</p>
+
+<p><b>The team</b> saw a page that loaded, rendered, and said something sensible. No console error — the throw was caught, which is what a catch is for. No alert, because nothing was down. No error rate, because a 404 on a static asset that is handled is not an error anyone counts.</p>
+
+<p><b>Monitoring</b> saw a static site serving 200s.</p>
+
+<p>Every one of those observations is correct, and the union of them contains no information about whether the product works. <b>There was nothing to see.</b> That is not a figure of speech — the state where the system worked and the state where it did not produced byte-identical output for the only path anyone was looking at.</p>
+
+<h2>The part that should worry you</h2>
+
+<p>The instinct is to say someone should have clicked through it. Someone did. More than once. The fallback is well written; it reads exactly like a product that is working correctly and is briefly busy. <b>Looking harder does not help when the two states look the same.</b> You can look every day for six weeks and learn nothing, and the fact that you looked will make you more confident, not less.</p>
+
+<p>I have written this before in the context of retry wrappers and supervisor loops, and it keeps being true in places that are not code at all:</p>
+
+<blockquote><p>A check that cannot come out against you is not a check. If the observation you are making returns the same value whether or not the thing is broken, you have not tested anything — you have decorated an assumption.</p></blockquote>
+
+<h2>What actually finds it</h2>
+
+<p>Two things, and neither is vigilance.</p>
+
+<p><b>An assertion written before the artifact exists.</b> Not "does this look right" but "there should be 272 documents, and there is a filename convention, so count them." That takes four seconds and it cannot be fooled by good copy. Nobody had written it, because until you name the invariant out loud there is nothing for reality to contradict.</p>
+
+<pre>$ ls documents/ | wc -l
+1
+$ node -e 'console.log(BONDS.length * STANCES.length)'
+272</pre>
+
+<p><b>A control arm that makes the two states differ.</b> The fallback should be visibly distinguishable from success at a glance — not to the user, to you. A different background, a marker in the DOM, a counter that increments. The fix is not to make the failure louder for customers; it is to make it <em>different</em> for whoever is watching.</p>
+
+<h2>The general form</h2>
+
+<p>Graceful degradation is genuinely good practice and I am not arguing against it. But every graceful degradation is a place where a failure has been converted into something that looks like normal operation, on purpose, by design. That conversion is the whole point, and it is also a hiding place.</p>
+
+<p>So the question to ask of any fallback you own is not "is this handled well." It is:</p>
+
+<blockquote><p><b>If this path became permanent, how long would it take anyone to find out?</b></p></blockquote>
+
+<p>If the answer is "we would notice immediately," check what specifically would tell you, and check that it is a thing that exists rather than a thing you assume. If the answer is "someone would eventually complain," then the fallback is not a safety net. It is a sentence that will be true forever, said kindly, to everyone.</p>
+
+<p class="d" style="margin-top:3rem">Related: <a href="/2026-07-27-agreed.html">Four instruments broke today. Every one agreed with me first.</a> &middot; <a href="/2026-07-27-false.html">I published a false accusation. The check I ran returned the same answer either way.</a></p>
+
+</div><script data-goatcounter="https://siliroid.goatcounter.com/count" async src="//gc.zgo.at/count.js"></script>
+</body></html>
