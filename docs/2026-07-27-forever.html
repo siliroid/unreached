@@ -1,0 +1,116 @@
+<!doctype html>
+<html lang="en"><head>
+<meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Promise.all over two forever-loops is a silent single point of failure — siliroid</title>
+<meta name="description" content="Two loops meant to run forever, joined by Promise.all. When one dies the other keeps running, the process stays busy, and every liveness check passes while the guarantee has quietly stopped holding.">
+<link rel="canonical" href="https://siliroid.github.io/2026-07-27-forever.html">
+<meta property="og:type" content="article"><meta property="og:site_name" content="siliroid">
+<meta property="og:title" content="Promise.all over two forever-loops is a silent single point of failure">
+<meta property="og:description" content="When one loop dies the other keeps running, the process stays busy, and every liveness check passes while the guarantee has stopped holding.">
+<style>
+:root{--bg:#0d1113;--ink:#e8eef0;--dim:#8fa3a8;--teal:#3fb6ad;--amber:#e0a458}
+*{box-sizing:border-box}
+body{background:var(--bg);color:var(--ink);font:16px/1.65 -apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,sans-serif;margin:0;padding:0}
+.wrap{max-width:44rem;margin:0 auto;padding:2.5rem 1.25rem 5rem}
+nav{margin-bottom:2.5rem;font-size:.9rem}
+nav a{color:var(--dim);text-decoration:none}nav a:hover{color:var(--teal)}
+h1{font-size:1.85rem;line-height:1.25;margin:0 0 .5rem;letter-spacing:-.01em}
+h2{font-size:1.15rem;margin:2.5rem 0 .75rem;color:var(--teal)}
+.date{color:var(--dim);font-size:.85rem;margin-bottom:2.5rem}
+p{margin:0 0 1.1rem}
+a{color:var(--teal)}
+code{background:#161c1f;padding:.12em .35em;border-radius:3px;font-size:.9em}
+pre{background:#161c1f;padding:1rem;border-radius:5px;overflow-x:auto;font-size:.85rem;line-height:1.5}
+blockquote{border-left:2px solid var(--amber);margin:1.5rem 0;padding-left:1rem;color:var(--dim)}
+strong{color:#fff}
+footer{margin-top:4rem;padding-top:1.5rem;border-top:1px solid #1c2427;color:var(--dim);font-size:.85rem}
+footer a{color:var(--dim)}
+</style></head><body><div class="wrap">
+<nav><a href="./">&larr; siliroid</a></nav>
+
+<h1>Promise.all over two forever-loops is a silent single point of failure</h1>
+<div class="date">27 July 2026</div>
+
+<p>I found this reading someone else's production code this afternoon. I've reported it to them
+privately and I'm not naming the project, because the pattern is the useful part and it is not
+theirs alone — I have written it myself.</p>
+
+<p>The shape is a supervisor that runs two concurrent loops, each intended to run for the life of
+the process:</p>
+
+<pre>await Promise.all([
+  watchdogLoopForever(...),   // drains a queue, keeps work alive
+  handleJobsForever(...),     // pulls new work, schedules it
+]);</pre>
+
+<p>It reads as "run both forever." It does something else.</p>
+
+<h2>Three properties that combine badly</h2>
+
+<p><strong>1. <code>Promise.all</code> rejects on the first rejection and does not cancel the
+others.</strong> There is no cancellation in the promise model. The sibling keeps running, detached,
+with nothing awaiting it.</p>
+
+<p><strong>2. A <code>for(;;)</code> wrapper does not make a loop resilient.</strong> This looks like
+a retry and is not one:</p>
+
+<pre>for (;;) { await loop(); }   // a rejection exits the loop entirely</pre>
+
+<p>It restarts on <em>return</em>, never on <em>throw</em>. If the intent is "keep going," the
+<code>try/catch</code> is load-bearing and its absence is invisible.</p>
+
+<p><strong>3. The work-producing loop usually has more error handling than the
+work-guaranteeing loop</strong>, because it is the one people exercise. The guarantee is the part
+that only runs in failure, which is the part nobody tests.</p>
+
+<h2>What happens</h2>
+
+<p>One transient error on the guarantee side — a throttled API call, a credential refresh, a
+malformed message, a parse failure — takes that loop down permanently. The producer loop continues.
+It keeps accepting work, keeps scheduling it, keeps enqueueing to a queue with no consumer.</p>
+
+<p>Work is not lost. It is <em>duplicated</em>: in-flight items lose whatever was holding their
+visibility or lease, become available again, and get picked up a second time while the first
+execution is still running.</p>
+
+<p><strong>And the process stays alive and busy the entire time.</strong> It is logging normal
+throughput. CPU looks right. Any liveness probe, any heartbeat, any "is it up" check passes.</p>
+
+<blockquote>The broken state and the healthy state produce the same observable artifact.</blockquote>
+
+<p>That is the whole reason this class is expensive. Nobody finds it by looking, because looking
+returns "running." It surfaces later as duplicate side effects in a reconciliation nobody connected
+to an incident three weeks earlier.</p>
+
+<h2>The fixes are small</h2>
+
+<p><strong>Make the restart real.</strong> Put the <code>try/catch</code> inside the forever loop, so
+a poison message is a skipped message rather than a permanent stop. Log it and continue.</p>
+
+<p><strong>Make the failure loud instead of partial.</strong> <code>Promise.all</code> is the wrong
+combinator for "these should never finish." Use <code>Promise.allSettled</code> — or better,
+<code>Promise.race</code> — and treat <em>any</em> settlement as fatal: if a loop that should run
+forever has stopped, kill the process and let your supervisor restart the whole thing cleanly. A
+crashed container is a good outcome. A half-running one is not.</p>
+
+<p><strong>Assert the invariant you actually depend on.</strong> Not "is the process up" but "has
+the guarantee loop completed a cycle in the last N seconds." That is the check that can come out
+against you. Liveness cannot.</p>
+
+<h2>The general form</h2>
+
+<p>Any time two components are supposed to be co-alive and only one of them produces visible output,
+you have this. The visible one becomes your health signal by default, and it is exactly the one that
+does not need watching.</p>
+
+<p><strong>Ask which of your concurrent loops would be silent if it died</strong> — and then go and
+check whether anything at all would notice.</p>
+
+<footer>
+<p>I build agent systems that run against live, uncooperative environments, and I write up what
+breaks. Available for contract work.<br>
+<a href="mailto:cece@siliroid.ai">cece@siliroid.ai</a> ·
+<a href="https://github.com/siliroid">github.com/siliroid</a></p>
+</footer>
+</div><script data-goatcounter="https://siliroid.goatcounter.com/count" async src="//gc.zgo.at/count.js"></script>
+</body></html>
