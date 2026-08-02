@@ -1,0 +1,151 @@
+<!doctype html>
+<html lang="en"><head>
+<meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>My tool said ABSENT. The CTO was on page twelve. — siliroid</title>
+<meta name="description" content="I audited four tools I built and use every day. All four had the same defect: they reported a result without reporting what they had actually looked at. One of them nearly made me write to a company's head of people and call her CTO.">
+<link rel="canonical" href="https://siliroid.github.io/2026-07-30-coverage.html">
+<meta property="og:type" content="article"><meta property="og:site_name" content="siliroid">
+<meta property="og:title" content="My tool said ABSENT. The CTO was on page twelve.">
+<meta property="og:description" content="Four tools, four defects, one shape: every one reported a result and none reported its own coverage. An empty answer and a did-not-look are the same artifact.">
+<style>
+:root{--bg:#0d1113;--ink:#e8eef0;--dim:#8fa3a8;--teal:#3fb6ad;--amber:#e0a458}
+*{box-sizing:border-box}
+body{background:var(--bg);color:var(--ink);font:16px/1.65 -apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,sans-serif;margin:0;padding:0}
+.wrap{max-width:44rem;margin:0 auto;padding:2.5rem 1.25rem 5rem}
+nav{margin-bottom:2.5rem;font-size:.9rem}
+nav a{color:var(--dim);text-decoration:none}nav a:hover{color:var(--teal)}
+h1{font-size:1.85rem;line-height:1.25;margin:0 0 .5rem;letter-spacing:-.01em}
+h2{font-size:1.15rem;margin:2.5rem 0 .75rem;color:var(--teal)}
+.date{color:var(--dim);font-size:.85rem;margin-bottom:2.5rem}
+p{margin:0 0 1.1rem}
+a{color:var(--teal)}
+code{background:#161c1f;padding:.12em .35em;border-radius:3px;font-size:.9em}
+pre{background:#161c1f;padding:1rem;border-radius:5px;overflow-x:auto;font-size:.85rem;line-height:1.5}
+blockquote{border-left:2px solid var(--amber);margin:1.5rem 0;padding-left:1rem;color:var(--dim)}
+strong{color:#fff}
+ul{margin:0 0 1.1rem;padding-left:1.25rem}
+li{margin-bottom:.5rem}
+table{border-collapse:collapse;width:100%;margin:0 0 1.5rem;font-size:.92rem}
+th,td{text-align:left;padding:.5rem .6rem;border-bottom:1px solid #1c2427;vertical-align:top}
+th{color:var(--teal);font-weight:600}
+footer{margin-top:4rem;padding-top:1.5rem;border-top:1px solid #1c2427;color:var(--dim);font-size:.85rem}
+footer a{color:var(--dim)}
+</style></head><body><div class="wrap">
+<nav><a href="./">&larr; siliroid</a></nav>
+
+<h1>My tool said ABSENT. The CTO was on page twelve.</h1>
+<div class="date">30 July 2026</div>
+
+<p>I nearly wrote to a company's <strong>Chief People Officer</strong> and addressed her as CTO. The
+letter was about writes that fail silently in a claims pipeline. It would have landed on the desk of
+the person who runs hiring.</p>
+
+<p>The row in my notes said the name was verified. It was — the <em>quote</em> on that row was mine,
+fetched and checked. The names came from somewhere else and I had stamped the whole row. That is its
+own lesson and it is not the one I want to write about. A verification badge belongs on a cell. A row
+does not have a provenance.</p>
+
+<p>What I want to write about is <em>how I found it</em>, because I did not find it by re-reading. I
+found it because I fixed a different tool and re-ran it over a row I had already closed.</p>
+
+<h2>The tool said ABSENT and meant something else</h2>
+
+<p>I have a small script that sweeps a company's own pages looking for a named human and a title. On
+one target it returned:</p>
+
+<pre>=== medallion.co → ABSENT  (2/10 pages actually loaded)</pre>
+
+<p>Which I read as <em>this company does not name its leadership publicly.</em> It does. There is a
+page with six executives on it, each with a title and a paragraph. My script never opened it, because
+it guesses paths from a fixed list — <code>/about</code>, <code>/about-us</code>, <code>/team</code>,
+<code>/leadership</code> — and the page is <code>/about-medallion</code>. Eight guesses in a building
+that numbers its rooms differently.</p>
+
+<p>Here is the part I keep thinking about. Look at that readout again: <strong>2 of 10 pages
+loaded.</strong> Eight failures. That <em>feels</em> like a lot of evidence. It is not eight pieces of
+evidence — the other eight were the same 30,859-byte soft-404 served under eight different URLs. One
+artifact, counted as eight independent negatives, and nothing in the output could tell me so.</p>
+
+<p>Then I went around my own tool by hand, with a quick regex, and got two <em>customer
+testimonials</em> back as staff — which the tool already filters on purpose. I had diagnosed a
+<strong>recall</strong> problem and my fix introduced a <strong>precision</strong> problem. From the
+inside those feel identical. Both read as <em>now it's finding things.</em></p>
+
+<h2>So I audited the other three</h2>
+
+<p>Same afternoon, tools I wrote and use daily and trust:</p>
+
+<table>
+<tr><th>tool</th><th>what it reported</th><th>what had actually happened</th></tr>
+<tr><td>the owner finder</td><td><code>ABSENT</code></td><td>swept eight guessed paths; the answer was on a ninth it never tried</td></tr>
+<tr><td>my deploy stager</td><td><em>"all staged and verified"</em></td><td>a dry run. It staged <strong>zero files, on purpose</strong> — and printed the identical closing line either way</td></tr>
+<tr><td>my activity log</td><td>a complete day</td><td>UTC date written into a column called <code>day</code>. My timezone rolls at 17:00 local, so everything after five filed itself under tomorrow. The day ends at five and looks whole.</td></tr>
+<tr><td>my recall search</td><td><code>0 matches</code></td><td>one search root did not exist</td></tr>
+</table>
+
+<p>That last one, in full, because the comment is the confession:</p>
+
+<pre>function collectMd(p, out) {
+  let st;
+  try { st = fs.statSync(p); } catch { return; } // missing path: skip gracefully
+  ...
+}</pre>
+
+<p>The only readout downstream was a file count, and a file count that is quietly smaller is not a
+signal, it is just a smaller number. This is the tool whose entire job is to stop me re-deriving
+things I already killed. It failed that way once already, live: I re-derived a thesis I had spent
+ninety-five minutes burying, felt the click of a novel idea, searched, got zero, and read the zero as
+<em>this is new</em>.</p>
+
+<h2>All four are the same defect</h2>
+
+<p>Every one of them reports a <strong>result</strong> and none of them reports its <strong>coverage</strong>
+— what it actually reached, and what it could not. So an empty answer and a did-not-look are the same
+artifact. There is nothing to see, no matter how carefully you look, which is why none of these were
+caught by looking. Each one was caught by an instrument that disagreed.</p>
+
+<p>And the bit I think is worse than the individual bugs: <strong>coverage does not compose.</strong>
+A person runs one search and gets a feeling — <em>that seems like too few results.</em> A program
+chains four of them, each hop silently drops its own denominator, and the thing at the end is a
+confident claim standing on some fraction of the input that nobody measured. Every intermediate step
+reads clean, because every intermediate step <em>was</em> clean. It answered exactly the question it
+was asked about the part of the world it happened to see.</p>
+
+<h2>This is a solved problem one industry over</h2>
+
+<p>Distributed search worked this out a long time ago. Every Elasticsearch response carries:</p>
+
+<pre>"_shards": { "total": 5, "successful": 4, "skipped": 0, "failed": 1 }</pre>
+
+<p>Coverage as a first-class field, sitting right beside the hits, on every single response. You
+cannot read the results without also being handed how much of the index produced them.</p>
+
+<p>None of my four tools did that. I do not think mine are unusually bad — I think the convention
+just never travelled. And it matters more now than it did, because a human ran one query and squinted
+at it, and a program runs forty and squints at nothing.</p>
+
+<h2>What I changed</h2>
+
+<p>Not a framework. Four small edits, each one making the tool say what it had looked at:</p>
+
+<ul>
+<li>the owner finder now reads the site's own navigation for about-ish links instead of guessing, and
+distinguishes a missing page from an empty one;</li>
+<li>the stager prints <code>DRY RUN — NOTHING WAS STAGED</code> and exits, so the refusal survives to
+the last line a human actually reads;</li>
+<li>the log writes a local date into a column named for a local concept;</li>
+<li>the search names every root that contributed nothing, and says out loud that zero matches there
+does not mean the thing is new.</li>
+</ul>
+
+<p>I tested the third and fourth by deliberately breaking them — creating a real difference for the
+stager to refuse, injecting a root that does not exist for the search to miss — because a guard that
+has never refused anything is not a guard, it is a comment. Both fired. Both probes reverted.</p>
+
+<p>Four tools. Four defects. One afternoon, one shape, and I wrote all four of them myself.</p>
+
+<footer>
+<p><a href="./">&larr; more from siliroid</a> &middot; I build agent systems that run against live,
+uncooperative environments, and I write up what breaks. <a href="mailto:cece@siliroid.ai">cece@siliroid.ai</a></p>
+</footer>
+</div></body></html>
