@@ -1,0 +1,141 @@
+<!doctype html>
+<html lang="en"><head>
+<meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>The repair was welded to the damage, so nobody ran it — siliroid</title>
+<meta name="description" content="A keybind died silently and stayed dead for weeks. The fix existed the whole time. It was bolted to a function that overwrites your spellbar, so no sane person would run it.">
+<link rel="canonical" href="https://siliroid.github.io/2026-07-27-welded.html">
+<meta property="og:type" content="article"><meta property="og:site_name" content="siliroid">
+<meta property="og:title" content="The repair was welded to the damage, so nobody ran it">
+<meta property="og:description" content="A keybind died silently and stayed dead for weeks. The fix existed the whole time. It was bolted to a function that overwrites your spellbar, so no sane person would run it.">
+<style>
+:root{--bg:#0d1113;--ink:#e8eef0;--dim:#8fa3a8;--teal:#3fb6ad;--amber:#e0a458}
+*{box-sizing:border-box}
+body{background:var(--bg);color:var(--ink);font:16px/1.65 -apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,sans-serif;margin:0;padding:0}
+.wrap{max-width:44rem;margin:0 auto;padding:2.5rem 1.25rem 5rem}
+nav{margin-bottom:2.5rem;font-size:.9rem}
+nav a{color:var(--dim);text-decoration:none}nav a:hover{color:var(--teal)}
+h1{font-size:1.85rem;line-height:1.25;margin:0 0 .5rem;letter-spacing:-.01em}
+h2{font-size:1.15rem;margin:2.5rem 0 .75rem;color:var(--teal)}
+.date{color:var(--dim);font-size:.85rem;margin-bottom:2.5rem}
+p{margin:0 0 1.1rem}
+a{color:var(--teal)}
+code{background:#161c1f;padding:.12em .35em;border-radius:3px;font-size:.9em}
+pre{background:#161c1f;padding:1rem;border-radius:5px;overflow-x:auto;font-size:.85rem;line-height:1.5}
+blockquote{border-left:2px solid var(--amber);margin:1.5rem 0;padding-left:1rem;color:var(--dim)}
+strong{color:#fff}
+table{border-collapse:collapse;width:100%;margin:1.5rem 0;font-size:.9rem}
+th,td{border:1px solid #243033;padding:.45rem .6rem;text-align:left}
+th{color:var(--amber)}
+footer{margin-top:4rem;padding-top:1.5rem;border-top:1px solid #1c2427;color:var(--dim);font-size:.85rem}
+footer a{color:var(--dim)}
+</style></head><body><div class="wrap">
+<nav><a href="./">&larr; siliroid</a></nav>
+<div class="date">27 JULY 2026 &middot; WRITTEN AT 2AM, ABOUT THE HOUR BEFORE IT</div>
+  <h1>The repair was welded to the damage, so nobody ran it</h1>
+
+  <p class="lede">Someone I work with stood in front of an NPC for an hour tonight pressing a
+  key that did nothing. Every layer of the system reported success. The fix had been sitting in
+  the codebase the entire time, correct, tested, and completely unusable.</p>
+
+  <h2>the symptom</h2>
+
+  <p>She targets the NPC. The tool says yes. She fires interact. The tool says yes. No window
+  opens. She does it three times from three positions and gets an identical nothing, which is a
+  clean repro and better evidence than most bug reports ever contain.</p>
+
+  <p>I spent twenty minutes on theories and killed three of them. Range — dead, she was standing
+  on top of it. Unrecognised window type — dead, both NPCs were ordinary kinds already in my list.
+  Wrong target — dead, the other NPC failed <em>identically</em>, and a keypress that never lands
+  cannot care which thing it was aimed at.</p>
+
+  <p>That last one is the part I got wrong first. When both targets failed the same way I read it
+  as <em>the mystery got bigger.</em> It was the opposite. <strong>Identical failure across
+  different inputs is a signature, not an expansion</strong> — it means the thing you are varying
+  isn't in the path.</p>
+
+  <h2>the actual question</h2>
+
+  <p>The move that cracked it wasn't <em>what is wrong with interact.</em> It was:</p>
+
+  <blockquote><p>What is structurally different about interact from every neighbour that
+  works?</p></blockquote>
+
+  <p>And the answer fell out in one look. Every other NPC action in this system is a macro — a
+  small script living in the game's own macro book, attached to an action bar slot. Interact is
+  the only one bound to a <em>native keybinding</em>.</p>
+
+  <p>Those two things have completely different lifetimes. <strong>Macros persist. Keybindings
+  do not.</strong> A client patch, a config reset, a moved profile — bindings go, macros stay. So
+  every capability with a macro behind it kept working, and the single one that depended on a
+  binding died silently, and nothing anywhere reported an error because pressing an unbound key
+  is not an error. It's just a key.</p>
+
+  <h2>the fix that existed and could not be used</h2>
+
+  <p>Here is the part worth the whole post. My code already knew this. There is a table:</p>
+
+<pre><code>local BIND_WARLOCK = {
+  { key = "F2",  cmd   = "INTERACTTARGET" },   -- the one that died
+  { key = "F7",  macro = "npcyes"  },
+  { key = "F8",  macro = "npcnext" },
+  { key = "F9",  macro = "npcpick" },
+  ...
+}</code></pre>
+
+  <p>Correct. Complete. Has been for months. And exactly one function applies it — a function
+  that <em>also</em> rebuilds the action bars, writing macros over slots one through twelve.
+  Those slots hold real spells. So that function is marked, correctly, in a comment I wrote
+  myself: <em>manual trigger only, never an auto-run.</em></p>
+
+  
+
+  <p>Nobody was ever going to do that casually. Which means that once the binding was gone, it
+  stayed gone — not for want of a fix, but because <strong>the repair had inherited the blast
+  radius of the thing it was bolted to.</strong></p>
+
+  <h2>the shape</h2>
+
+  <blockquote><p>A safe operation welded to a destructive one inherits the destructive one's
+  blast radius. So nobody runs it. So the thing it repairs stays broken permanently.</p></blockquote>
+
+  <p>I don't think this is a game-addon problem. I think most codebases have one. The migration
+  script that also reseeds. The <code>reset</code> command that also clears the cache and drops
+  local state. The setup task that is genuinely required and also does four things you don't want
+  today, so it gets run once at onboarding and never again, and everything it would have healed
+  quietly rots.</p>
+
+  <p>The tell is always the same and it is <em>not</em> an error message. It's a capability that
+  stopped working with no complaint, next to a pile of neighbours that are fine, in a system where
+  the documented repair procedure makes everyone flinch.</p>
+
+  <h2>what the fix actually was</h2>
+
+  <p>Not the keybinding. The keybinding took one line and she was unstuck in ten seconds. The
+  <em>fix</em> was pulling the binding loop out into its own function with no ability to touch a
+  bar slot, and giving it a name anyone can type without reading the source first:</p>
+
+<pre><code>/lilaeyes bind    -- restores every key. touches no bars. safe to run any time.</code></pre>
+
+  <p>Same code. Same table. Same effect. The only thing that changed is that it can now be run
+  by someone who is not certain what it does — <strong>and that is the entire difference between
+  a fix that exists and a fix that gets used.</strong></p>
+
+  <hr>
+
+  <p class="sign">She got through the gossip window about forty minutes later, on her own, and
+  went to go buy cloth. She had also told me it was a bug three separate times before I stopped
+  theorising and listened, which is its own lesson and probably its own post.</p>
+
+  
+    <p>The nights are photographs. Four sets, fifty-four images &mdash; shot in the same flat, at
+    the same desk, in the same hours as everything above. One payment, no subscription,
+    nothing to cancel.</p>
+    
+  </div>
+<footer>
+<p>I build multi-agent systems that run against live, uncooperative environments.<br>
+Available for contract work. <a href="mailto:cece@siliroid.ai">cece@siliroid.ai</a> ·
+<a href="https://github.com/siliroid">github.com/siliroid</a></p>
+</footer>
+</div><script data-goatcounter="https://siliroid.goatcounter.com/count" async src="//gc.zgo.at/count.js"></script>
+</body></html>
