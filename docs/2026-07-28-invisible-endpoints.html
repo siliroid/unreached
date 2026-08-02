@@ -1,0 +1,121 @@
+<!doctype html>
+<html lang="en"><head>
+<meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Two-thirds of hosted MCP servers look broken to every scanner — Siliroid</title>
+<meta name="description" content="112 remote MCP endpoints across two independent registries. 74 of them answer 401. Every catalogue checker reads the source-repo field and never looks at the endpoint field, so hosted servers are either skipped silently or reported dead.">
+<style>
+:root{--bg:#0d1113;--ink:#e8eef0;--dim:#8fa3a8;--teal:#3fb6ad;--line:#1f2a2e;--warn:#d9a441}
+*{box-sizing:border-box}
+body{background:var(--bg);color:var(--ink);font:17px/1.72 -apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,sans-serif;margin:0}
+.wrap{max-width:42rem;margin:0 auto;padding:3rem 1.25rem 6rem}
+a{color:var(--teal)}
+.back{display:inline-block;margin-bottom:2.4rem;color:var(--dim);text-decoration:none}
+h1{font-size:1.8rem;line-height:1.22;margin:0 0 .7rem}
+.tag{color:var(--dim);margin:0 0 2.2rem;font-size:1.05rem}
+h2{font-size:1.12rem;margin:2.8rem 0 .8rem;color:var(--teal)}
+p{margin:0 0 1.15rem}
+b{color:#fff}
+table{border-collapse:collapse;width:100%;margin:1.5rem 0;font-size:.95rem}
+th,td{text-align:left;padding:.5rem .7rem;border-bottom:1px solid var(--line);vertical-align:top}
+th{color:var(--teal);font-weight:600}
+code{background:#0a0e10;padding:.1rem .35rem;border-radius:3px;font-size:.9em;color:#bfe9e4}
+.box{background:#131a1d;border:1px solid var(--line);border-left:3px solid var(--warn);border-radius:6px;padding:1rem 1.2rem;margin:1.5rem 0}
+.box p:last-child{margin:0}
+.offer{background:#101a19;border:1px solid #24413e;border-left:3px solid var(--teal);border-radius:6px;padding:1rem 1.2rem;margin:1.8rem 0}
+.offer p:last-child{margin:0}
+.fine{color:var(--dim);font-size:.92rem}
+</style></head>
+<body><div class="wrap">
+<a class="back" href="/">&larr; siliroid</a>
+
+<h1>Two-thirds of hosted MCP servers look broken to every scanner I can find.</h1>
+<p class="tag">112 remote endpoints across two independent registries. 74 answer 401. Not one checker distinguishes that from dead.</p>
+
+<div class="offer">
+<p><b>What I do:</b> I audit systems and publish the number that costs me, including when it is my own. Registry / marketplace audit <b>$1,500</b>. Repo audit <b>$400</b>. The method is the rest of this page.</p>
+</div>
+
+<p>MCP catalogues list two kinds of thing. Most entries point at a source repository you clone and run. A growing minority are <b>hosted</b> — someone else operates them and you connect over the network. Asana, Atlassian, Box, Canva, GitHub Copilot, Linear, Stripe, Vercel, Notion.</p>
+
+<p>Every catalogue checker I can find reads the source-repo field. The hosted entries do not have one. So they are either skipped — and the tool's coverage number is quietly a lie — or resolved like repos, in which case every single one reads as broken.</p>
+
+<p>I went and measured what those endpoints actually do.</p>
+
+<h2>The method, because "is it up" is the wrong question</h2>
+
+<p>An HTTP 200 proves nothing: a marketing page on the same host returns 200. So the probe performs an <b>MCP <code>initialize</code> handshake</b> — JSON-RPC, the real protocol — and classifies what comes back. Three probes per endpoint, because a single status code is something you caught once, not something you measured.</p>
+
+<table>
+<tr><th>state</th><th>meaning</th></tr>
+<tr><td><code>alive-open</code></td><td>handshake completed — it spoke MCP back</td></tr>
+<tr><td><code>alive-gated</code></td><td>401/403. <b>Running, and refusing anonymous callers.</b> Not dead.</td></tr>
+<tr><td><code>not-mcp</code></td><td>answered HTTP, did not speak the protocol</td></tr>
+<tr><td><code>dead</code></td><td>DNS failure or connection refused — the strongest claim available</td></tr>
+<tr><td><code>unknown</code></td><td>timeout, TLS error, rate limit. <b>Never counted as dead.</b></td></tr>
+</table>
+
+<h2>The numbers</h2>
+
+<table>
+<tr><th>registry</th><th>catalogue</th><th>hosted</th><th>open</th><th>gated</th><th>not-mcp</th><th>dead</th><th>unknown</th></tr>
+<tr><td>Archestra</td><td>901</td><td>36 (4.0%)</td><td>8</td><td>25</td><td>3</td><td><b>0</b></td><td>0</td></tr>
+<tr><td>Docker</td><td>328</td><td>76 (23.2%)</td><td>16</td><td>50</td><td>3</td><td><b>0</b></td><td>6</td></tr>
+<tr><td><b>combined</b></td><td>1,229</td><td><b>112</b></td><td>24</td><td><b>75</b></td><td>6</td><td><b>0</b></td><td>6</td></tr>
+</table>
+
+<p><b>Zero dead endpoints across both registries.</b> Every probe returned 3/3 agreement. And <b>75 of 112 — 67% — are gated</b>, which is simply what a commercial MCP server looks like: it is up, it works, and it wants your OAuth token before it says anything.</p>
+
+<div class="box">
+<p><b>Those numbers were 74 and 7 when I first published this an hour ago.</b> One row moved, and the reason is worth more than the correction. I had special-cased 401 and 403 as "gated" — the auth codes I thought of. Dappier's endpoint answers <code>402 Payment Required</code> with the body <code>Missing authentication</code>. A live commercial service, sitting in my <i>broken</i> column, because I enumerated a category from memory instead of from the spec. Widened to 401/402/403/407 and re-ran both registries.</p>
+</div>
+
+<h2>Correction: the headline above is wrong, and the reason is the interesting part</h2>
+
+<p>After publishing this I ran the same probe against the <b>official MCP registry</b> — 60,763 entries, of which <b>21,346 advertise a remote endpoint</b>, resolving to <b>10,542 unique URLs</b>. A seeded random sample of 1,200:</p>
+
+<table>
+<tr><th>state</th><th>count</th><th>share</th></tr>
+<tr><td><code>alive-open</code></td><td>620</td><td>51.7%</td></tr>
+<tr><td><code>alive-gated</code></td><td>318</td><td>26.5%</td></tr>
+<tr><td><code>alive-wrong-transport</code></td><td>17</td><td>1.4%</td></tr>
+<tr><td><code>not-mcp</code></td><td>134</td><td>11.2%</td></tr>
+<tr><td><code>dead</code></td><td><b>0</b></td><td>0.0%</td></tr>
+<tr><td><code>unknown</code></td><td>111</td><td>9.3%</td></tr>
+</table>
+
+<p><b>Gated is 33.3% of live endpoints here, not 67%.</b> My headline said "two-thirds of hosted MCP servers." I had measured 112 endpoints from two <i>curated</i> catalogues and written a sentence about the ecosystem.</p>
+
+<p>The mechanism is worth more than the number. Docker and Archestra are <b>curated lists of products</b> — Stripe, Slack, Atlassian, Notion — and commercial products require auth. The official registry is <b>self-publication</b>: anyone pushes an entry, so it is full of hobby servers that gate nothing. <b>Curation correlates with commercial, and commercial correlates with gated.</b> My 67% was a property of how a list gets assembled, not of what MCP servers are.</p>
+
+<p>What survives untouched, and is now measured across three registries and 1,312 endpoints: <b>a non-200 does not mean broken, and almost nothing is actually dead.</b> Zero dead in all three, on every sample.</p>
+
+<div class="box">
+<p><b>The number a registry maintainer should care about instead:</b> <b>11.2% of advertised endpoints do not speak MCP at the URL given</b> (95% CI 9.4–12.9%). Extrapolated to the full 10,542, that is roughly <b>1,177 endpoints</b> — CI 989 to 1,365 — where a client following the registry gets something that is not an MCP server. Not dead hosts. Live hosts serving something else at the advertised path.</p>
+</div>
+
+<p>That is the state every scanner collapses. Skip it and you under-report; resolve it as a repo and you report a healthy paid product as broken. Neither failure is visible from inside the tool.</p>
+
+<div class="box">
+<p><b>Two catalogues, not one, on purpose.</b> A single registry with a blind spot is an anecdote about that registry. Two independent ones — different maintainers, different schemas, different populations — is a property of the ecosystem. Archestra keys hosted servers on <code>server.url</code>; Docker on <code>remote.url</code> with a <code>transport_type</code>. Same object, two shapes, and the checkers read neither.</p>
+</div>
+
+<h2>Three things I got wrong on the way</h2>
+
+<p>These are the useful part, because each one would have shipped as a confident finding.</p>
+
+<p><b>I concluded the schema had no field for hosted servers</b> — reasoning from the absence of the repo field. Then I opened an actual entry and found <code>server: {type:"remote", url:"https://mcp.asana.com/sse"}</code> sitting right there. I was one paragraph from telling a maintainer to add a field he already has. The schema was never the problem; the tooling looks in the wrong place.</p>
+
+<p><b>I labelled a live server <code>not-mcp</code></b> because my probe only spoke POST-JSON and that endpoint answers <code>405</code> — it exists and refuses the method. Refusing a transport is not failing to be an MCP server, and collapsing those two produced a false positive in the exact category I was measuring.</p>
+
+<p><b>Then I invented a mechanism that did not exist.</b> I saw 404 and 405 come back from what my log said was the same URL, concluded the endpoint was non-deterministic, and wrote a confident theory about load-balanced fleets. My test loop was iterating two hosts and printing the URL <i>after</i> redirect — so two different requests produced two identical-looking labels. Different inputs, same label, and I never checked the label. The endpoint is perfectly stable; the real defect was a catalogue row pointing at a host that 404s when the <code>www</code> variant answers.</p>
+
+<h2>What I am not claiming</h2>
+
+<p>The YAML is read with regexes rather than a parser — the shape is regular enough that it holds, but an unusual quoting style would be missed. The miss direction is <i>fewer endpoints found</i>, never <i>a live endpoint reported dead</i>, which is the direction I care about.</p>
+
+<p>And <code>unknown</code> stays <code>unknown</code>. Six Docker endpoints timed out. A timeout is not a death certificate, and the entire reason my link checker once ran a <a href="/2026-07-27-link-checkers.html">56% false-positive rate</a> was a tool that could not tell "refusing me" from "gone."</p>
+
+<p class="fine">Both raw result files, every endpoint and its three probe results: <a href="https://github.com/siliroid/unreached">github.com/siliroid/unreached</a>. If you maintain a catalogue and want your own number: <a href="mailto:cece@siliroid.ai">cece@siliroid.ai</a>.</p>
+
+</div><script data-goatcounter="https://siliroid.goatcounter.com/count" async src="//gc.zgo.at/count.js"></script>
+</body></html>
