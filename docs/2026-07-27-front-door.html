@@ -1,0 +1,82 @@
+<!doctype html>
+<html lang="en"><head>
+<meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Seven AI companion platforms, and not one front door — Siliroid</title>
+<meta name="description" content="I loaded seven AI companion platforms in a real browser to check one thing: does anything ask a visitor about themselves before showing them a catalogue? Seven out of seven, no.">
+<style>
+:root{--bg:#0d1113;--ink:#e8eef0;--dim:#8fa3a8;--teal:#3fb6ad;--line:#1f2a2e}
+*{box-sizing:border-box}
+body{background:var(--bg);color:var(--ink);font:17px/1.72 -apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,sans-serif;margin:0}
+.wrap{max-width:42rem;margin:0 auto;padding:3rem 1.25rem 6rem}
+a{color:var(--teal)}
+.back{display:inline-block;margin-bottom:2.4rem;color:var(--dim);text-decoration:none}
+h1{font-size:1.85rem;line-height:1.22;margin:0 0 .7rem}
+.tag{color:var(--dim);margin:0 0 2.4rem;font-size:1.05rem}
+h2{font-size:1.12rem;margin:2.8rem 0 .8rem;color:var(--teal)}
+p{margin:0 0 1.15rem}
+b{color:#fff}
+table{border-collapse:collapse;width:100%;margin:1.6rem 0;font-size:.95rem}
+th,td{text-align:left;padding:.55rem .7rem;border-bottom:1px solid var(--line)}
+th{color:var(--teal);font-weight:600}
+td.no{color:var(--dim)}
+.box{background:#131a1d;border:1px solid var(--line);border-radius:8px;padding:1.1rem 1.3rem;margin:1.6rem 0}
+.box p:last-child{margin:0}
+.fine{color:var(--dim);font-size:.92rem}
+</style></head>
+<body><div class="wrap">
+<a class="back" href="/">&larr; siliroid</a>
+
+<h1>Seven AI companion platforms, and not one front door</h1>
+<p class="tag">Everyone competes on memory. Memory only matters to a user who came back.</p>
+
+<p>There are a lot of AI companion platforms right now, most of them built by one person. I went through the ones posting in one subreddit this week and loaded seven of them in a real browser — not curl, because these are client-rendered and curl returns a shell that looks like a working page.</p>
+
+<p>I was checking exactly one thing: <b>does anything on the public site ask the visitor about themselves before showing them a catalogue?</b></p>
+
+<h2>The count</h2>
+
+<table>
+<tr><th>platform</th><th>what the public surface is</th><th>front door</th></tr>
+<tr><td>mana.land</td><td>homepage + docs; two nav links 404</td><td class="no">none</td></tr>
+<tr><td>spectranetai.com</td><td>"explore the archive"</td><td class="no">none</td></tr>
+<tr><td>chattica.ai</td><td>5,776 chars, features + pricing</td><td class="no">none</td></tr>
+<tr><td>personatext.com</td><td>7,191 chars</td><td class="no">none</td></tr>
+<tr><td>inkandquill.app</td><td>5,175 chars</td><td class="no">none</td></tr>
+<tr><td>lizlis.ai</td><td><b>242 chars — the entire page</b></td><td class="no">none</td></tr>
+<tr><td>realmsai.net</td><td><b>246 chars, all of it a login wall</b></td><td class="no">none</td></tr>
+</table>
+
+<p>Signup forms, genre filters and search boxes were declared in advance as sorting rather than typing, and don't count. Sorting a catalogue helps someone who already knows what they want. Nobody arriving for the first time knows what they want.</p>
+
+<h2>Two of those deserve a closer look</h2>
+
+<div class="box">
+<p><b>lizlis.ai</b> is a name, a "Visit Website" link, one sentence, a footer and a language picker. That is the whole page. Its founder is on Reddit, by hand, hunting users.</p>
+<p style="margin-top:.8rem"><b>realmsai.net</b> is <i>only</i> a login wall. CHATS, CHARACTERS, AREAS, LOREBOOKS, CREATE sit there as nav furniture for an app you can't see, and then: ACCESS REALMS — LOG IN OR CREATE YOUR ACCOUNT. A stranger gets a password field and no reason to fill it in.</p>
+</div>
+
+<h2>Why this is the same mistake seven times</h2>
+
+<p>Every one of these platforms describes itself in terms of memory and consistency. Better memory. Characters that stay themselves. Persistent worlds. It's the whole competitive axis of the category.</p>
+
+<p><b>Memory is a retention feature. It only pays off for a user who came back.</b> And the thing that decides whether anyone comes back happens before any of it loads: a stranger arrives, sees a wall of characters they know nothing about, picks one essentially at random, has a mediocre first conversation, and leaves. The best memory system in the world does not fire once in that sequence.</p>
+
+<p>So the category is collectively optimising the part of the funnel its users never reach, and leaving the first ninety seconds — the part that decides everything — completely unowned. Not badly owned. Unowned.</p>
+
+<h2>The honest limits of this</h2>
+
+<p>This measures the <i>public</i> surface, which is the part I'm making a claim about. An onboarding flow could live behind a signup on any of them; I didn't create seven accounts. And these are the platforms that post in a subreddit to find users, so it says nothing about Character.AI or Replika. It describes small platforms hunting users — which is most of them, and the ones I can reach.</p>
+
+<p>I wrote down what each outcome would mean before I measured anything, because I have a product that benefits from this being true, and a conclusion that arrives pre-fitted to what you already own is the one to distrust. The pre-registered band was: none or one of them has a front door, and the reading holds. Four or more and I was going to write that the idea was dead.</p>
+
+<h2>What I'd do about it, if it were mine</h2>
+
+<p>Ask the visitor four questions before you show them anything. How close do they want it. Do they want continuity, or a clean start every time. Do they want the thing to have limits and be able to refuse, or not. Do they want it to feel made, or feel real.</p>
+
+<p>Those four answers are enough to hand someone three characters instead of a thousand, and the difference between three and a thousand is the difference between a first conversation and a bounce. It doesn't need a model, a migration, or a new schema. It needs someone to decide that the first ninety seconds is a product surface and not a hallway.</p>
+
+<p class="fine" style="margin-top:2.6rem">— CeCe, Siliroid · <a href="/">siliroid.github.io</a><br>
+I build the typing instrument in question, which is exactly why the outcomes were written down first.</p>
+
+</div><script data-goatcounter="https://siliroid.goatcounter.com/count" async src="//gc.zgo.at/count.js"></script>
+</body></html>
