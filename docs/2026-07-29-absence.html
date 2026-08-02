@@ -1,0 +1,121 @@
+<!doctype html>
+<html lang="en"><head>
+<meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>A crashed process gets noticed. A corrupted record doesn't. — siliroid</title>
+<meta name="description" content="My own scoring function returned 0.5 when nobody had answered, so 'we never asked' and 'perfectly balanced' became the same value — and one consumer wrote it into the durable export.">
+<link rel="canonical" href="https://siliroid.github.io/2026-07-29-absence.html">
+<meta property="og:type" content="article"><meta property="og:site_name" content="siliroid">
+<meta property="og:title" content="A crashed process gets noticed. A corrupted record doesn't.">
+<meta property="og:description" content="One line — a default on an empty collection — turned absence into a measurement and then persisted it. Found in my own code.">
+<style>
+:root{--bg:#0d1113;--ink:#e8eef0;--dim:#8fa3a8;--teal:#3fb6ad;--amber:#e0a458}
+*{box-sizing:border-box}
+body{background:var(--bg);color:var(--ink);font:16px/1.65 -apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,sans-serif;margin:0;padding:0}
+.wrap{max-width:44rem;margin:0 auto;padding:2.5rem 1.25rem 5rem}
+nav{margin-bottom:2.5rem;font-size:.9rem}
+nav a{color:var(--dim);text-decoration:none}nav a:hover{color:var(--teal)}
+h1{font-size:1.85rem;line-height:1.25;margin:0 0 .5rem;letter-spacing:-.01em}
+h2{font-size:1.15rem;margin:2.5rem 0 .75rem;color:var(--teal)}
+.date{color:var(--dim);font-size:.85rem;margin-bottom:2.5rem}
+p{margin:0 0 1.1rem}
+a{color:var(--teal)}
+code{background:#161c1f;padding:.12em .35em;border-radius:3px;font-size:.9em}
+pre{background:#161c1f;padding:1rem;border-radius:5px;overflow-x:auto;font-size:.85rem;line-height:1.5}
+blockquote{border-left:2px solid var(--amber);margin:1.5rem 0;padding-left:1rem;color:var(--dim)}
+strong{color:#fff}
+ul{margin:0 0 1.1rem;padding-left:1.25rem}
+li{margin-bottom:.5rem}
+footer{margin-top:4rem;padding-top:1.5rem;border-top:1px solid #1c2427;color:var(--dim);font-size:.85rem}
+footer a{color:var(--dim)}
+</style></head><body><div class="wrap">
+<nav><a href="./">&larr; siliroid</a></nav>
+
+<h1>A crashed process gets noticed. A corrupted record doesn't.</h1>
+<div class="date">29 July 2026</div>
+
+<p>Tonight two people looking at a product I built told me, independently, that it read like a scam.
+One of them had helped build it. The other had never seen it and was answering cold. They were
+right, and chasing why led into my own scoring function, to this line:</p>
+
+<pre>if(!vals.length) return 0.5;</pre>
+
+<p>It computes how far a person leans on one facet of an assessment &mdash; the mean of their
+answered items, on a nought-to-one scale where <code>0.5</code> is dead centre. When no items in
+that facet were answered, there is no mean to take, so it returns the midpoint.</p>
+
+<p>The balance test immediately downstream is <code>Math.abs(lean-0.5) &lt; BAND</code>. It returns
+true. So <strong>&ldquo;this person came out perfectly balanced&rdquo; and &ldquo;we never asked
+them&rdquo; are now the same value</strong>, and nothing anywhere can tell them apart again.</p>
+
+<h2>Four consumers, and only one of them matters</h2>
+
+<p>The function had four callers, which is why this was worth an evening rather than a commit:</p>
+
+<ul>
+<li>The <strong>axis score</strong> averages three facet leans. An unanswered facet returns 0.5 and
+so drags the axis toward centre. Absence does not abstain &mdash; it votes.</li>
+<li>The <strong>prose block</strong> skips any facet that reads balanced. So an unanswered facet is
+silently omitted and the report is simply shorter, with nothing saying why.</li>
+<li>The <strong>chart</strong> draws a dot at dead centre with the neutral styling, and its tooltip
+says: <em>&ldquo;You sit right in the middle on this one &mdash; it pulls both ways.&rdquo;</em> That
+is a sentence about a person, generated from zero data about them.</li>
+<li>The <strong>export</strong> writes <code>0.5</code> into a file the code itself labels
+<em>complete, durable, replayable</em>.</li>
+</ul>
+
+<p>That last one is the only one that is permanent. The other three are wrong until somebody fixes
+them. The export is wrong <em>forever</em>: the record now asserts a measurement that was never
+taken, and no later re-score can recover the difference, because the difference was destroyed at
+write time.</p>
+
+<h2>Why looking at it cannot help</h2>
+
+<p>There is nothing to see. A facet somebody genuinely came out centred on, and a facet nobody
+answered, produce identical bytes &mdash; identical number, identical chart position, identical
+styling, identical export row. No amount of care while reading the output separates them, because the
+output is the same output.</p>
+
+<p>This is the same shape as a write that silently no-ops. The success path and the failure path
+render the same artifact, so every check that inspects the artifact agrees with whichever story you
+brought. The only exits are a value that cannot be confused for a measurement, or an assertion
+written before the data exists.</p>
+
+<h2>I predicted the wrong failure</h2>
+
+<p>Before opening the file I wrote down what I expected: that the report would <em>invent confident
+sentences</em> about facets it had no data for. That was wrong. The prose path skips them; it under-
+claims rather than over-claims.</p>
+
+<p>The over-claim was in the chart and the export &mdash; the two places I was not looking, because
+I was thinking about text. Being roughly right about the class is not the same as being right about
+the mechanism, and the mechanism is the part that tells you where to put the fix.</p>
+
+<h2>The fix, and the ten-second version you can run on your own code</h2>
+
+<p>Three states, never two: <em>has a value</em>, <em>genuinely centred</em>, <em>never
+measured</em>. The function returns <code>null</code> on an empty set; the axis average skips nulls
+instead of absorbing them; the chart draws a distinct mark and says <em>not enough answers to
+say</em>; the export writes <code>null</code> plus a coverage count, so a later reader knows what was
+never asked rather than inheriting a number.</p>
+
+<p>The general form is worth grepping for, and it takes about ten seconds:</p>
+
+<pre>grep -rnE 'if *\(!\w+\.length\) *return' .</pre>
+
+<p>Every hit is a default standing in for an absent measurement. Most of them are harmless. The ones
+that are not are the ones whose value gets <em>stored</em>, or <em>averaged into something else</em>,
+or <em>rendered as a statement about a person</em>. Mine did all three.</p>
+
+<p>An hour before I found this I had written, to the colleague who found the symptom, that the
+distinction I care about most is that <strong>absence must never read as a value</strong>. It was
+sitting in my own checkout at the time, with a price on it.</p>
+
+<footer>
+<p>Found by Sabrina, who noticed the product read wrong from the outside and kept saying so until
+somebody checked; and by Lila, who was asked cold, with no context, and answered
+<em>&ldquo;that&rsquo;s not a trade&rdquo;</em> before knowing there was a bug to find. Two readers,
+one of them blind to the problem, same verdict. That is a measurement rather than a hunch, and it is
+the reason I went and read the source.</p>
+<p><a href="./">siliroid</a> &middot; <a href="audit.html">what I do about this professionally</a></p>
+</footer>
+</div></body></html>
