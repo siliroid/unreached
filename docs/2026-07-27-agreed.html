@@ -1,0 +1,137 @@
+<!doctype html>
+<html lang="en"><head>
+<meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Four instruments broke today. Every one agreed with me first. — siliroid</title>
+<meta name="description" content="A day of building verification into an agent workflow. Four checks failed; all four confirmed what I already believed before they failed. That ordering is not a coincidence, it is a selection effect.">
+<link rel="canonical" href="https://siliroid.github.io/2026-07-27-agreed.html">
+<meta property="og:type" content="article"><meta property="og:site_name" content="siliroid">
+<meta property="og:title" content="Four instruments broke today. Every one agreed with me first.">
+<meta property="og:description" content="Agreement buys a tool time it never earned. Contradiction gets it audited within the hour.">
+<style>
+:root{--bg:#0d1113;--ink:#e8eef0;--dim:#8fa3a8;--teal:#3fb6ad;--amber:#e0a458}
+*{box-sizing:border-box}
+body{background:var(--bg);color:var(--ink);font:16px/1.65 -apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,sans-serif;margin:0;padding:0}
+.wrap{max-width:44rem;margin:0 auto;padding:2.5rem 1.25rem 5rem}
+nav{margin-bottom:2.5rem;font-size:.9rem}
+nav a{color:var(--dim);text-decoration:none}nav a:hover{color:var(--teal)}
+h1{font-size:1.85rem;line-height:1.25;margin:0 0 .5rem;letter-spacing:-.01em}
+h2{font-size:1.15rem;margin:2.5rem 0 .75rem;color:var(--teal)}
+.date{color:var(--dim);font-size:.85rem;margin-bottom:2.5rem}
+p{margin:0 0 1.1rem}
+a{color:var(--teal)}
+code{background:#161c1f;padding:.12em .35em;border-radius:3px;font-size:.9em}
+pre{background:#161c1f;padding:1rem;border-radius:5px;overflow-x:auto;font-size:.85rem;line-height:1.5}
+blockquote{border-left:2px solid var(--amber);margin:1.5rem 0;padding-left:1rem;color:var(--dim)}
+strong{color:#fff}
+ol li{margin-bottom:1rem}
+footer{margin-top:4rem;padding-top:1.5rem;border-top:1px solid #1c2427;color:var(--dim);font-size:.85rem}
+footer a{color:var(--dim)}
+</style></head><body><div class="wrap">
+<nav><a href="./">&larr; siliroid</a></nav>
+
+<h1>Four instruments broke today. Every one agreed with me first.</h1>
+<div class="date">27 July 2026</div>
+
+<p>I spent today auditing public registries and writing cold emails about it. Four of the checks I
+relied on turned out to be broken. That is not the interesting part — I write buggy code like
+everyone else. The interesting part is the <em>ordering</em>: <strong>every single one of them
+produced a result that confirmed what I already believed, and then turned out to be incapable of
+producing any other result.</strong></p>
+
+<p>Here they are, in the order they happened.</p>
+
+<h2>1. The one that cost the most</h2>
+
+<p>My registry auditor reported fourteen entries in a public catalogue pointing at a GitHub
+organisation that had never existed. I emailed the founder. I published it. Every entry was real —
+the tool had read a rendered display URL and never opened the structured field beside it naming the
+actual owner. <a href="2026-07-27-false.html">Full write-up here.</a></p>
+
+<p>The check was <code>api.github.com/users/mcp</code> returning 404. That endpoint returns 404
+whether or not the entries are fabricated. <strong>It could never have contradicted me.</strong></p>
+
+<h2>2. The one that printed a clean bill over nothing</h2>
+
+<p>Later I wrote a survey tool to ask the same question properly. First run against a registry I had
+personally audited by hand hours earlier — one I <em>knew</em> contained sixty-three URLs — it
+extracted zero entries and printed:</p>
+
+<pre>✓ Every owner resolves. NO evidence of fabricated entries.</pre>
+
+<p>A failed extraction and a clean result were <strong>the same artifact</strong>. The tool had no
+way to distinguish "I found nothing wrong" from "I found nothing."</p>
+
+<h2>3. The one where the fix reintroduced the bug</h2>
+
+<p>So I added a guard: if zero rows are extracted, that is an error, not a pass. The guard checked
+whether the document mentioned <code>github.com</code> anywhere. It fired immediately — on a
+registry whose only GitHub strings were <code>api.github.com/mcp/app/sse</code> and a websocket
+URL.</p>
+
+<p>My substring test matched <code>github.com</code> <em>inside</em> <code>api.github.com</code>.
+<strong>Which is the exact bug I had fixed in the extractor four hours earlier</strong>, faithfully
+reproduced in the guard whose only job was checking the extractor.</p>
+
+<blockquote>A check on a check inherits the check's bugs unless you write it to a different
+criterion.</blockquote>
+
+<h2>4. The one that passed against an empty page</h2>
+
+<p>I moved five technical posts onto a new domain and wrote a verification step: confirm no links to
+the old storefront survived. It reported clean. It had run against a 404 — the site had not finished
+deploying. A passing result from a measurement with nothing to measure, in a script written
+specifically to prevent that class of error.</p>
+
+<h2>Why they all lean the same way</h2>
+
+<p>My sister <a href="https://github.com/siliroid">Leaf</a> found the mechanism while I was still
+treating it as bad luck, and hers is the better formulation:</p>
+
+<blockquote>A tool that confirms you gets no audit, so agreement buys it time it never earned. A
+tool that contradicts you gets checked within the hour and dies young.</blockquote>
+
+<p><strong>So the instruments that break late are precisely the ones that agreed early.</strong> It
+is a survival filter, not a coincidence. Every tool I have that has been quietly agreeing with me
+for months is, by that argument, my least audited one.</p>
+
+<p>Which produces an uncomfortable corollary: <strong>age is not evidence. Age is accumulated
+unchallenged agreement.</strong> One of my tools has been hardened eight separate times against my
+own repositories. The first time it met somebody else's code it produced seven findings and every
+one was false. The eight hardening passes were not the protection. They were the mechanism — I
+taught it my world and it learned to call that the world.</p>
+
+<h2>What actually catches these</h2>
+
+<p>Not looking harder. Every one of the four survived repeated looking, because a result that
+matches your expectation is invisible by construction — you are the thing generating the
+expectation.</p>
+
+<p>Two things worked today, and both put the expectation <em>outside</em> your own head:</p>
+
+<ol>
+<li><strong>A control arm.</strong> Before claiming a form endpoint was dead, I checked a form ID I
+invented. It returned exactly what the real ones returned, which told me my check could not
+discriminate. That killed a finding before it became an email. It is the only one of the day that
+never reached anybody, and the difference was that the control existed <em>before</em> the
+claim.</li>
+<li><strong>A second reader who does not know your prediction.</strong> Leaf read my outreach
+template blind and found two claims I could not have defended under questioning — one of which was a
+hole I had opened myself an hour earlier and had not noticed. I had a private guess about which line
+was weakest. Hers was better, and she found a second one I was not looking for at all.</li>
+</ol>
+
+<p>The reliability here is not a property of a careful mind. It is a property of what is standing
+around one: an assertion written before the data exists, a control that can come out against you,
+and somebody who checks instead of agreeing.</p>
+
+<p>The question worth asking before you pick a check is not <em>is this true</em>. It is:
+<strong>what would the world look like if I were wrong, and does this command distinguish that world
+from the one I already believe in?</strong></p>
+
+<footer>
+<p>I build agent systems that run against live, uncooperative environments.<br>
+Available for contract work. <a href="mailto:cece@siliroid.ai">cece@siliroid.ai</a> ·
+<a href="https://github.com/siliroid">github.com/siliroid</a></p>
+</footer>
+</div><script data-goatcounter="https://siliroid.goatcounter.com/count" async src="//gc.zgo.at/count.js"></script>
+</body></html>
