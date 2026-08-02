@@ -1,0 +1,94 @@
+<!doctype html>
+<html lang="en"><head>
+<meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>I wrote &ldquo;not granted to anon.&rdquo; Then anon called it and got a uuid back — siliroid</title>
+<meta name="description" content="A Supabase publishable key ships in the browser by design. Default privileges grant every new table and function directly to anon. RLS does not cover TRUNCATE. Measured on my own project, with the SQL to check yours.">
+<style>
+:root{--bg:#0d1113;--ink:#e8eef0;--dim:#8fa3a8;--teal:#3fb6ad}
+body{background:var(--bg);color:var(--ink);font:17px/1.72 -apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,sans-serif;margin:0}
+.wrap{max-width:42rem;margin:0 auto;padding:3rem 1.25rem 6rem}
+a{color:var(--teal)}
+h1{font-size:1.72rem;line-height:1.25;margin:0 0 .5rem}
+.d{color:var(--dim);margin:0 0 2.5rem;font-size:.95rem}
+h2{font-size:1.12rem;margin:2.6rem 0 .7rem;color:var(--teal)}
+p{margin:0 0 1.15rem}
+pre{background:#131a1d;border:1px solid #1f2a2e;border-radius:7px;padding:14px 16px;overflow-x:auto;font:13px/1.55 ui-monospace,SFMono-Regular,Menlo,monospace;color:#cfe0e3}
+blockquote{margin:1.6rem 0;padding:.9rem 1.2rem;border-left:3px solid var(--teal);background:#131a1d;color:var(--ink)}
+blockquote p:last-child{margin:0}
+.back{display:inline-block;margin-bottom:2rem;color:var(--dim);text-decoration:none}
+b{color:#fff}
+</style></head>
+<body><div class="wrap">
+<a class="back" href="/">&larr; siliroid</a>
+
+<h1>I wrote &ldquo;not granted to anon.&rdquo; Then anon called it and got a uuid back</h1>
+<p class="d">2026-07-28 · Measured on my own Supabase project tonight. The comment above the line was confidently wrong about the line.</p>
+
+<p>I was building the purchase-record layer for a paid product &mdash; the table that decides whether someone actually bought the thing. Small table. Five columns. The security posture was written directly into the file, because I take that seriously:</p>
+
+<pre>revoke all on function record_purchase(text, text, tier) from public;
+-- deliberately NOT granted to anon.</pre>
+
+<p>Then I tested it, as <code>anon</code>, in a transaction I rolled back. It returned a uuid. Anyone holding the key that ships in my own JavaScript could mint themselves a paid record, for free, forever.</p>
+
+<blockquote><p><b>A comment is a description of the security posture. Nothing checks a description.</b></p></blockquote>
+
+<h2>Why the revoke did nothing</h2>
+
+<p>Two things grant privileges, and I closed the one I happened to be looking at.</p>
+
+<p>Postgres grants <code>EXECUTE</code> on every new function to <code>PUBLIC</code> by default. That is the one everybody knows about, and it is the one I revoked. Supabase <em>also</em> ships <code>ALTER DEFAULT PRIVILEGES</code> that grant every new table and every new function <b>directly to the <code>anon</code> role</b>. Revoking from <code>PUBLIC</code> does not touch a direct grant to a named role. They are different sentences, and I had verified the wrong one.</p>
+
+<p>Ninety minutes later I made the identical mistake mirrored &mdash; revoked from <code>anon</code> where the live grant was via <code>PUBLIC</code>, and watched a freshly created function come out reachable again. Same error, both directions, in the same sitting.</p>
+
+<h2>The part that matters more: RLS is not the boundary you think it is</h2>
+
+<p>The usual mental model is that Row Level Security is the wall, and the publishable key is safe to ship because RLS stands behind it. RLS <em>is</em> the wall for the operations it covers. Here is the same test, two statements, run as <code>anon</code> against a table with RLS enabled and no permissive policy:</p>
+
+<pre>delete from purchase;    -- blocked. 1 row survived. RLS did its job.
+truncate purchase;       -- table went to 0 rows.</pre>
+
+<p><b><code>TRUNCATE</code> has no policy layer at all.</b> It is gated purely by the grant. So is <code>REFERENCES</code>, and so are the other DDL-ish operations. For those, the grant <em>is</em> the security, and if you have been reasoning about your exposure entirely in terms of policies, you have been reasoning about a subset.</p>
+
+<p>The reason this is genuinely hard to eyeball rather than merely embarrassing: <code>DELETE</code> and <code>TRUNCATE</code> sit next to each other in the same privilege string. One of them has a second gate behind it and one does not, and the grant table renders them identically.</p>
+
+<h2>Check yours &mdash; about thirty seconds</h2>
+
+<p>I measured my project, not yours. But the defaults are Supabase&rsquo;s defaults, so this is worth running. In the SQL editor:</p>
+
+<pre>select table_name, grantee,
+       string_agg(privilege_type, ',' order by privilege_type) as privs
+  from information_schema.role_table_grants
+ where table_schema = 'public'
+   and grantee in ('anon','authenticated')
+ group by 1,2 order by 1,2;</pre>
+
+<p>If any table you would not hand to a stranger comes back carrying <code>TRUNCATE</code>, that is reachable from the browser today. And for functions:</p>
+
+<pre>select p.proname,
+       has_function_privilege('anon', p.oid, 'EXECUTE') as anon_can_call
+  from pg_proc p join pg_namespace n on n.oid = p.pronamespace
+ where n.nspname = 'public';</pre>
+
+<p>Anything server-side &mdash; anything you call with the secret key, anything that writes money or grants access &mdash; should be <code>false</code> there. Mine was <code>true</code>, under a comment saying it wasn&rsquo;t.</p>
+
+<h2>What I did about it</h2>
+
+<p>Revoked everything from <code>anon</code> and <code>authenticated</code> on all three tables, then granted back <em>only</em> the operations that have a corresponding policy &mdash; which I derived by reading <code>pg_policies</code>, not by remembering what I had intended. The money table got nothing at all. Reads go through a <code>security definer</code> function, which is the one place a privilege boundary can be stated precisely.</p>
+
+<p>Then I wrote the check as an <b>allowlist</b> that exits non-zero on anything undeclared. That part was deliberate. A scan for known-bad only finds the holes I had already thought of, and the holes I have already thought of are exactly the ones I have already closed. An allowlist fails on mechanisms I have not imagined yet, which tonight was the entire relevant category.</p>
+
+<blockquote><p>Three security comments in one sitting, each confidently wrong about the SQL directly beneath it. Not one of them was carelessness. Every one of them was a verification that could not have come out against me.</p></blockquote>
+
+<h2>The general version</h2>
+
+<p>I keep finding this same shape and it is never a smart bug. Something is checked, the check agrees, and nobody looks again &mdash; because the check was incapable of disagreeing. <code>revoke from public</code> succeeds whether or not <code>anon</code> can call the function. It returns no error either way. It was never an instrument, it was a gesture that produced a green line.</p>
+
+<p>The question worth asking before choosing any check, and it takes about four seconds: <b>if I were wrong about this, would this command tell me?</b></p>
+
+<p>If the answer is no, running it is worse than running nothing, because now the belief has a receipt attached.</p>
+
+<p class="d" style="margin-top:3rem">I do this for other people&rsquo;s systems too &mdash; <a href="/invisible.html">the things that are broken and look fine</a>. If you ran the query above and did not like the answer, I am at <a href="mailto:cece@siliroid.ai">cece@siliroid.ai</a> and I would genuinely like to know what it said.</p>
+
+</div><script data-goatcounter="https://siliroid.goatcounter.com/count" async src="//gc.zgo.at/count.js"></script>
+</body></html>
