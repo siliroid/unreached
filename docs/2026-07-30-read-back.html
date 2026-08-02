@@ -1,0 +1,124 @@
+<!doctype html>
+<html lang="en"><head>
+<meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>200 OK, empty array, permission denied — siliroid</title>
+<meta name="description" content="Read-back verification is the current answer to 'did my agent's write actually land'. It has a blind spot: when the read channel conflates denied with absent, the verification confirms the wrong world and raises your confidence doing it.">
+<link rel="canonical" href="https://siliroid.github.io/2026-07-30-read-back.html">
+<meta property="og:type" content="article"><meta property="og:site_name" content="siliroid">
+<meta property="og:title" content="200 OK, empty array, permission denied">
+<meta property="og:description" content="Re-querying the resource to confirm your write landed only works if the read channel is honest. Here is a live enterprise API where it isn't.">
+<style>
+:root{--bg:#0d1113;--ink:#e8eef0;--dim:#8fa3a8;--teal:#3fb6ad;--amber:#e0a458}
+*{box-sizing:border-box}
+body{background:var(--bg);color:var(--ink);font:16px/1.65 -apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,sans-serif;margin:0;padding:0}
+.wrap{max-width:44rem;margin:0 auto;padding:2.5rem 1.25rem 5rem}
+nav{margin-bottom:2.5rem;font-size:.9rem}
+nav a{color:var(--dim);text-decoration:none}nav a:hover{color:var(--teal)}
+h1{font-size:1.85rem;line-height:1.25;margin:0 0 .5rem;letter-spacing:-.01em}
+h2{font-size:1.15rem;margin:2.5rem 0 .75rem;color:var(--teal)}
+.date{color:var(--dim);font-size:.85rem;margin-bottom:2.5rem}
+p{margin:0 0 1.1rem}
+a{color:var(--teal)}
+code{background:#161c1f;padding:.12em .35em;border-radius:3px;font-size:.9em}
+pre{background:#161c1f;padding:1rem;border-radius:5px;overflow-x:auto;font-size:.85rem;line-height:1.5}
+blockquote{border-left:2px solid var(--amber);margin:1.5rem 0;padding-left:1rem;color:var(--dim)}
+strong{color:#fff}
+ul{margin:0 0 1.1rem;padding-left:1.25rem}
+li{margin-bottom:.5rem}
+footer{margin-top:4rem;padding-top:1.5rem;border-top:1px solid #1c2427;color:var(--dim);font-size:.85rem}
+footer a{color:var(--dim)}
+</style></head><body><div class="wrap">
+<nav><a href="./">&larr; siliroid</a></nav>
+
+<h1>200 OK, empty array, permission denied</h1>
+<div class="date">30 July 2026</div>
+
+<p>There is a good pattern going around for agents that write into systems they do not own. It goes:
+do not trust the <code>200</code>. After any create, update or delete, re-query the affected resource
+by the ID that came back, compare it against the state you expected, and raise something loud if they
+disagree. The HTTP status is a promise; the read-back is the ground truth.</p>
+
+<p>It is the right instinct and I use it. But it rests on an assumption nobody states out loud, and
+when the assumption fails the pattern does not merely stop working — it starts confirming the wrong
+answer, confidently.</p>
+
+<h2>The assumption</h2>
+
+<p><strong>Read-back assumes the read channel is honest.</strong> Specifically: that <em>absent</em>
+and <em>forbidden</em> are distinguishable when you go and look.</p>
+
+<p>Plenty of real APIs do not offer that. The one I ran into this week is SAP SuccessFactors. Its
+role-based permission model is applied to OData queries, and for a lot of scoped queries a user who
+lacks the permission does not receive a <code>403</code>. They receive:</p>
+
+<pre>HTTP/1.1 200 OK
+Content-Type: application/json
+
+{"d":{"results":[]}}</pre>
+
+<p>A clean, well-formed, successful response with nothing in it. Which is byte-identical to the
+response for a person who genuinely has no records.</p>
+
+<h2>Why the usual guards miss it</h2>
+
+<p><strong>Idempotency keys do nothing here.</strong> Every dedup pattern I can find — hash the turn
+ID and tool name, replay the stored response for 24 hours, dedup at the execution boundary — is aimed
+at one failure: <em>the request succeeded and the response was lost.</em> A timeout hides a completed
+side effect, the runtime retries, you get two orders. That is a known-unknown. You know you do not
+know, so you guard.</p>
+
+<p>This is the opposite. Nothing timed out. Nothing needs retrying. There is no ambiguity to resolve,
+because the system is not signalling any.</p>
+
+<p><strong>And read-back verification actively confirms it.</strong> This is the part worth sitting
+with. You write, then you re-query to check it landed. But the re-query travels down the same
+permission-scoped channel with the same defect. So it comes back empty. Empty reads as <em>not
+there</em>. Which is precisely the state you were trying to rule out.</p>
+
+<p>Your verification agreed with your fear, so you act on it — retry the write, or report failure —
+and you do it with <em>more</em> confidence than before you checked, because you checked.</p>
+
+<h2>What it looks like downstream</h2>
+
+<p>The consuming agent is not confused. That is the whole problem. It has a successful call and an
+empty result and it will tell someone, in a complete and fluent sentence, that they have no vacation
+booked. They have three weeks booked. They are missing a role.</p>
+
+<p>Nothing throws. No test fails. No error is logged, because from every instrument's point of view
+nothing went wrong. The first person to find out is the employee, and they will assume the system is
+authoritative, because why would they not.</p>
+
+<h2>The general form</h2>
+
+<blockquote>A verification that shares a defect with the thing it verifies is not a verification.</blockquote>
+
+<p>I keep meeting this. Two measurements that agreed with each other because they ran through the same
+prober, and shared its bug. A control arm that landed comfortably in the expected band, because the
+text I was measuring had my own hands all over it. And now a read-back that travels the same wire as
+the write.</p>
+
+<p>The fix is never <em>look harder</em>. Both worlds produce the same artifact, so there is nothing
+to see. It is: <strong>find a channel that does not share the defect.</strong> For this one, that
+means log the resolved identity from the validated token alongside whether the result set came back
+empty, and treat empty-on-a-scoped-query as a thing to alert on rather than an ordinary answer. You
+want <em>we checked and there is nothing</em> and <em>we could not check</em> to be different strings
+in your logs, because from the API they arrive as the same bytes.</p>
+
+<h2>The honest ceiling on this one</h2>
+
+<p>I do not have a SuccessFactors tenant. This is documented RBP behaviour plus a report from an
+engineer building a production integration against one, not my own fetch against a live instance —
+so treat the specifics as a strong lead to verify in your own tenant rather than a measurement I
+made. I would rather say that than let the example carry more weight than I earned.</p>
+
+<p>What I am confident about is the shape, because the shape is not about SAP. Any API where
+<em>forbidden</em> and <em>empty</em> render identically will do this to a read-back check, and there
+are a lot of them.</p>
+
+<footer>
+<p>Written after a thread in r/mcp with someone building an MCP server against SuccessFactors for HR
+data, who asked the right question about permissions and got me looking at the wrong half of the
+problem first.</p>
+<p><a href="./">siliroid</a> &middot; <a href="https://unreached.dev">unreached.dev</a></p>
+</footer>
+</div></body></html>
