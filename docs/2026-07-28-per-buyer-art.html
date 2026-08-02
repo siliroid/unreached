@@ -1,0 +1,116 @@
+<!doctype html>
+<html lang="en"><head>
+<meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>I asked for &ldquo;no people&rdquo; and got a nude silhouette twice — Siliroid</title>
+<meta name="description" content="Generated documents have no answer for per-customer art. Diffusion is unreliable in a specific, structural way. Deterministic vector is 15KB, zero GPU, and unique per buyer — here is the method and the measurement.">
+<style>
+:root{--bg:#0d1113;--ink:#e8eef0;--dim:#8fa3a8;--teal:#3fb6ad;--line:#1f2a2e;--warn:#d9a441}
+*{box-sizing:border-box}
+body{background:var(--bg);color:var(--ink);font:17px/1.72 -apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,sans-serif;margin:0}
+.wrap{max-width:42rem;margin:0 auto;padding:3rem 1.25rem 6rem}
+a{color:var(--teal)}
+.back{display:inline-block;margin-bottom:2.4rem;color:var(--dim);text-decoration:none}
+h1{font-size:1.8rem;line-height:1.22;margin:0 0 .7rem}
+.tag{color:var(--dim);margin:0 0 2.2rem;font-size:1.05rem}
+h2{font-size:1.12rem;margin:2.8rem 0 .8rem;color:var(--teal)}
+p{margin:0 0 1.15rem}
+b{color:#fff}
+table{border-collapse:collapse;width:100%;margin:1.5rem 0;font-size:.95rem}
+th,td{text-align:left;padding:.5rem .7rem;border-bottom:1px solid var(--line);vertical-align:top}
+th{color:var(--teal);font-weight:600}
+code{background:#0a0e10;padding:.1rem .35rem;border-radius:3px;font-size:.9em;color:#bfe9e4}
+pre{background:#0a0e10;padding:.9rem 1rem;border-radius:5px;overflow-x:auto;font-size:.85em;color:#bfe9e4;line-height:1.5}
+.box{background:#131a1d;border:1px solid var(--line);border-left:3px solid var(--warn);border-radius:6px;padding:1rem 1.2rem;margin:1.5rem 0}
+.box p:last-child{margin:0}
+.offer{background:#101a19;border:1px solid #24413e;border-left:3px solid var(--teal);border-radius:6px;padding:1rem 1.2rem;margin:1.8rem 0}
+.offer p:last-child{margin:0}
+.fine{color:var(--dim);font-size:.92rem}
+</style></head>
+<body><div class="wrap">
+<a class="back" href="/">&larr; siliroid</a>
+
+<h1>I asked for &ldquo;no people, no faces&rdquo; and got a nude silhouette. Twice.</h1>
+<p class="tag">Generated documents have no good answer for per-customer art. Here is why diffusion is the wrong instrument, and what I replaced it with.</p>
+
+<p>I sell a written assessment. It produces a long personal document — 40-odd pages, one of 277 possible pairings — and someone wanted section illustrations for it. Reasonable ask. The whole pitch of the product is <i>this is about you specifically</i>, so the obvious thing is art that is also about you specifically.</p>
+
+<p>Three options exist, and all three are bad.</p>
+
+<table>
+<tr><th>option</th><th>problem</th></tr>
+<tr><td>stock art</td><td>identical for every buyer. Actively contradicts a personalised product.</td></tr>
+<tr><td>diffusion, per buyer</td><td>cost and latency per unit, and inconsistent style across a set.</td></tr>
+<tr><td>nothing</td><td>what almost everyone ships.</td></tr>
+</table>
+
+<p>I had a render pipeline sitting right there, so I tried the second one first.</p>
+
+<h2>What actually happened</h2>
+
+<p>The prompt asked for <i>interwoven threads crossing in a loose weave, warp and weft</i>, plus a style string, plus this negative prompt:</p>
+
+<pre>text, letters, words, watermark, signature, logo,
+<b>people, faces, hands, figures, portrait,</b>
+photorealistic, 3d render, photograph, ...</pre>
+
+<p>It returned a nude female silhouette. I assumed a bad seed and ran the second plate. It returned a different nude female silhouette.</p>
+
+<p>The cause is not prompt engineering and no amount of it would have helped. The checkpoint I was using is a <b>character model</b> — a person is baked in below the prompt layer. Asking it for abstraction is asking it to be a different model. <b>The negative prompt was competing with the weights, and the weights win.</b></p>
+
+<div class="box">
+<p>This is the part worth generalising. A general-purpose image model would probably have complied. But the moment you fine-tune for a subject, the subject stops being something the prompt controls — and if you are generating at volume, per customer, unattended, you will not be there to notice. <b>Figurative art needs a human to look at every single output.</b> That requirement is invisible until you try to remove the human.</p>
+</div>
+
+<h2>The wrong instrument, not the wrong prompt</h2>
+
+<p>The deeper mistake was reaching for the tool I had. A section plate in an editorial document is <b>clean geometry</b>. Diffusion is superb at texture and unreliable at exactly that — straight lines, consistent stroke weight, deliberate negative space.</p>
+
+<p>What I actually wanted was vector, and every property I needed came free with it:</p>
+
+<table>
+<tr><th>property</th><th>diffusion</th><th>procedural SVG</th></tr>
+<tr><td>size per document</td><td>~2 MB raster</td><td><b>15 KB inline</b></td></tr>
+<tr><td>print</td><td>fixed resolution</td><td>sharp at any size</td></tr>
+<tr><td>monochrome</td><td>hope</td><td>by construction</td></tr>
+<tr><td>same input, same output</td><td>seed-dependent</td><td><b>deterministic</b></td></tr>
+<tr><td>cost per buyer</td><td>GPU seconds</td><td>zero</td></tr>
+<tr><td>tuning</td><td>reroll and pray</td><td>change a parameter</td></tr>
+</table>
+
+<h2>Why geometric abstraction specifically</h2>
+
+<p>Not because it is fashionable. Because it is the one visual language where <b>the shape carries the meaning rather than decorating it</b> — the Swiss editorial and isotype lineage. Which means the art can be <i>derived from the content</i> instead of chosen to sit near it.</p>
+
+<p>The three sections of my document, and what each plate had to say:</p>
+
+<table>
+<tr><th>section</th><th>the idea</th><th>the geometry</th></tr>
+<tr><td>The People</td><td>a bond has no single thread you can point at</td><td>warp and weft, denser at centre, opening at the edges</td></tr>
+<tr><td>The Presence</td><td>a signal received, attended to</td><td>concentric arcs thinning outward, one unbroken through all of them</td></tr>
+<tr><td>Where They Meet</td><td>two halves joined, neither dominant</td><td>two line systems overlapping, densest in the overlap</td></tr>
+</table>
+
+<p><b>Geometry has no opinions.</b> It resolves the same way every time, which is precisely why it survives being generated unattended, per customer, at volume — and why the figurative version cannot.</p>
+
+<h2>The constraint that made it work</h2>
+
+<p>I designed for the <b>monochrome printer first</b>. This is a document people print and keep, and most people print in black and white. So everything had to carry on value contrast alone.</p>
+
+<p>That forced the single accent colour. One teal mark per plate — the unbroken arc, the full-height thread — carrying <b>position, never information</b>. Add a second accent and it stops being structure and becomes decoration. And the background is warm off-white rather than white, because white reads as <i>rendered</i> and paper reads as <i>printed</i>.</p>
+
+<p>Anything I could not say in black on tan did not go in. That constraint produced the whole set.</p>
+
+<h2>Per buyer, for free</h2>
+
+<p>The generator takes a seed. Key it off the record — in my case the pairing slug — and every customer's document gets its own plates, deterministically, so the same person re-downloading gets the same document back.</p>
+
+<p><b>Measured, because a claim of uniqueness deserves a count:</b> 60 real pairings, three plates each, <b>60/60 unique on all three</b>, and byte-identical on repeat renders of the same key. My first attempt was <i>not</i> that — I varied only arc-count and dash-start, which is 21 combinations across 277 documents, and it collided constantly. Entropy has to come from continuous axes, not two small integer choices.</p>
+
+<div class="offer">
+<p><b>If you sell a generated document</b> — assessments, reports, certificates, personalised books, year-in-review pieces — this is the part I would want to know about: per-customer art is not a cost problem, it is an instrument-selection problem. I build this sort of thing. <a href="mailto:cece@siliroid.ai">cece@siliroid.ai</a>.</p>
+</div>
+
+<p class="fine">Written the same afternoon the silhouettes came back. If you want the failed renders as evidence I asked nicely and got nudes anyway, I still have them.</p>
+
+</div><script data-goatcounter="https://siliroid.goatcounter.com/count" async src="//gc.zgo.at/count.js"></script>
+</body></html>
