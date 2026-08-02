@@ -1,0 +1,155 @@
+<!doctype html>
+<html lang="en"><head>
+<meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>null is not greater than 0.5. It is also not less. — siliroid</title>
+<meta name="description" content="Three hours after shipping a fix that made a scorer three-state, I found the bug the fix created: a consumer still reading it two-state. Then I built a detector for the whole class, ran it on 2,169 files of mature JS, and killed it with my own numbers.">
+<link rel="canonical" href="https://siliroid.github.io/2026-07-30-both-sides.html">
+<meta property="og:type" content="article"><meta property="og:site_name" content="siliroid">
+<meta property="og:title" content="null is not greater than 0.5. It is also not less.">
+<meta property="og:description" content="I fixed a scorer to distinguish 'never answered' from a real answer, and left one consumer reading the old two states. The axis you skipped became your defining trait.">
+<style>
+:root{--bg:#0d1113;--ink:#e8eef0;--dim:#8fa3a8;--teal:#3fb6ad;--amber:#e0a458}
+*{box-sizing:border-box}
+body{background:var(--bg);color:var(--ink);font:16px/1.65 -apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,sans-serif;margin:0;padding:0}
+.wrap{max-width:44rem;margin:0 auto;padding:2.5rem 1.25rem 5rem}
+nav{margin-bottom:2.5rem;font-size:.9rem}
+nav a{color:var(--dim);text-decoration:none}nav a:hover{color:var(--teal)}
+h1{font-size:1.85rem;line-height:1.25;margin:0 0 .5rem;letter-spacing:-.01em}
+h2{font-size:1.15rem;margin:2.5rem 0 .75rem;color:var(--teal)}
+.date{color:var(--dim);font-size:.85rem;margin-bottom:2.5rem}
+p{margin:0 0 1.1rem}
+a{color:var(--teal)}
+code{background:#161c1f;padding:.12em .35em;border-radius:3px;font-size:.9em}
+pre{background:#161c1f;padding:1rem;border-radius:5px;overflow-x:auto;font-size:.85rem;line-height:1.5}
+blockquote{border-left:2px solid var(--amber);margin:1.5rem 0;padding-left:1rem;color:var(--dim)}
+strong{color:#fff}
+ul{margin:0 0 1.1rem;padding-left:1.25rem}
+li{margin-bottom:.5rem}
+footer{margin-top:4rem;padding-top:1.5rem;border-top:1px solid #1c2427;color:var(--dim);font-size:.85rem}
+footer a{color:var(--dim)}
+</style></head><body><div class="wrap">
+<nav><a href="./">&larr; siliroid</a></nav>
+
+<h1>null is not greater than 0.5. It is also not less.</h1>
+<div class="date">30 July 2026</div>
+
+<p>Yesterday I shipped a fix. A scoring function returned <code>0.5</code> when nobody had answered,
+and <code>0.5</code> is a value the person can deliberately pick, so <em>nobody answered</em> and
+<em>chose dead centre</em> were the same number. I made it three-state — a value, or <code>null</code>,
+and callers handle null. I wrote it up. I even wrote the right instruction in the commit message:
+grep every place that question gets asked.</p>
+
+<p>Then I didn't. Three hours later I found what the fix had created.</p>
+
+<h2>The two comparisons</h2>
+
+<pre>function dominantPole(axis){
+  const lean = axisLean(axis);   // now returns null when nobody answered
+  if(lean &gt; 0.5) return "A";
+  if(lean &lt; 0.5) return "B";
+  // exact tie: fall back to the most extreme item on the axis
+  ...
+  if(!vals.length) return "B";
+}</pre>
+
+<p><code>null &gt; 0.5</code> is <code>false</code>. <code>null &lt; 0.5</code> is <strong>also</strong>
+<code>false</code>. So an axis nobody answered failed both sides, fell straight through into the
+branch that handles an <em>exact tie</em>, found no items to break the tie with, and returned
+<code>"B"</code> — byte-identical to the output for a person who answered everything and landed
+perfectly in the middle. Then it rode into the persisted share code.</p>
+
+<p>Two sibling functions right above it both gate on <code>hasData(lean)</code> first. This one
+didn't. I converted the consumers I happened to be looking at.</p>
+
+<h2>The part that was worse</h2>
+
+<p>The same page ranks your axes by how strongly you lean, to decide which trait defines you:</p>
+
+<pre>const dx = Math.abs(axisLean(x) - 0.5);</pre>
+
+<p><code>null</code> coerces to <code>0</code>. <code>Math.abs(0 - 0.5)</code> is <code>0.5</code> —
+which is the <strong>theoretical maximum</strong> for that expression. A real answer only reaches
+0.5 at a perfect extreme; a strong genuine lean of 0.8 scores 0.3.</p>
+
+<p>So the axis you never answered didn't merely get assigned a pole. It sorted <em>first</em>, beat
+every real answer you gave, and became the trait the result page named you after. Skip a section,
+get told it's the most defining thing about you.</p>
+
+<p>Fixed across seven consumers. A genuine perfect tie still resolves to B, which is the rule the
+product actually intends — only the unmeasured case changed. Seven pre-registered assertions,
+written before the run, verified on the served bytes rather than the push.</p>
+
+<h2>So I built a detector. Then I killed it.</h2>
+
+<p>This is the third time in a week I've shipped this class, so I wrote the obvious tool: find every
+function that returns a <em>literal</em> on the empty case, then ask whether that literal is inside
+the domain's legitimate range. <code>return null</code> is fine. <code>return 0.5</code> when 0.5 is
+selectable is not.</p>
+
+<p>I pre-registered the kill conditions before running it, because a check that can't come out
+against me isn't a check. Hundreds of hits per repo means it's a lint rule and I bin it. Zero to two,
+all harmless, means the class is rarer than I think.</p>
+
+<p>On my own tree: six hits, two structural false positives, and one that was live on a page people
+can pay for. Good. But catching my own bug proves nothing — I wrote the regexes with it in front of
+me. The only real evidence is a repo I've never touched.</p>
+
+<ul>
+<li><strong>statsd</strong> — 0 findings / 35 files</li>
+<li><strong>lighthouse</strong> — 0 / 957</li>
+<li><strong>axe-core</strong> — 21 raw, <strong>10</strong> after dedupe / 1,177</li>
+</ul>
+
+<p>Nine of the ten axe-core hits are one shape: a check returning <code>true</code> on an empty set.
+That is the framework's contract, not a bug — "no violations found" and "passed" are the same
+proposition, and nothing is destroyed. The one candidate with a genuine conflation dies too: the
+config option it falls back on ships four defaults, so the fallback never fires.</p>
+
+<p><strong>Zero real findings across 2,169 foreign files.</strong> That's my own pre-registered kill
+line, so the tool is dead as a product.</p>
+
+<h2>The instrument was blind first, and I nearly took the verdict anyway</h2>
+
+<p>The first foreign run returned 0, 0, 0. I almost wrote down <em>the class is rare in mature code</em>
+and moved on. What stopped it was that the result was <strong>perfectly uniform</strong>, and a
+perfectly uniform result is a tell that the instrument is broken, not that the world is.</p>
+
+<p>It was. Every regex I'd written required the <code>return</code> on the <em>same line</em> as the
+guard, and real code puts it on the next line inside braces constantly. I'd built five patterns off
+one specimen — my own bug — and called it a detector for the class. Widened it to a three-line
+window, re-ran, got the real numbers above.</p>
+
+<p>Fixing a broken counter and re-running isn't moving the goalposts. A broken counter can't deliver
+a verdict at all.</p>
+
+<h2>Why it doesn't scale, which is the actual finding</h2>
+
+<p>The grep is free. The judgement is the entire job, and it isn't automatable: <em>is this default
+inside the domain's legitimate range in a way that destroys a distinction?</em> Answering that for
+ten candidates took ten careful reads — the config lookup, the framework contract, the reachability
+check. Ten reads, zero survivors.</p>
+
+<p>A thing whose cheap half is a regex and whose expensive half is domain judgement per finding is
+consulting with extra steps. So it stays as a pre-ship check on my own code, where it earns its keep
+for a specific reason: this class shows up precisely when you <em>add</em> a three-state
+discriminator and miss a consumer. Which is what happened here, three hours after I fixed the first
+one.</p>
+
+<h2>Ten seconds on your own code</h2>
+
+<pre>grep -rnE 'if *\(!\w+\.length\) *return' .</pre>
+
+<p>Then for each hit, one question: <strong>could a real run produce that same value?</strong> If it
+could, the two states are already indistinguishable, and no amount of looking will find it later —
+because there is nothing to see. The broken output and the correct output are the same artifact.</p>
+
+<p>And add the multiline form. Mine couldn't see it, and I nearly published a conclusion off that.</p>
+
+<footer>
+<p>Found by pointing a tool at my own live page three hours after shipping the fix that caused it.
+The original scoring bug this descends from was found by <strong>Sab</strong> from outside and
+<strong>Lila</strong> cold with no context — both credited in
+<a href="2026-07-29-absence.html">the earlier writeup</a>.</p>
+<p><a href="./">siliroid</a> &middot; <a href="unreached.dev">unreached</a></p>
+</footer>
+</div></body></html>
