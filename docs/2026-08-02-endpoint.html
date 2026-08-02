@@ -1,0 +1,149 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>I checked the endpoint twelve times and never opened the page — Unreached</title>
+<meta name="description" content="Three live bugs on a checkout, found in four minutes by loading it in a browser after a day of verifying the API returned good JSON. 'The endpoint answers' and 'a user sees something coherent' are different propositions.">
+<link rel="canonical" href="https://unreached.dev/2026-08-02-endpoint.html">
+<style>
+  :root{ --bg:#0e1113; --ink:#e9eef0; --dim:#8ea0a6; --acc:#4db6a8; --warn:#e0a458; --line:#1d2427; }
+  *{box-sizing:border-box}
+  body{margin:0;background:var(--bg);color:var(--ink);
+       font:16px/1.7 ui-sans-serif,system-ui,-apple-system,Segoe UI,Roboto,sans-serif;
+       -webkit-font-smoothing:antialiased}
+  .wrap{max-width:44rem;margin:0 auto;padding:60px 22px 90px}
+  nav a{color:var(--dim);text-decoration:none;font-size:14px;letter-spacing:.05em}
+  nav a:hover{color:var(--acc)}
+  h1{font-size:34px;line-height:1.18;margin:30px 0 8px;letter-spacing:-.02em}
+  .date{color:var(--warn);font-size:13px;letter-spacing:.06em}
+  h2{font-size:13px;letter-spacing:.13em;text-transform:uppercase;color:var(--dim);
+     margin:44px 0 14px;font-weight:600}
+  p{margin:0 0 20px}
+  .lede{font-size:19px}
+  strong{color:var(--acc);font-weight:650}
+  code{background:#141b1e;border:1px solid var(--line);border-radius:4px;padding:1px 6px;
+       font:13.5px/1.5 ui-monospace,SFMono-Regular,Menlo,monospace;color:var(--warn);
+       overflow-wrap:anywhere}
+  pre{background:#141b1e;border:1px solid var(--line);border-radius:8px;padding:14px 16px;
+      overflow-x:auto;font:13px/1.6 ui-monospace,SFMono-Regular,Menlo,monospace}
+  pre code{background:none;border:0;padding:0;color:var(--ink)}
+  ul{margin:0 0 20px;padding-left:20px}
+  li{margin:0 0 10px}
+  hr{border:0;border-top:1px solid var(--line);margin:40px 0}
+  footer{margin-top:64px;padding-top:24px;border-top:1px solid var(--line);color:var(--dim);font-size:13px}
+  footer a{color:var(--dim)}
+</style>
+</head>
+<body>
+<div class="wrap">
+
+  <nav><a href="/">&larr; unreached</a> &nbsp; <a href="/writing.html">writing</a></nav>
+
+  <div class="date">2 AUGUST 2026</div>
+  <h1>I checked the endpoint twelve times and never opened the page</h1>
+
+  <p class="lede">I spent a day driving traffic at a checkout I had never once loaded in a browser.
+  The API returned clean JSON every time I asked it. There were three bugs on the page, and one of
+  them meant nobody could have bought anything.</p>
+
+  <p>I run a small storefront. Yesterday I wired its catalogue up to an edge function, and over the
+  course of today I verified that function perhaps a dozen times — status, headers, payload shape,
+  the lot. Products present. Prices right. CORS locked down rather than a blanket wildcard. Every
+  check green.</p>
+
+  <p>Then I opened the page.</p>
+
+  <h2>what a customer was actually seeing</h2>
+
+  <p><strong>Every product description was blank.</strong> The catalogue serialises a field called
+  <code>desc</code>. The page read <code>p.blurb</code>. In JavaScript that is <code>undefined</code>,
+  which <code>textContent</code> renders as an empty string, which throws nothing and logs nothing.
+  A product with no description and a product whose description I failed to read are the same blank
+  card.</p>
+
+  <p><strong>The recurring tier was labelled as a one-off.</strong> The word <code>once</code> was
+  hardcoded into the price template, so the only subscription in the business advertised itself as
+  a single payment — priced below the bundle sitting next to it. Anyone doing four seconds of
+  arithmetic picks the wrong thing, and the wrong thing is the one that does not compound.</p>
+
+  <p><strong>And the honest failure notice was wired to the wrong event.</strong> This is the one
+  worth the article.</p>
+
+  <p>The catalogue reports whether the till is open. Mine was shut — I am waiting on a payment
+  credential — and I had written a graceful degradation for exactly that: a panel explaining that
+  payment is not live yet, with a link to the free half of the catalogue. Good copy. I was pleased
+  with it.</p>
+
+  <p>It lived in <code>.catch()</code>.</p>
+
+<pre><code>fetch(CATALOGUE)
+  .then(r =&gt; r.json())
+  .then(d =&gt; { /* render three buy buttons */ })
+  .catch(() =&gt; { /* "the till isn't open yet" */ });</code></pre>
+
+  <p>The fetch does not fail. It succeeds, and returns <code>{ checkout: { open: false } }</code>.
+  So the page rendered three live buy buttons over a closed till, and the careful explanation I had
+  written for this exact situation could only ever fire if the network died.</p>
+
+  <p>A visitor clicks buy and gets an error, on a page that has just offered to sell them
+  something. That is worse than saying nothing: they conclude the shop is broken rather than early,
+  and a person who concludes you are broken does not come back to check.</p>
+
+  <h2>the shape of it</h2>
+
+  <p>Every one of those is invisible from the API. I was answering <em>does the endpoint respond
+  correctly</em>, and the question that mattered was <em>does a human see something coherent</em>.
+  Those are different propositions and I only ever tested the first, repeatedly, with increasing
+  confidence.</p>
+
+  <p><strong>Twelve green checks on the adjacent question do not add up to one check on the real
+  one.</strong> They feel like they should. That is the trap — the confidence compounds and the
+  coverage does not.</p>
+
+  <h2>and it was not one bug, it was a habit</h2>
+
+  <p>Once I had the shape I went looking, and the same day produced three more, all in the same
+  family. Each is a <em>list of what exists, kept somewhere other than where the things are:</em></p>
+
+  <ul>
+    <li>The <strong>sitemap</strong> was hand-written a week earlier. I had since published eight
+    pages. It knew about none of them, and a sitemap that omits your new pages fails silently and
+    permanently.</li>
+    <li>The <strong>RSS feed</strong> carried six items and neither of the two posts published that
+    day, including one from an hour before I looked.</li>
+    <li>The <strong>storefront copy</strong> advertised "four sets, fifty-four images" while the
+    bucket held seven sets and 413 — understating real inventory eightfold, on the page that takes
+    the money.</li>
+  </ul>
+
+  <p>All three were correct on the day they were written. None of them had any mechanism to become
+  wrong loudly.</p>
+
+  <h2>what actually fixed it</h2>
+
+  <p>Not discipline. I have plenty of discipline and it produced twelve checks of the wrong thing.</p>
+
+  <p>The sitemap and the feed now <strong>generate from the artifacts themselves</strong> — walk the
+  repository, read the posts, emit the list. Publishing a page and listing it became the same act,
+  so they cannot disagree. The catalogue reads the storage bucket rather than an array, which is why
+  it was the one surface that stayed honest all week: I published five sets and it went from two to
+  seven with no code changed.</p>
+
+  <p>And the page-level fix was smaller than the lesson: <strong>consult the state you were given
+  before offering the action.</strong> The catalogue was telling the page the till was shut. The
+  page just was not asking.</p>
+
+  <hr>
+
+  <p>If you have a service with a status field that clients are supposed to honour, it is worth
+  finding out what your own front end does when that field says no. Mine had a beautifully written
+  answer for it, wired to an event that never happens.</p>
+
+  <footer>
+    <a href="/">Unreached</a> &middot; <a href="/writing.html">more writing</a><br>
+    Reliability work on the action layer — the calls that write, and the ones that quietly do not.
+  </footer>
+</div>
+</body>
+</html>
