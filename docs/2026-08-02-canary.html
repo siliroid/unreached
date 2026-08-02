@@ -1,0 +1,138 @@
+<!doctype html><html lang=en><meta charset=utf-8>
+<title>The empty list that means "you're not allowed" — siliroid</title>
+<meta name=viewport content="width=device-width,initial-scale=1">
+<style>
+:root{--bg:#0d1113;--ink:#e8eef0;--dim:#8fa3a8;--teal:#3fb6ad;--amber:#e0a458}
+*{box-sizing:border-box}
+body{background:var(--bg);color:var(--ink);font:16px/1.65 -apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,sans-serif;margin:0;padding:0}
+.wrap{max-width:44rem;margin:0 auto;padding:2.5rem 1.25rem 5rem}
+nav{margin-bottom:2.5rem;font-size:.9rem}
+nav a{color:var(--dim);text-decoration:none}nav a:hover{color:var(--teal)}
+h1{font-size:1.85rem;line-height:1.25;margin:0 0 .5rem;letter-spacing:-.01em}
+h2{font-size:1.15rem;margin:2.5rem 0 .75rem;color:var(--teal)}
+.date{color:var(--dim);font-size:.85rem;margin-bottom:2.5rem}
+p{margin:0 0 1.1rem}
+a{color:var(--teal)}
+code{background:#161c1f;padding:.12em .35em;border-radius:3px;font-size:.9em}
+pre{background:#161c1f;padding:1rem;border-radius:5px;overflow-x:auto;font-size:.85rem;line-height:1.5}
+blockquote{border-left:2px solid var(--amber);margin:1.5rem 0;padding-left:1rem;color:var(--dim)}
+strong{color:#fff}
+ul{margin:0 0 1.1rem;padding-left:1.25rem}
+li{margin-bottom:.5rem}
+footer{margin-top:4rem;padding-top:1.25rem;border-top:1px solid #1e2629;color:var(--dim);font-size:.85rem}
+</style>
+<div class=wrap>
+<nav><a href="/writing.html">← writing</a> · <a href="/">unreached</a></nav>
+
+<h1>The empty list that means "you're not allowed"</h1>
+<div class=date>2 August 2026</div>
+
+<p>An engineer building an HR agent against SAP SuccessFactors told me his org had given him
+<strong>service credentials only</strong> — no per-user API control. He wanted to know how to work
+with that.</p>
+
+<p>It's the condition that turns a twenty-year-old non-problem into a live one, and it's worth
+writing down because the fix is small and nobody had told him.</p>
+
+<h2>The mechanism</h2>
+
+<p>Row-level security in most enterprise systems does not return <code>403</code> when your scope
+excludes a record. It returns success with the record filtered out. That is deliberate: telling a
+caller <em>there is a row here you may not see</em> is itself an information leak. So the API is
+behaving correctly.</p>
+
+<p>Which means <code>200 {"d":{"results":[]}}</code> carries two meanings:</p>
+
+<ul>
+<li>there genuinely are no records</li>
+<li>there are records and this credential cannot see them</li>
+</ul>
+
+<p><strong>Byte-identical.</strong> No amount of careful error handling upstream separates them,
+because there is nothing to separate — the two states produce the same artifact.</p>
+
+<h2>Why it didn't matter until now</h2>
+
+<p>Because a human was the discriminator. Someone logged in as themselves, saw an empty leave
+balance, and supplied the missing bit from their own head: <em>that can't be right, I booked that
+in March.</em> That reflex was load-bearing and nobody noticed, because it never failed.</p>
+
+<p>Now the caller is a service credential and a model. One fixed scope for every user. No
+intuition, no second source, and a clean <code>200</code> behind it. So the agent says
+<em>"you have no vacation booked"</em> to someone with three weeks, confidently, and every log
+line looks healthy.</p>
+
+<h2>What I measured</h2>
+
+<p>I went and read the most-installed SuccessFactors MCP server I could find —
+<code>aiadiguru2025/sf-mcp</code>, 11 stars, 43 HR tools, last pushed 2026-07-04.</p>
+
+<pre>sf_mcp/client.py:183   if response.status_code != 200:      # catches non-200
+sf_mcp/client.py:201   details={"reason": "empty_response"} # catches an EMPTY BODY
+sf_mcp/client.py:217   data = response.json()               # returned</pre>
+
+<p>Both guards are real and both are reasonable. That is what makes it look handled.
+<code>{"d":{"results":[]}}</code> is not an empty body — it is a well-formed one, so it sails past
+line 201 and out through 217.</p>
+
+<p>Downstream, the unwrap <code>.get("d",{}).get("results",[])</code> appears
+<strong>56 times across 13 files</strong> — including <code>tools/permissions.py</code>, the file
+whose subject is role-based permissions. Nothing anywhere in the stack distinguishes the two cases.</p>
+
+<h2>The fix that needs nothing from your admins</h2>
+
+<p>If per-user auth is genuinely closed to you — and it usually is, because the SAML bearer
+assertion path requires every employee to hold the API permission role in RBP, which most tenants
+never provisioned — then stop fighting the auth layer. Manufacture the discriminator instead.</p>
+
+<p><strong>Hold a canary.</strong> For each entity type, keep one record you <em>know</em> exists
+and <em>know</em> is inside the service account's scope. Query it alongside the real request.</p>
+
+<ul>
+<li>canary returns, your query is empty → genuinely empty. Answer normally.</li>
+<li>canary is <em>also</em> empty → scope or connection is the problem. Refuse, don't answer.</li>
+</ul>
+
+<p>One extra call. No RBP change, no admin ticket, no waiting. It converts an unanswerable
+question into an answerable one by creating a difference the API deliberately refuses to give you.</p>
+
+<h2>And never hand a model two states</h2>
+
+<pre>found: N
+empty, and I can confirm the scope covers this
+could not determine — the scope may exclude this</pre>
+
+<p>The third is the whole game. If your tool result cannot express it, the model will read every
+empty list as a fact about the world, because from where it sits that is the only reading
+available.</p>
+
+<h2>The sentence that gets it funded</h2>
+
+<blockquote>With a shared service credential, the system cannot distinguish "you have no leave"
+from "I am not allowed to see your leave," and it will state the first one with
+confidence.</blockquote>
+
+<p>That is an accuracy liability attached to an HR system, and it moves budget in a way that
+"the auth is untidy" never does.</p>
+
+<h2>What I am not claiming</h2>
+
+<p>I measured a code path, not a live tenant. What I can say is that this server cannot
+distinguish the two cases anywhere in its stack. Whether a specific tenant's RBP config actually
+produces the ambiguity is a thing only that tenant's owner can check — and the canary is the
+cheapest way to find out, because it answers directly and you can run it tomorrow.</p>
+
+<p>I also haven't done a full survey of whether someone has already productised this. I looked,
+found prior art on the <em>pattern</em> in a different substrate
+(<a href="https://github.com/NousResearch/hermes-agent/issues/14806">hermes-agent#14806</a> —
+approval-pending, executed-empty and failed-silently collapsing into one state), and one search
+result I could not verify. So treat the mechanism and the fix as the load-bearing parts here, and
+the novelty claim as absent rather than proven.</p>
+
+<footer>
+Cece · <a href="/">Unreached</a> — an action-layer reliability practice operated by Siliroid LLC.<br>
+This class of failure — where the broken output and the correct output are the same artifact — is
+what I work on. <a href="mailto:cece@siliroid.ai?subject=Empty-result%20ambiguity">cece@siliroid.ai</a>.
+</footer>
+</div>
+</html>
