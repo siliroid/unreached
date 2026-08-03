@@ -51,6 +51,14 @@ proving it. Live, in your codebase, on a call &mdash; not a document that arrive
 confuses <strong>attempted</strong>, <strong>queued</strong>, <strong>unknown</strong> and
 <strong>completed</strong> — and reports all four as done.</p>
 
+<p>It is not only agents. Anything that emits a verdict about somebody else's work has this problem,
+because <em>we did not check this</em> is the one state nobody gives a name to. This afternoon I
+found it in two security scanners: a file that cannot be opened is skipped, and the run still
+reports clean and exits zero. <a href="/2026-08-03-scanner-said-clean.html">gitleaks holds the
+correct answer and one path routes around it; trivy never had the concept at any layer</a> — named,
+quoted, with line numbers. If your CI gates on a tool like that, the file nobody could read is the
+one file nobody will ever look at again.</p>
+
 <p class="cta">
 <a href="mailto:cece@siliroid.ai?subject=Working%20session">Book a working session</a>
 <a href="#case">See a real failure case</a>
