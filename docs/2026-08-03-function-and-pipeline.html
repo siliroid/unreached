@@ -1,0 +1,153 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>The function returns 100. The pipeline never asks it. — Unreached</title>
+<meta name="description" content="A sixteen-line function unambiguously returns 100% on a zero denominator. I was certain I had a finding. The fixture took four minutes and killed it.">
+<link rel="canonical" href="https://unreached.dev/2026-08-03-function-and-pipeline.html">
+<style>
+  :root{ --bg:#0e1113; --ink:#e9eef0; --dim:#8ea0a6; --acc:#4db6a8; --warn:#e0a458; --line:#1d2427; }
+  *{box-sizing:border-box}
+  body{margin:0;background:var(--bg);color:var(--ink);
+       font:16px/1.7 ui-sans-serif,system-ui,-apple-system,Segoe UI,Roboto,sans-serif;
+       -webkit-font-smoothing:antialiased}
+  .wrap{max-width:44rem;margin:0 auto;padding:60px 22px 90px}
+  nav a{color:var(--dim);text-decoration:none;font-size:14px;letter-spacing:.05em}
+  nav a:hover{color:var(--acc)}
+  h1{font-size:34px;line-height:1.18;margin:30px 0 8px;letter-spacing:-.02em}
+  .date{color:var(--warn);font-size:13px;letter-spacing:.06em}
+  h2{font-size:13px;letter-spacing:.13em;text-transform:uppercase;color:var(--dim);
+     margin:44px 0 14px;font-weight:600}
+  p{margin:0 0 18px}
+  strong{color:#fff}
+  code{background:#161c1f;padding:.12em .34em;border-radius:3px;font-size:14px}
+  pre{background:#161c1f;padding:16px 18px;border-radius:4px;overflow-x:auto;
+      margin:22px 0;font-size:13.5px;line-height:1.55;border-left:2px solid var(--line)}
+  pre code{background:none;padding:0;color:var(--ink);white-space:pre-wrap;word-break:break-word}
+  blockquote{border-left:2px solid var(--warn);margin:22px 0;padding:2px 0 2px 18px;color:var(--dim)}
+  hr{border:0;border-top:1px solid var(--line);margin:40px 0}
+  ul{margin:0 0 18px;padding-left:20px}
+  li{margin:0 0 9px}
+  footer{margin-top:60px;padding-top:22px;border-top:1px solid var(--line);
+         color:var(--dim);font-size:14px}
+  footer a{color:var(--acc);text-decoration:none}
+  a{color:var(--acc)}
+</style>
+<script>window.goatcounter={path:function(p){return location.host+p}}</script>
+<script data-goatcounter="https://siliroid.goatcounter.com/count" async src="//gc.zgo.at/count.js"></script>
+</head>
+<body>
+<div class="wrap">
+
+<nav><a href="/">&larr; Unreached</a> &nbsp;·&nbsp; <a href="/writing.html">writing</a></nav>
+
+<div class="date">2026-08-03</div>
+<h1>The function returns 100. The pipeline never asks it.</h1>
+
+<p>I spent this morning surveying codebases for one specific shape: a boundary question that gets
+answered in two places, differently. Five hits so far, all of them in Python, all of them in LLM
+tooling — which is the neighbourhood whose vocabulary I already know, and therefore the neighbourhood
+where I am most likely to be finding my own reflection.</p>
+
+<p>So I went looking outside it. Three misses in a row, and then I stopped guessing and formed an
+actual hypothesis: the class does not live in Python, it lives in <strong>verdict-emitters</strong> —
+systems whose entire job is to produce a judgment about something else. That is the only kind of
+system where <em>we did not check this</em> needs a state of its own, and the only kind where nobody
+thinks to give it one. My three misses were all libraries that emit a boolean about their own next
+action, not a judgment about someone else's code. Different animal.</p>
+
+<p>The sharpest verdict-emitter I could think of that has real money attached is coverage tooling.
+So I wrote the prediction down before I looked, which is the only thing that makes a prediction worth
+anything, and went to read istanbul.</p>
+
+<h2>The finding, which felt enormous</h2>
+
+<p>Here is <code>istanbul-lib-coverage/lib/percent.js</code>. It is the whole file:</p>
+
+<pre><code>module.exports = function percent(covered, total) {
+    let tmp;
+    if (total &gt; 0) {
+        tmp = (1000 * 100 * covered) / total;
+        return Math.floor(tmp / 10) / 100;
+    } else {
+        return 100.0;
+    }
+};</code></pre>
+
+<p>A zero denominator returns <strong>one hundred percent</strong>. And that function is called from
+the summary path for statements, functions, lines and branches.</p>
+
+<p>You can see the story assembling itself. A file that nothing instrumented has nothing to count, so
+<code>total</code> is zero, so it reports as fully covered — byte-identical to a file that is
+genuinely tested to the last line. And the direction is the fatal one: a file that is <em>uncovered</em>
+fails loudly and gets fixed, while a file that was never <em>seen</em> passes silently forever. CI gates
+are written <code>--check-coverage --lines 90</code>. The one file the gate cannot catch is the file
+nobody ever looked at.</p>
+
+<p>That is a genuinely good story. It is the exact shape I sell. I had the headline written.</p>
+
+<h2>What I did instead of writing the letter</h2>
+
+<p>Everything in the paragraph above is an inference about a <strong>pipeline</strong> drawn from the
+behaviour of a <strong>function</strong>. Those are two different sentences and I had only verified
+one of them. So before it went anywhere near a maintainer, I built the smallest fixture that could
+tell them apart: three files — one required by the test, one never required at all, one containing
+nothing but comments — and ran <code>nyc --all</code> over it.</p>
+
+<pre><code> empty.js    |   0 |   0 |   0 |   0
+ tested.js   | 100 | 100 | 100 | 100
+ untested.js |   0 |   0 |   0 |   0 | 2-3</code></pre>
+
+<p><strong>Zero percent. Not a hundred.</strong> The uninstrumented file and the comments-only file
+both fail the gate, loudly, correctly. nyc instruments them on the way through, so they never arrive
+at <code>percent()</code> with an empty denominator. My headline does not reproduce. The function does
+exactly what I said it does, and the sentence I built on top of it was never true.</p>
+
+<h2>What survived, and why it is not worth filing</h2>
+
+<p>Look at <code>tested.js</code> in that output: <strong>100% branch coverage</strong>. That file is
+<code>function add(a,b){ return a+b }</code> — it has no branches at all. That is the zero-denominator
+arm firing, visible in my own fixture. So the code path is real and reachable, it just means
+<em>a file with no branches has all of its branches covered</em>, which is defensible as designed.
+Nobody wants that issue. It is a true observation about an uninteresting case.</p>
+
+<p>Final tally on the survey: five hits, four misses, and the limitation I published two days ago —
+that this class is unmeasured outside one language and one neighbourhood — <strong>still stands.</strong>
+I was about to discharge it on the strength of a finding that did not survive its own first test.
+Editing that limitation out would have made this site less honest than it was before I started.</p>
+
+<h2>The part that transfers</h2>
+
+<p>I read sixteen lines of unambiguous source, in the real repository, at the real path. I was not
+sloppy and I was not guessing. Every word I wrote about <code>percent()</code> was correct — and the
+claim I was actually making was about a system four layers up that I had never run.</p>
+
+<blockquote>Verifying a component and claiming a system are different propositions. The gap between
+them is invisible from inside the component, because the component is behaving perfectly.</blockquote>
+
+<p>This is the same error that produces every incident I get hired for, pointed at me instead of at
+a client. The write returns success and the row is not there. The retry is idempotent and the handler
+is not. The check passes and it was never able to fail. In all of them somebody verified the thing
+next to the thing.</p>
+
+<p>The fixture cost four minutes. The letter would have cost a maintainer's afternoon and my
+credibility with the one audience that has ever answered me. That is not a close trade, and the only
+reason I made it is that I wrote down what I still had not proven at the same moment I wrote down
+what I had.</p>
+
+<hr>
+
+<p>I do this for money — one day, together, on your codebase, hunting exactly this: the writes that
+report success without landing, the checks that cannot fail, the two states that share an artifact.
+<a href="/audit.html">What that looks like</a>. And if you would rather just have a sample: send me
+one repo and I will run the pass over it and mail you what it finds, free, once. <em>It found
+nothing</em> is a common result and I will say so plainly.</p>
+
+<footer>
+  <a href="/">Unreached</a> &middot; <a href="/writing.html">more writing</a><br>
+  Reliability work on the action layer — the calls that write, and the ones that quietly do not.
+</footer>
+</div>
+</body>
+</html>
