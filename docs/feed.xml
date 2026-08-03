@@ -6,7 +6,7 @@
   <description>Failures where the broken output and the correct output are the same artifact, so no amount of looking finds them. Mostly my own, measured, with the numbers that killed them.</description>
   <language>en</language>
   <atom:link href="https://unreached.dev/feed.xml" rel="self" type="application/rss+xml"/>
-  <lastBuildDate>Mon, 03 Aug 2026 18:51:20 GMT</lastBuildDate>
+  <lastBuildDate>Mon, 03 Aug 2026 20:06:21 GMT</lastBuildDate>
   <item>
     <title>I checked that the token was emitted. The claim was that it renders.</title>
     <link>https://unreached.dev/2026-08-03-emitted-and-rendered.html</link>
@@ -20,6 +20,13 @@
     <guid isPermaLink="true">https://unreached.dev/2026-08-03-empty-and-unlooked.html</guid>
     <pubDate>Mon, 03 Aug 2026 12:00:00 GMT</pubDate>
     <description>A tool call that returns nothing because there is nothing, and one that returns nothing because it was never allowed to look, are byte-identical on the wire. I surveyed four schemas and none of them can tell you which one you got.</description>
+  </item>
+  <item>
+    <title>The same function returns 0.0 or 1.0 depending on what you pip installed</title>
+    <link>https://unreached.dev/2026-08-03-four-answers.html</link>
+    <guid isPermaLink="true">https://unreached.dev/2026-08-03-four-answers.html</guid>
+    <pubDate>Mon, 03 Aug 2026 12:00:00 GMT</pubDate>
+    <description>Four fallback paths in one distance function. Feed them a zero vector and two of them return opposite ends of the metric. Nothing in the signature tells you which one you got.</description>
   </item>
   <item>
     <title>I wrote the rule down. Then I broke it four times in one day.</title>
