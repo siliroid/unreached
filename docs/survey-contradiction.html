@@ -3,8 +3,8 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
-<title>Seven codebases, one defect class — a survey — Unreached</title>
-<meta name="description" content="Seven codebases — five agent frameworks and two security scanners — where a failure to look and a clean result are the same artifact. Named, quoted, with line numbers, plus four repos where I found nothing and one finding of my own that died on its fixture.">
+<title>Thirteen codebases, one defect class — a survey — Unreached</title>
+<meta name="description" content="Thirteen codebases where a failure to look and a clean result can be the same artifact. Seven hits and six misses, named, quoted, with line numbers — including two security tools that solved it properly, one finding of my own that died on its own fixture, and the split that makes this a spectrum rather than a blind spot.">
 <link rel="canonical" href="https://unreached.dev/survey-contradiction.html">
 <style>
   :root{ --bg:#0e1113; --ink:#e9eef0; --dim:#8ea0a6; --acc:#4db6a8; --warn:#e0a458; --line:#1d2427; }
@@ -155,13 +155,57 @@ headline written — a file nothing instrumented reporting as fully covered. The
 function does what I said. The claim I built on top of it was about a pipeline I had not run.
 <a href="/2026-08-03-function-and-pipeline.html">Full retraction</a>.</td>
 </tr>
+
+<tr class="miss">
+<td><strong>trufflesecurity/<wbr>trufflehog</strong></td>
+<td>did we fail to look at something</td>
+<td colspan="2"><strong>Solved, and it is a flag.</strong> <code>main.go:76</code> ships
+<code>--fail-on-scan-errors</code>; <code>main.go:1233-1247</code> walks
+<code>ref.Snapshot().Errors</code> per job and sets the return error when it is on.
+<code>sources/filesystem/filesystem.go:437</code> turns a stat failure into
+<code>reporter.ChunkErr(...)</code> — a <em>structured error on the job snapshot</em>, not a log
+line — and <code>main.go:799-804</code> puts <code>sources.WithSourceUnits()</code> in the base
+options array unconditionally, so that is the default path.
+<em>The seam I nearly counted:</em> the legacy <code>Chunks()</code> path in the same file
+(<code>:115-156</code>) logs and <code>continue</code>s instead, then returns <code>nil</code>. Two
+mechanisms answering one question — a miss only because the unit path is the default one.</td>
+</tr>
+
+<tr class="miss">
+<td><strong>anchore/syft</strong></td>
+<td>did we fail to look at something</td>
+<td colspan="2"><strong>Solved end to end, into the emitted document.</strong> I went in expecting a
+hit — an SBOM that silently omits a file is worse than a scan that silently passes one, because the
+SBOM is the artifact you hand an auditor. Wrong at all four layers.
+<code>internal/err_helper.go:39-45</code> names the case (<code>IsErrPathPermission</code>);
+<code>file/cataloger/filedigest/cataloger.go:63-66</code> returns
+<code>unknown.New(location, err)</code> instead of dropping the file;
+<code>sbom/sbom.go:29</code> carries <code>Unknowns map[file.Coordinates][]string</code> as state
+rather than logging; and <code>format/syftjson/to_format_model.go:108-110</code> reads it per
+coordinate, attaches it at <code>:144</code>, and it reaches the wire as
+<code>Unknowns []string</code> with a <code>json:"unknowns,omitempty"</code> tag
+(<code>format/syftjson/model/file.go:36-37</code>).
+It also pre-answers the objection: <code>cataloging/unknowns.go</code> ships
+<code>RemoveWhenPackagesDefined: true</code> by default, so "this would be noisy" already has a
+shipped answer. <em>Not verified: I did not run a permission-denied fixture, so I have not shown
+that <code>omitempty</code> and that default do not combine to hide the field in the common
+case.</em></td>
+</tr>
 </table>
 
-<p><strong>Seven hits, four misses</strong> — and the two security scanners are not the same finding
-twice. gitleaks <em>contradicts itself</em>: it has a correct partial-vs-clean answer and one path
-routes around it. trivy has no such answer at any layer. Different defects, identical artifact for
-whoever reads the output, which is why the frame that matters is <em>two states, one artifact</em>
-rather than "contradiction" on its own.</p>
+<p><strong>Seven hits, six misses</strong> — and the interesting part is no longer the hits. Four
+security-adjacent tools have now been asked the same question and the answers are <em>split</em>:
+trufflehog solved it with a flag, syft solved it all the way into the emitted SBOM, gitleaks has the
+correct answer in one file and one path routes around it, trivy has no concept at any layer. Two of
+four ship it.</p>
+
+<p>That split is the finding, and it is not the one I set out to write. This is not an industry-wide
+blind spot and I am not going to sell it as one — it is a <strong>spectrum with named companies at
+both ends</strong>, where the ones who solved it did so quietly and the ones who did not are shipping
+a report that cannot say <em>I could not read this</em>. gitleaks and trivy are also not the same
+defect twice: one contradicts itself, the other has nothing to contradict. Different causes,
+identical artifact for whoever reads the output — which is why the frame is <em>two states, one
+artifact</em> rather than "contradiction" on its own.</p>
 
 <p>I would rather show you the misses, because a survey where
 everything I looked at confirmed me is not a survey, it is a pattern I was determined to find. One of
@@ -216,11 +260,25 @@ I went at it.</p>
 
 <p>It is now <strong>partially</strong> discharged, and the way it moved is worth more than the
 result. Three probes outside the neighbourhood missed — and staring at why beat probing a fourth
-time. The five hits are not united by Python. They are united by being <strong>verdict-emitters</strong>:
-systems whose entire job is producing a judgment about somebody else's work. That is the only kind of
-system where <em>we did not check this</em> needs a state of its own, and the only kind where nobody
-thinks to give it one. All three misses emit a boolean about their own next action instead. Different
-animal.</p>
+time. The five original hits are not united by Python. They are united by being
+<strong>verdict-emitters</strong>: systems whose entire job is producing a judgment about somebody
+else's work. That is the only kind of system where <em>we did not check this</em> needs a state of
+its own. The early misses — axios-retry, zod — emit a boolean about their own next action instead.
+Different animal, and that is why they cannot have this defect.</p>
+
+<p><strong>Then the reframe cost me its own second half, and that is the honest part.</strong> The
+sentence I originally wrote was that verdict-emitters are the only systems where nobody
+<em>thinks</em> to give that state a name. Two probes later that is plainly false. trufflehog gives
+it a CLI flag wired to structured per-job errors. syft gives it a field on the SBOM struct that
+survives all the way into the emitted JSON, plus a config knob for the noise objection. Both are
+verdict-emitters. Both thought of it.</p>
+
+<p>So the honest version of the thesis is narrower and I think more useful: verdict-emitters are
+where this question <em>must</em> be answered, and the industry is <strong>split on answering
+it</strong>. Two of the four security tools here ship the third state; two do not. That is not a
+blind spot to be scolded about. It is a spectrum, the good end of it already exists in shipped Go
+code, and any vendor reading this can find out which end their own row is on in about twenty
+minutes.</p>
 
 <p>That reframe makes a prediction, so I wrote it down before looking: the class should live in
 linters, scanners and CI gates — none of which are LLM tooling. First attempt was istanbul, and it
