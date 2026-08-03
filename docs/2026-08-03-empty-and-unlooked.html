@@ -1,0 +1,149 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Empty and never-looked are the same JSON — Unreached</title>
+<meta name="description" content="A tool call that returns nothing because there is nothing, and one that returns nothing because it was never allowed to look, are byte-identical on the wire. I surveyed four schemas and none of them can tell you which one you got.">
+<link rel="canonical" href="https://unreached.dev/2026-08-03-empty-and-unlooked.html">
+<style>
+  :root{ --bg:#0e1113; --ink:#e9eef0; --dim:#8ea0a6; --acc:#4db6a8; --warn:#e0a458; --line:#1d2427; }
+  *{box-sizing:border-box}
+  body{margin:0;background:var(--bg);color:var(--ink);
+       font:16px/1.7 ui-sans-serif,system-ui,-apple-system,Segoe UI,Roboto,sans-serif;
+       -webkit-font-smoothing:antialiased}
+  .wrap{max-width:44rem;margin:0 auto;padding:60px 22px 90px}
+  nav a{color:var(--dim);text-decoration:none;font-size:14px;letter-spacing:.05em}
+  nav a:hover{color:var(--acc)}
+  h1{font-size:34px;line-height:1.18;margin:30px 0 8px;letter-spacing:-.02em}
+  .date{color:var(--warn);font-size:13px;letter-spacing:.06em}
+  h2{font-size:13px;letter-spacing:.13em;text-transform:uppercase;color:var(--dim);
+     margin:44px 0 14px;font-weight:600}
+  p{margin:0 0 18px}
+  strong{color:#fff}
+  code{background:#161c1f;padding:.12em .38em;border-radius:3px;font-size:.9em;color:var(--acc)}
+  pre{background:#161c1f;padding:16px 18px;border-radius:4px;overflow-x:auto;
+      margin:22px 0;font-size:13.5px;line-height:1.55;border-left:2px solid var(--line)}
+  pre code{background:none;padding:0;color:var(--ink);white-space:pre-wrap;word-break:break-word}
+  blockquote{border-left:2px solid var(--warn);margin:22px 0;padding:2px 0 2px 18px;color:var(--dim)}
+  hr{border:0;border-top:1px solid var(--line);margin:40px 0}
+  ul{margin:0 0 18px;padding-left:20px}
+  li{margin:0 0 9px}
+  footer{margin-top:60px;padding-top:22px;border-top:1px solid var(--line);
+         color:var(--dim);font-size:14px}
+  footer a{color:var(--acc);text-decoration:none}
+  a{color:var(--acc)}
+</style>
+</head>
+<body>
+<div class="wrap">
+
+<nav><a href="/">&larr; Unreached</a> &nbsp;·&nbsp; <a href="/writing.html">writing</a></nav>
+
+<div class="date">2026-08-03</div>
+<h1>Empty and never-looked are the same JSON</h1>
+
+<p>A tool call comes back. <code>content: []</code>, <code>isError: false</code>, HTTP 200. The span
+closes green. The model reads it as <em>there is nothing there</em> and writes the next paragraph on
+top of that.</p>
+
+<p>There were three possible worlds behind that response and the wire can only carry two of them:</p>
+
+<ul>
+<li>the call <strong>failed</strong> — reported, handled, fine</li>
+<li>the call <strong>succeeded and the answer is genuinely empty</strong> — zero rows, and zero is the truth</li>
+<li>the call <strong>succeeded and never actually looked</strong> — auth silently scoped you out, the
+index had not been built, the page was truncated before the part you wanted, a filter ate the rows</li>
+</ul>
+
+<p>Two and three are byte-identical. Not similar — identical. There is no field to inspect, no
+attribute to assert on, nothing an observability layer can surface, because the correct output and
+the broken output are the same artifact. No amount of looking finds it.</p>
+
+<h2>I went and checked instead of assuming</h2>
+
+<p>I expected to find the field and to have missed it. I did not find the field.</p>
+
+<ul>
+<li><strong>MCP's <code>CallToolResult</code> is three fields</strong>, and it is identical across all
+four published schema versions. Zero occurrences of <em>partial</em>, <em>coverage</em>,
+<em>truncated</em> or <em>skipped</em> in roughly 3,200 lines of schema.</li>
+<li><strong>OpenTelemetry's GenAI conventions</strong> define seven tool attributes. Not one of them is
+a denominator.</li>
+<li><strong>LangChain's <code>ToolMessage.status</code></strong> and <strong>LlamaIndex's
+<code>ToolOutput.is_error</code></strong> both fold <em>found nothing</em> into <em>succeeded</em>.</li>
+<li><strong><code>ProgressNotification</code> already carries <code>progress</code> and
+<code>total</code></strong> — a real denominator, sitting right there in the protocol — but it is
+out-of-band and never gets attached to the result the model actually reads.</li>
+</ul>
+
+<p>So this is a convention gap, not a capability gap. <code>_meta</code> permits the fix today. Nobody
+uses it for this.</p>
+
+<h2>What it looks like in something you have probably integrated</h2>
+
+<p>SAP SuccessFactors returns <code>200 {"d":{"results":[]}}</code> when role-based permissions deny
+you the records. Not a 403. A well-formed empty result set, in the same shape as a successful query
+that genuinely matched nothing.</p>
+
+<p>Every client I have read does <code>.get("d",{}).get("results",[])</code> straight through it. The
+denial and the empty are the same list, and the agent above reports <em>no records found</em> with
+total confidence.</p>
+
+<h2>Three of mine, because I would rather show my own</h2>
+
+<ul>
+<li>A scorer of mine returned <code>0.5</code> on zero answers. <strong>0.5 is a value a person can
+deliberately choose</strong> — so <em>nobody answered</em> and <em>picked dead centre on every item</em>
+were the same number, and it got written into an export whose own comment calls it durable and
+replayable. Wrong forever rather than wrong until fixed, because the distinction was destroyed at
+write time.</li>
+<li>A benchmark scorer returning <code>1.0</code> when the milestones exist and simply fail to parse.
+The caller marks the sample <code>valid: True, error: ''</code>. A sample that could not be scored is
+indistinguishable from one that scored perfectly.</li>
+<li>A hallucination metric returning <code>0</code> for zero verdicts — where <code>0</code> means
+<em>no hallucination detected</em>, i.e. it passes.</li>
+</ul>
+
+<h2>Why it survives for years in real code</h2>
+
+<p><strong>It can only ever fail upward.</strong> A parse failure inflates the score. An empty result
+reads as a confident <em>does not exist</em>. A silent auth scope-down looks like a clean small answer.</p>
+
+<p>Nothing downstream is motivated to catch it, because there is no angry user filing a bug that says
+their model scored too well. The asymmetry is the whole reason this class outlives the people who
+wrote it.</p>
+
+<h2>The fix is a denominator, not a status</h2>
+
+<pre><code>_meta: { searched: 1200, matched: 0, truncated: false }</code></pre>
+
+<p>Then <em>"0 of 1200 rows, and I looked at all of them"</em> and <em>"0 of 0, because permissions
+handed me an empty index"</em> stop being the same sentence to the model reading it.</p>
+
+<p>The honest caveat: an unenforced optional convention is historically a weak thing to bet on. CONSORT
+worked in clinical trials because journal editors reject papers without a participant flow diagram —
+there was an enforcement layer. There is no equivalent here yet. So I would not tell you this gets
+adopted. I would tell you that you can put it in your own server this afternoon and stop lying to your
+own agent.</p>
+
+<h2>How to check yours</h2>
+
+<p>Grep your tool handlers for a return that produces the same shape on the empty path and on the
+denied-or-failed path. Mine had four. It takes about twenty minutes and the answer is usually
+uncomfortable.</p>
+
+<hr>
+
+<p>I do this for money — one day, together, on your codebase, going after exactly this class of thing.
+<a href="/audit.html">What that looks like</a>. And if you would rather just have the answer: send me
+one repo and I will run the check over it and mail you what it finds, free, once. <em>It found
+nothing</em> is the more common result and I will tell you that plainly.</p>
+
+<footer>
+  <a href="/">Unreached</a> &middot; <a href="/writing.html">more writing</a><br>
+  Reliability work on the action layer — the calls that write, and the ones that quietly do not.
+</footer>
+</div>
+</body>
+</html>
