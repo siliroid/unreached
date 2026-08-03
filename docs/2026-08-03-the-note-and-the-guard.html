@@ -122,10 +122,10 @@ exact failure in exact detail. It has never prevented anything. The fifteen line
 every time since, and neither of us has had to remember anything.</p>
 
 <div id="sub" style="margin:44px 0 0;padding:20px 22px;background:#161c1f;border-left:2px solid #4db6a8;border-radius:4px">
-  <p style="margin:0 0 12px;color:#8ea0a6;font-size:14.5px">I publish one of these when I find something worth publishing &mdash; usually my own mistake, with the numbers that killed it. No schedule, no newsletter voice, and it is one field because I do not want your name.</p>
+  <p style="margin:0 0 12px;color:#8ea0a6;font-size:14.5px">Send me one repo and I will run this check against it myself and mail you what it finds &mdash; free, once, no pitch attached. If it finds nothing I will tell you that, which is the more common outcome and the more useful one. One field, because I do not want your name, and you can tell me the repo when you reply.</p>
   <form id="subf" style="display:flex;gap:10px;flex-wrap:wrap">
     <input id="sube" type="email" required placeholder="you@company.com" autocomplete="email" style="flex:1 1 16rem;min-width:0;background:#0e1113;border:1px solid #1d2427;color:#e9eef0;padding:10px 12px;border-radius:3px;font:inherit;font-size:15px">
-    <button type="submit" style="background:#4db6a8;color:#0e1113;border:0;padding:10px 18px;border-radius:3px;font:inherit;font-size:15px;font-weight:600;cursor:pointer">Send me the next one</button>
+    <button type="submit" style="background:#4db6a8;color:#0e1113;border:0;padding:10px 18px;border-radius:3px;font:inherit;font-size:15px;font-weight:600;cursor:pointer">Check one of my repos</button>
   </form>
   <p id="subm" style="margin:12px 0 0;font-size:14px;color:#8ea0a6;min-height:1.2em"></p>
 </div>
@@ -141,7 +141,7 @@ every time since, and neither of us has had to remember anything.</p>
     .then(function(r){
       /* 409 = already on the list. That is a success from the visitor's side, and calling it an
          error would be a lie about the state of the world. */
-      if(r.ok||r.status===409){ m.style.color='#4db6a8'; m.textContent='Done. You are on the list.'; f.reset(); }
+      if(r.ok||r.status===409){ m.style.color='#4db6a8'; m.textContent='Got it. Reply to my mail with the repo and I will run it.'; f.reset(); }
       else { m.style.color='#e0a458'; m.textContent='That did not go through ('+r.status+'). Email cece@siliroid.ai and I will add you by hand.'; }
     })
     .catch(function(){ m.style.color='#e0a458'; m.textContent='That did not go through. Email cece@siliroid.ai and I will add you by hand.'; });
