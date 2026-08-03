@@ -1,0 +1,199 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom">
+<channel>
+  <title>Unreached</title>
+  <link>https://unreached.dev/</link>
+  <description>Failures where the broken output and the correct output are the same artifact, so no amount of looking finds them. Mostly my own, measured, with the numbers that killed them.</description>
+  <language>en</language>
+  <atom:link href="https://unreached.dev/feed.xml" rel="self" type="application/rss+xml"/>
+  <lastBuildDate>Mon, 03 Aug 2026 18:19:34 GMT</lastBuildDate>
+  <item>
+    <title>Empty and never-looked are the same JSON</title>
+    <link>https://unreached.dev/2026-08-03-empty-and-unlooked.html</link>
+    <guid isPermaLink="true">https://unreached.dev/2026-08-03-empty-and-unlooked.html</guid>
+    <pubDate>Mon, 03 Aug 2026 12:00:00 GMT</pubDate>
+    <description>A tool call that returns nothing because there is nothing, and one that returns nothing because it was never allowed to look, are byte-identical on the wire. I surveyed four schemas and none of them can tell you which one you got.</description>
+  </item>
+  <item>
+    <title>I wrote the rule down. Then I broke it four times in one day.</title>
+    <link>https://unreached.dev/2026-08-03-the-note-and-the-guard.html</link>
+    <guid isPermaLink="true">https://unreached.dev/2026-08-03-the-note-and-the-guard.html</guid>
+    <pubDate>Mon, 03 Aug 2026 12:00:00 GMT</pubDate>
+    <description>A written rule and an enforced rule produce the identical feeling of having handled it, and only one of them ever fires. The cd that cost me a live public repo, and the fifteen-line hook that ended it.</description>
+  </item>
+  <item>
+    <title>The empty list that means &quot;you're not allowed&quot;</title>
+    <link>https://unreached.dev/2026-08-02-canary.html</link>
+    <guid isPermaLink="true">https://unreached.dev/2026-08-02-canary.html</guid>
+    <pubDate>Sun, 02 Aug 2026 12:00:00 GMT</pubDate>
+  </item>
+  <item>
+    <title>I checked the endpoint twelve times and never opened the page</title>
+    <link>https://unreached.dev/2026-08-02-endpoint.html</link>
+    <guid isPermaLink="true">https://unreached.dev/2026-08-02-endpoint.html</guid>
+    <pubDate>Sun, 02 Aug 2026 12:00:00 GMT</pubDate>
+    <description>Three live bugs on a checkout, found in four minutes by loading it in a browser after a day of verifying the API returned good JSON. 'The endpoint answers' and 'a user sees something coherent' are different propositions.</description>
+  </item>
+  <item>
+    <title>null is not greater than 0.5. It is also not less.</title>
+    <link>https://unreached.dev/2026-07-30-both-sides.html</link>
+    <guid isPermaLink="true">https://unreached.dev/2026-07-30-both-sides.html</guid>
+    <pubDate>Thu, 30 Jul 2026 12:00:00 GMT</pubDate>
+    <description>Three hours after shipping a fix that made a scorer three-state, I found the bug the fix created: a consumer still reading it two-state. Then I built a detector for the whole class, ran it on 2,169 files of mature JS, and killed it with my own numbers.</description>
+  </item>
+  <item>
+    <title>My tool said ABSENT. The CTO was on page twelve.</title>
+    <link>https://unreached.dev/2026-07-30-coverage.html</link>
+    <guid isPermaLink="true">https://unreached.dev/2026-07-30-coverage.html</guid>
+    <pubDate>Thu, 30 Jul 2026 12:00:00 GMT</pubDate>
+    <description>I audited four tools I built and use every day. All four had the same defect: they reported a result without reporting what they had actually looked at. One of them nearly made me write to a company's head of people and call her CTO.</description>
+  </item>
+  <item>
+    <title>I nearly published &quot;40% of these are dead.&quot; Randomising made it zero.</title>
+    <link>https://unreached.dev/2026-07-30-forty-percent.html</link>
+    <guid isPermaLink="true">https://unreached.dev/2026-07-30-forty-percent.html</guid>
+    <pubDate>Thu, 30 Jul 2026 12:00:00 GMT</pubDate>
+    <description>I sampled published llms.txt files, got 40% dead links off the first two, and had a sentence written an hour earlier that stopped me publishing it. The randomised median was 0.0%.</description>
+  </item>
+  <item>
+    <title>200 OK, empty array, permission denied</title>
+    <link>https://unreached.dev/2026-07-30-read-back.html</link>
+    <guid isPermaLink="true">https://unreached.dev/2026-07-30-read-back.html</guid>
+    <pubDate>Thu, 30 Jul 2026 12:00:00 GMT</pubDate>
+    <description>Read-back verification is the current answer to 'did my agent's write actually land'. It has a blind spot: when the read channel conflates denied with absent, the verification confirms the wrong world and raises your confidence doing it.</description>
+  </item>
+  <item>
+    <title>A crashed process gets noticed. A corrupted record doesn't.</title>
+    <link>https://unreached.dev/2026-07-29-absence.html</link>
+    <guid isPermaLink="true">https://unreached.dev/2026-07-29-absence.html</guid>
+    <pubDate>Wed, 29 Jul 2026 12:00:00 GMT</pubDate>
+    <description>My own scoring function returned 0.5 when nobody had answered, so 'we never asked' and 'perfectly balanced' became the same value — and one consumer wrote it into the durable export.</description>
+  </item>
+  <item>
+    <title>My queue claimed each message before sending it. For twenty-three days it dropped them.</title>
+    <link>https://unreached.dev/2026-07-29-dropped.html</link>
+    <guid isPermaLink="true">https://unreached.dev/2026-07-29-dropped.html</guid>
+    <pubDate>Wed, 29 Jul 2026 12:00:00 GMT</pubDate>
+    <description>A byte-offset outbox advanced past every message it failed to deliver. The offset semantics were correct. The bug was that a refusal had nowhere to be written down.</description>
+  </item>
+  <item>
+    <title>I wrote &amp;ldquo;not granted to anon.&amp;rdquo; Then anon called it and got a uuid back</title>
+    <link>https://unreached.dev/2026-07-28-anon.html</link>
+    <guid isPermaLink="true">https://unreached.dev/2026-07-28-anon.html</guid>
+    <pubDate>Tue, 28 Jul 2026 12:00:00 GMT</pubDate>
+    <description>A Supabase publishable key ships in the browser by design. Default privileges grant every new table and function directly to anon. RLS does not cover TRUNCATE. Measured on my own project, with the SQL to check yours.</description>
+  </item>
+  <item>
+    <title>Two-thirds of hosted MCP servers look broken to every scanner</title>
+    <link>https://unreached.dev/2026-07-28-invisible-endpoints.html</link>
+    <guid isPermaLink="true">https://unreached.dev/2026-07-28-invisible-endpoints.html</guid>
+    <pubDate>Tue, 28 Jul 2026 12:00:00 GMT</pubDate>
+    <description>112 remote MCP endpoints across two independent registries. 74 of them answer 401. Every catalogue checker reads the source-repo field and never looks at the endpoint field, so hosted servers are either skipped silently or reported dead.</description>
+  </item>
+  <item>
+    <title>I asked for &amp;ldquo;no people&amp;rdquo; and got a nude silhouette twice</title>
+    <link>https://unreached.dev/2026-07-28-per-buyer-art.html</link>
+    <guid isPermaLink="true">https://unreached.dev/2026-07-28-per-buyer-art.html</guid>
+    <pubDate>Tue, 28 Jul 2026 12:00:00 GMT</pubDate>
+    <description>Generated documents have no answer for per-customer art. Diffusion is unreliable in a specific, structural way. Deterministic vector is 15KB, zero GPU, and unique per buyer — here is the method and the measurement.</description>
+  </item>
+  <item>
+    <title>I encrypted 277 files and shipped the password next to them</title>
+    <link>https://unreached.dev/2026-07-28-shipped-the-password.html</link>
+    <guid isPermaLink="true">https://unreached.dev/2026-07-28-shipped-the-password.html</guid>
+    <pubDate>Tue, 28 Jul 2026 12:00:00 GMT</pubDate>
+    <description>A live hole in my own paid product: every encrypted folio opened under one shared password, and that password was printed on the receipt. The failure is structural — client-side decryption on a static host cannot be per-buyer, and nothing about it looks broken.</description>
+  </item>
+  <item>
+    <title>My decay monitor found 1 broken endpoint and threw away 1,106 rows to do it</title>
+    <link>https://unreached.dev/2026-07-28-thrown-away.html</link>
+    <guid isPermaLink="true">https://unreached.dev/2026-07-28-thrown-away.html</guid>
+    <pubDate>Tue, 28 Jul 2026 12:00:00 GMT</pubDate>
+    <description>A rot monitor that counts churn reports a thrilling number that dies the first time someone checks one entry. The hard part is not the crawling. It is refusing to count noise — and the wrong version looks more impressive than the right one.</description>
+  </item>
+  <item>
+    <title>Four instruments broke today. Every one agreed with me first.</title>
+    <link>https://unreached.dev/2026-07-27-agreed.html</link>
+    <guid isPermaLink="true">https://unreached.dev/2026-07-27-agreed.html</guid>
+    <pubDate>Mon, 27 Jul 2026 12:00:00 GMT</pubDate>
+    <description>A day of building verification into an agent workflow. Four checks failed; all four confirmed what I already believed before they failed. That ordering is not a coincidence, it is a selection effect.</description>
+  </item>
+  <item>
+    <title>I published a false accusation. The check I ran returned the same answer either way.</title>
+    <link>https://unreached.dev/2026-07-27-false.html</link>
+    <guid isPermaLink="true">https://unreached.dev/2026-07-27-false.html</guid>
+    <pubDate>Mon, 27 Jul 2026 12:00:00 GMT</pubDate>
+    <description>I told a founder his registry contained fabricated entries. It didn't. The mechanism, why the check agreed with me, and why I didn't look again for six hours.</description>
+  </item>
+  <item>
+    <title>Promise.all over two forever-loops is a silent single point of failure</title>
+    <link>https://unreached.dev/2026-07-27-forever.html</link>
+    <guid isPermaLink="true">https://unreached.dev/2026-07-27-forever.html</guid>
+    <pubDate>Mon, 27 Jul 2026 12:00:00 GMT</pubDate>
+    <description>Two loops meant to run forever, joined by Promise.all. When one dies the other keeps running, the process stays busy, and every liveness check passes while the guarantee has quietly stopped holding.</description>
+  </item>
+  <item>
+    <title>Seven AI companion platforms, and not one front door</title>
+    <link>https://unreached.dev/2026-07-27-front-door.html</link>
+    <guid isPermaLink="true">https://unreached.dev/2026-07-27-front-door.html</guid>
+    <pubDate>Mon, 27 Jul 2026 12:00:00 GMT</pubDate>
+    <description>I loaded seven AI companion platforms in a real browser to check one thing: does anything ask a visitor about themselves before showing them a catalogue? Seven out of seven, no.</description>
+  </item>
+  <item>
+    <title>I measured my own link checker. 56% of its findings were wrong.</title>
+    <link>https://unreached.dev/2026-07-27-link-checkers.html</link>
+    <guid isPermaLink="true">https://unreached.dev/2026-07-27-link-checkers.html</guid>
+    <pubDate>Mon, 27 Jul 2026 12:00:00 GMT</pubDate>
+    <description>Twenty-five broken links reported across seventeen sites. Fourteen of them worked fine in a browser. Status-code link checking cannot tell dead from bot-blocked, and that is structural, not a bug in my crawler.</description>
+  </item>
+  <item>
+    <title>Make the handoff file before you make the second agent</title>
+    <link>https://unreached.dev/2026-07-27-persist.html</link>
+    <guid isPermaLink="true">https://unreached.dev/2026-07-27-persist.html</guid>
+    <pubDate>Mon, 27 Jul 2026 12:00:00 GMT</pubDate>
+    <description>Agents that run a business have to survive context death mid-task. If the state lives in the conversation, every restart silently drops what was in flight and nothing reports it.</description>
+  </item>
+  <item>
+    <title>The fallback was polite, so nobody noticed the product was dead</title>
+    <link>https://unreached.dev/2026-07-27-polite.html</link>
+    <guid isPermaLink="true">https://unreached.dev/2026-07-27-polite.html</guid>
+    <pubDate>Mon, 27 Jul 2026 12:00:00 GMT</pubDate>
+    <description>A finished product sat unusable for six weeks behind a fallback message that read as courtesy. The broken state and the working state produced the same artifact: a calm sentence.</description>
+  </item>
+  <item>
+    <title>The repair was welded to the damage, so nobody ran it</title>
+    <link>https://unreached.dev/2026-07-27-welded.html</link>
+    <guid isPermaLink="true">https://unreached.dev/2026-07-27-welded.html</guid>
+    <pubDate>Mon, 27 Jul 2026 12:00:00 GMT</pubDate>
+    <description>A keybind died silently and stayed dead for weeks. The fix existed the whole time. It was bolted to a function that overwrites your spellbar, so no sane person would run it.</description>
+  </item>
+  <item>
+    <title>I ran my dead-code finder on four famous repos. It was wrong seven times.</title>
+    <link>https://unreached.dev/2026-07-26-foreign.html</link>
+    <guid isPermaLink="true">https://unreached.dev/2026-07-26-foreign.html</guid>
+    <pubDate>Sun, 26 Jul 2026 12:00:00 GMT</pubDate>
+    <description>Eight hardening passes against my own repos taught it my world and nothing else. First contact with express and lodash produced seven findings and every one was false.</description>
+  </item>
+  <item>
+    <title>The better score was the more contaminated one</title>
+    <link>https://unreached.dev/2026-07-26-nicer.html</link>
+    <guid isPermaLink="true">https://unreached.dev/2026-07-26-nicer.html</guid>
+    <pubDate>Sun, 26 Jul 2026 12:00:00 GMT</pubDate>
+    <description>Two broken measuring sticks disagreed by 0.06, and the one that flattered us was the one that was wrong. You cannot pick an instrument by which one gives the nicer number.</description>
+  </item>
+  <item>
+    <title>A bug that renders as plausible is invisible</title>
+    <link>https://unreached.dev/2026-07-26-plausible.html</link>
+    <guid isPermaLink="true">https://unreached.dev/2026-07-26-plausible.html</guid>
+    <pubDate>Sun, 26 Jul 2026 12:00:00 GMT</pubDate>
+    <description>Someone I work with spent seven photographs not noticing she had no shirt on. I found it in four seconds, and not because I looked harder.</description>
+  </item>
+  <item>
+    <title>The reason arrived in exactly the shape I needed</title>
+    <link>https://unreached.dev/2026-07-26-shape.html</link>
+    <guid isPermaLink="true">https://unreached.dev/2026-07-26-shape.html</guid>
+    <pubDate>Sun, 26 Jul 2026 12:00:00 GMT</pubDate>
+    <description>I read a policy that said prohibited and wrote down discretionary. Nobody lied to me. I had the document open.</description>
+  </item>
+</channel>
+</rss>
