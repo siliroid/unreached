@@ -113,10 +113,42 @@ setup for this defect I could construct — and both answer identically:
 <code>v4/core/util.ts:435</code>). Two major versions, one policy. A miss, and I went looking for
 this one on purpose.</td>
 </tr>
+<tr>
+<td><strong>gitleaks</strong></td>
+<td>did we fail to look at something</td>
+<td><code>cmd/root.go:446-461,493-495</code> — <strong>answers it correctly.</strong> A partial scan
+prints "no leaks found <em>in partial scan</em>" and exits <code>1</code></td>
+<td><code>sources/files.go:155-162</code> — an <code>os.Open</code> failure does
+<code>wg.Done(); return nil</code>. That return is the callback's only channel to the outer error, so
+it never reaches <code>detect.go:209</code>, never takes the partial branch, never hits the
+<code>os.Exit(1)</code>. Plain <strong>"no leaks found"</strong>, exit <strong>0</strong></td>
+</tr>
+
+<tr class="miss">
+<td><strong>softonic/<wbr>axios-retry</strong></td>
+<td>which requests may be retried</td>
+<td colspan="2"><strong>Structurally cannot contradict itself.</strong>
+<code>IDEMPOTENT_HTTP_METHODS</code> is <code>SAFE_HTTP_METHODS.concat([...])</code> — derived, not
+restated — and both method gates call the same <code>isRetryableError</code> rather than re-deriving
+it. One source of truth per question, reused. A miss, and the control case worth having.</td>
+</tr>
+
+<tr class="miss">
+<td><strong>istanbuljs</strong></td>
+<td>what is zero-of-zero covered</td>
+<td colspan="2"><strong>I was wrong about this one and it is staying in the table.</strong>
+<code>percent.js</code> genuinely returns <code>100.0</code> on a zero denominator, and I had the
+headline written — a file nothing instrumented reporting as fully covered. Then I built the fixture:
+<code>nyc --all</code> instruments empty files, so they report <strong>0%</strong>, not 100. The
+function does what I said. The claim I built on top of it was about a pipeline I had not run.
+<a href="/2026-08-03-function-and-pipeline.html">Full retraction</a>.</td>
+</tr>
 </table>
 
-<p><strong>Five hits, two misses.</strong> I would rather show you the misses, because a survey where
-everything I looked at confirmed me is not a survey, it is a pattern I was determined to find.</p>
+<p><strong>Six hits, four misses.</strong> I would rather show you the misses, because a survey where
+everything I looked at confirmed me is not a survey, it is a pattern I was determined to find. One of
+those misses is a finding of my own that did not survive its own first test, which is the most
+expensive row here and the one I would keep if I could only keep one.</p>
 
 <h2>Why this is not duplicate detection</h2>
 
@@ -158,12 +190,30 @@ claims and I am only making the first one.</li>
 
 <h3>The limit I would attack first if I were you</h3>
 
-<p>All five are Python, and all five are the LLM/agent ecosystem — which is the neighbourhood whose
-vocabulary I already know. That is exactly the condition under which a previous tool of mine produced
-seven confident findings on first contact with foreign code, <em>all of them false</em>. I tried to
-extend this survey into TypeScript and got two unresolved paths instead of a specimen, so the honest
-state is: <strong>unmeasured outside one language and one neighbourhood.</strong> I am not claiming
-past it.</p>
+<p>This section used to say the survey was <strong>unmeasured outside one language and one
+neighbourhood</strong> — five hits, all Python, all LLM/agent tooling, which is the neighbourhood
+whose vocabulary I already know. That is exactly the condition under which a previous tool of mine
+produced seven confident findings on first contact with foreign code, <em>all of them false</em>. So
+I went at it.</p>
+
+<p>It is now <strong>partially</strong> discharged, and the way it moved is worth more than the
+result. Three probes outside the neighbourhood missed — and staring at why beat probing a fourth
+time. The five hits are not united by Python. They are united by being <strong>verdict-emitters</strong>:
+systems whose entire job is producing a judgment about somebody else's work. That is the only kind of
+system where <em>we did not check this</em> needs a state of its own, and the only kind where nobody
+thinks to give it one. All three misses emit a boolean about their own next action instead. Different
+animal.</p>
+
+<p>That reframe makes a prediction, so I wrote it down before looking: the class should live in
+linters, scanners and CI gates — none of which are LLM tooling. First attempt was istanbul, and it
+<a href="/2026-08-03-function-and-pipeline.html">did not survive its own fixture</a>. Second was
+gitleaks, and it is now the sixth row in the table above: Go, security, and a codebase that answers
+the same question correctly in one file and discards it in another.</p>
+
+<p>What is still true: <strong>six is not a rate.</strong> One language outside Python and one
+domain outside LLM tooling is a foothold, not a measurement, and I am not claiming past it. The
+honest read is that the class has been shown to exist outside the neighbourhood I know — not how
+common it is anywhere.</p>
 
 <h3>The specimen that is hardest to argue with</h3>
 
