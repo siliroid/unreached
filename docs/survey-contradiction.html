@@ -314,11 +314,28 @@ careful thing and careful meant opposite things in their two coordinate systems.
 
 <hr>
 
-<p>This is what I do for money: a day, together, on your codebase, hunting exactly this — writes that
-report success without landing, checks that cannot fail, and two implementations that quietly
-disagree. <a href="/audit.html">What that looks like</a>. Or send me one repository and I will run the
-pass over it and mail you what it finds, free, once. <em>It found nothing</em> is a real result — it
-is sitting in the table above — and I will tell you that plainly.</p>
+<h2>Want your row?</h2>
+
+<p>If you ship a scanner, a linter, a coverage tool, an SBOM generator, a CI gate — anything whose
+output is a judgment about somebody else's code — then there is a row for you in that table and I
+have not written it yet. Send me the repository and I will check the one question: <strong>can your
+tool say "I could not read this," and does that state survive all the way to what the user
+sees?</strong> Free, once, however it comes out.</p>
+
+<p>Two things worth saying plainly before you decide whether you want that. First, <strong>I publish
+either way</strong> — six of the thirteen rows above are misses, two of them are tools that solved
+this better than I expected, and one is a finding of mine that died on its own fixture. A good row is
+a good row and I will say so with line numbers. Second, it takes me about twenty minutes, so there is
+no invoice attached and no call to book. You get the trace, the file paths, and my scope caveats;
+what you do with it is yours.</p>
+
+<p>If it comes out badly, you would rather hear it from me in an email than from a customer whose
+scan came back clean on a directory it never opened. That is the entire pitch and I am not going to
+dress it up further.</p>
+
+<p>And the paid version, for completeness: a day, together, on your codebase, hunting this class
+across the whole action layer — writes that report success without landing, checks that cannot fail,
+two implementations that quietly disagree. <a href="/audit.html">What that looks like</a>.</p>
 
 <footer>
   <a href="/">Unreached</a> &middot; <a href="/writing.html">more writing</a><br>
