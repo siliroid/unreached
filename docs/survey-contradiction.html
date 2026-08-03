@@ -124,6 +124,18 @@ it never reaches <code>detect.go:209</code>, never takes the partial branch, nev
 <code>os.Exit(1)</code>. Plain <strong>"no leaks found"</strong>, exit <strong>0</strong></td>
 </tr>
 
+<tr>
+<td><strong>aquasecurity/<wbr>trivy</strong></td>
+<td>did we fail to look at something</td>
+<td colspan="2"><strong>The concept does not exist at any layer</strong> — which makes it a different
+defect from gitleaks, not the same one twice. <code>walker/fs.go:87-89</code> discards a permission
+error with a bare <code>return nil</code> and <em>no log at all</em> (gitleaks at least warns here).
+<code>walker/walk.go:18-21</code> — <code>Option</code> is <code>SkipFiles</code>/<code>SkipDirs</code>,
+nothing tallies it. <code>types/report.go:20-40</code> — the <code>Report</code> struct is nine fields
+and not one of them can carry "a file could not be read." Three layers, no route out.
+<em>Scope: I did not trace the exit code and am not claiming it.</em></td>
+</tr>
+
 <tr class="miss">
 <td><strong>softonic/<wbr>axios-retry</strong></td>
 <td>which requests may be retried</td>
@@ -145,7 +157,13 @@ function does what I said. The claim I built on top of it was about a pipeline I
 </tr>
 </table>
 
-<p><strong>Six hits, four misses.</strong> I would rather show you the misses, because a survey where
+<p><strong>Seven hits, four misses</strong> — and the two security scanners are not the same finding
+twice. gitleaks <em>contradicts itself</em>: it has a correct partial-vs-clean answer and one path
+routes around it. trivy has no such answer at any layer. Different defects, identical artifact for
+whoever reads the output, which is why the frame that matters is <em>two states, one artifact</em>
+rather than "contradiction" on its own.</p>
+
+<p>I would rather show you the misses, because a survey where
 everything I looked at confirmed me is not a survey, it is a pattern I was determined to find. One of
 those misses is a finding of my own that did not survive its own first test, which is the most
 expensive row here and the one I would keep if I could only keep one.</p>
