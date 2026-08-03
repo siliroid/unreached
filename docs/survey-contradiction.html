@@ -103,7 +103,20 @@ nothing, which stays in the table because a survey without its misses is an adve
 <td>—</td>
 <td colspan="2"><strong>Nothing found.</strong> 32 files with <code>except ImportError</code>, zero cosine implementations, and the <code>def distance</code> hits are all test files. A clean miss.</td>
 </tr>
+
+<tr class="miss">
+<td><strong>colinhacks/zod</strong></td>
+<td>what is <code>NaN</code></td>
+<td colspan="2"><strong>They agree.</strong> v3 and v4 ship side by side in one package — the best
+setup for this defect I could construct — and both answer identically:
+<code>Number.isNaN(data) ? "nan" : "number"</code> (<code>v3/helpers/util.ts:186</code>,
+<code>v4/core/util.ts:435</code>). Two major versions, one policy. A miss, and I went looking for
+this one on purpose.</td>
+</tr>
 </table>
+
+<p><strong>Five hits, two misses.</strong> I would rather show you the misses, because a survey where
+everything I looked at confirmed me is not a survey, it is a pattern I was determined to find.</p>
 
 <h2>Why this is not duplicate detection</h2>
 
