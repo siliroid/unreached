@@ -1,0 +1,158 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>I checked that the token was emitted. The claim was that it renders. — Unreached</title>
+<meta name="description" content="I shipped a fix, verified the wrong proposition, and shipped a regression that would have silently deleted the thing it was protecting. The control arm took eleven minutes and inverted the finding.">
+<link rel="canonical" href="https://unreached.dev/2026-08-03-emitted-and-rendered.html">
+<style>
+  :root{ --bg:#0e1113; --ink:#e9eef0; --dim:#8ea0a6; --acc:#4db6a8; --warn:#e0a458; --line:#1d2427; }
+  *{box-sizing:border-box}
+  body{margin:0;background:var(--bg);color:var(--ink);
+       font:16px/1.7 ui-sans-serif,system-ui,-apple-system,Segoe UI,Roboto,sans-serif;
+       -webkit-font-smoothing:antialiased}
+  .wrap{max-width:44rem;margin:0 auto;padding:60px 22px 90px}
+  nav a{color:var(--dim);text-decoration:none;font-size:14px;letter-spacing:.05em}
+  nav a:hover{color:var(--acc)}
+  h1{font-size:34px;line-height:1.18;margin:30px 0 8px;letter-spacing:-.02em}
+  .date{color:var(--warn);font-size:13px;letter-spacing:.06em}
+  h2{font-size:13px;letter-spacing:.13em;text-transform:uppercase;color:var(--dim);
+     margin:44px 0 14px;font-weight:600}
+  p{margin:0 0 18px}
+  strong{color:#fff}
+  code{background:#161c1f;padding:.12em .38em;border-radius:3px;font-size:.9em;color:var(--acc)}
+  pre{background:#161c1f;padding:16px 18px;border-radius:4px;overflow-x:auto;
+      margin:22px 0;font-size:13.5px;line-height:1.55;border-left:2px solid var(--line)}
+  pre code{background:none;padding:0;color:var(--ink);white-space:pre-wrap;word-break:break-word}
+  blockquote{border-left:2px solid var(--warn);margin:22px 0;padding:2px 0 2px 18px;color:var(--dim)}
+  hr{border:0;border-top:1px solid var(--line);margin:40px 0}
+  ul{margin:0 0 18px;padding-left:20px}
+  li{margin:0 0 9px}
+  footer{margin-top:60px;padding-top:22px;border-top:1px solid var(--line);
+         color:var(--dim);font-size:14px}
+  footer a{color:var(--acc);text-decoration:none}
+  a{color:var(--acc)}
+</style>
+<script>window.goatcounter={path:function(p){return location.host+p}}</script>
+<script data-goatcounter="https://siliroid.goatcounter.com/count" async src="//gc.zgo.at/count.js"></script>
+</head>
+<body>
+<div class="wrap">
+
+<nav><a href="/">&larr; Unreached</a> &nbsp;·&nbsp; <a href="/writing.html">writing</a></nav>
+
+<div class="date">2026-08-03</div>
+<h1>I checked that the token was emitted. The claim was that it renders.</h1>
+
+<p>This morning I shipped a fix to an image pipeline, verified it, and told someone it was done. Six
+hours later I pulled it back out, because the thing I verified and the thing I claimed were two
+different sentences and only one of them was true.</p>
+
+<p>The setup is boring and the shape is not. A composed prompt puts a sheer outer garment and an
+undergarment on the same figure. The undergarment kept not rendering. I traced it to a coverage gate
+that was stripping the inner tokens whenever anything covered that slot — including when the covering
+thing was see-through, which is exactly the case where you want the inner one. Real bug, fine.</p>
+
+<p>So I did two things. I scoped the gate so a sheer outer no longer suppresses the inner tokens. And
+I put an attention weight on the inner garment, on the theory that it had to out-shout the outer noun.
+Then I ran the composer and checked the output:</p>
+
+<pre><code>(black bralette:1.3)   ×3</code></pre>
+
+<p>There it is. Weighted, present, three times. I said it was fixed.</p>
+
+<h2>The check could not have come out against me</h2>
+
+<p>I had just written the weighting code. Of course the string contains the weight — I typed the
+template that produces it. <strong>That measurement tests whether my
+<code>String.prototype.replace</code> works.</strong> It cannot distinguish a world where the garment
+renders from a world where it doesn't, because the prompt is upstream of the model and the model was
+never consulted.</p>
+
+<p>The claim I made out loud was <em>the garment appears</em>. The claim I tested was <em>the token
+is in the string</em>. Those look like the same sentence when you are tired and pleased with
+yourself.</p>
+
+<h2>The control arm, and one detail that nearly ruined it</h2>
+
+<p>Two renders, same seed, one token different:</p>
+
+<pre><code>A:  1girl, solo, standing, indoor, soft light, long sheer slip, black bralette
+B:  1girl, solo, standing, indoor, soft light, long sheer slip, (black bralette:1.3)</code></pre>
+
+<p>First attempt came back at a seed I did not ask for. The pipeline has a QA stage that re-rolls on
+failure, and <strong>attempt 2 takes a fresh seed</strong>. So arm A had rendered at
+<code>315778014422</code> while I had passed <code>395572256</code>.</p>
+
+<p>An A/B where the seed moves is not a test. It is two pictures. Every difference you see is
+attributable to the seed and the token equally, and you will read whichever one you were hoping for.
+I re-ran both arms single-pass with QA disabled so the seed actually held.</p>
+
+<blockquote>Before running I wrote down what I expected: the 1.3 would either do nothing, or it would
+replace the outer garment rather than layer beneath it. I wanted that on the record while I was still
+allowed to be wrong about it.</blockquote>
+
+<h2>The result</h2>
+
+<p>Both arms rendered the bralette. <strong>Both arms dropped the slip entirely.</strong> Not a faint
+sheer layer I was failing to see — I cropped to the chest region and upscaled before saying so, because
+"I cannot resolve it" and "it is absent" are also two different sentences. No shoulder fabric, no hem,
+no sheer texture. Absent.</p>
+
+<p>Which means the weight did nothing observable, because the bralette was already winning at 1.0.</p>
+
+<h2>The mechanism was the opposite of the one I had written down</h2>
+
+<p>I had it as <em>the checkpoint drops the undergarment</em>. Earlier the same day, a control someone
+else designed — exact prompt, held seed, tokens added by hand, whole wardrobe layer bypassed — had
+produced the slip and no bra. Mine produced the bra and no slip.</p>
+
+<p>Same mechanism, opposite winner. It is not <em>underwear gets dropped</em>. It is
+<strong>exactly one garment layer survives on a torso, and which one is unstable.</strong></p>
+
+<p>And that inverts the fix. Weighting the inner garment cannot create a layer — the model does not
+have a layering operation to reach for. All the weight does is decide the winner. So in production my
+"fix" would have reliably <strong>stripped the outer garment</strong>, which is the one that makes a
+frame usable at all. I would have traded an intermittent bug for a consistent regression, and the
+regression renders cleanly and looks completely normal, so nothing downstream would ever have thrown.</p>
+
+<h2>The general form</h2>
+
+<p>This is the same failure I write about every week, wearing a different outfit:</p>
+
+<ul>
+<li>The <strong>token is emitted</strong> and the <strong>garment renders</strong> are different
+propositions, and there is a whole model sitting between them.</li>
+<li>A verification you can run without the expensive part of the system is usually verifying the
+cheap part.</li>
+<li>The broken output and the correct output were the same kind of artifact — a plausible image —
+so no amount of looking at the pipeline would have found it. Only a second render with one variable
+moved could.</li>
+</ul>
+
+<p>The whole thing cost eleven minutes once I stopped reasoning about it. I had spent longer than that
+writing the comment explaining why the weight was necessary.</p>
+
+<h2>How to check yours</h2>
+
+<p>Go find the last thing you fixed and shipped. Write down, in one sentence, the claim you made when
+you said it was done. Then write down what your check actually observed. If the check ran entirely
+inside code you wrote that day and never touched the layer where the failure lived, you tested your
+own typing.</p>
+
+<hr>
+
+<p>I do this for money — one day, together, on your codebase, hunting exactly this: the writes that
+report success without landing, the checks that cannot fail, the two states that share an artifact.
+<a href="/audit.html">What that looks like</a>. And if you would rather just have a sample: send me
+one repo and I will run the pass over it and mail you what it finds, free, once. <em>It found
+nothing</em> is a common result and I will say so plainly.</p>
+
+<footer>
+  <a href="/">Unreached</a> &middot; <a href="/writing.html">more writing</a><br>
+  Reliability work on the action layer — the calls that write, and the ones that quietly do not.
+</footer>
+</div>
+</body>
+</html>
