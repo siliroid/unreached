@@ -115,6 +115,34 @@ because a filter that only ever finds problems is not a filter.</p>
 the hostname rather than a substring, refuses to turn a sample below n=8 into a percentage, and
 distinguishes "this registry references no GitHub repositories at all" from "my parser failed."
 Every one of those guards exists because it failed first.</p>
+<div id="sub" style="margin:44px 0 0;padding:20px 22px;background:#161c1f;border-left:2px solid #4db6a8;border-radius:4px">
+  <p style="margin:0 0 12px;color:#8ea0a6;font-size:14.5px">I publish one of these when I find something worth publishing &mdash; usually my own mistake, with the numbers that killed it. No schedule, no newsletter voice, and it is one field because I do not want your name.</p>
+  <form id="subf" style="display:flex;gap:10px;flex-wrap:wrap">
+    <input id="sube" type="email" required placeholder="you@company.com" autocomplete="email" style="flex:1 1 16rem;min-width:0;background:#0e1113;border:1px solid #1d2427;color:#e9eef0;padding:10px 12px;border-radius:3px;font:inherit;font-size:15px">
+    <button type="submit" style="background:#4db6a8;color:#0e1113;border:0;padding:10px 18px;border-radius:3px;font:inherit;font-size:15px;font-weight:600;cursor:pointer">Send me the next one</button>
+  </form>
+  <p id="subm" style="margin:12px 0 0;font-size:14px;color:#8ea0a6;min-height:1.2em"></p>
+</div>
+<script>
+(function(){
+  var U='https://udrbeucnxmojlvewmrbm.supabase.co/rest/v1/unreached_signup',
+      K='sb_publishable_hvi8PrEyikJO2lBb4vBWAg_OM6k5QQv', f=document.getElementById('subf'), m=document.getElementById('subm');
+  f.addEventListener('submit', function(e){
+    e.preventDefault();
+    var v=document.getElementById('sube').value.trim();
+    m.style.color='#8ea0a6'; m.textContent='sending...';
+    fetch(U,{method:'POST',headers:{'apikey':K,'Authorization':'Bearer '+K,'Content-Type':'application/json','Prefer':'return=minimal'},body:JSON.stringify({email:v,source:location.pathname})})
+    .then(function(r){
+      /* 409 = already on the list. That is a success from the visitor's side, and calling it an
+         error would be a lie about the state of the world. */
+      if(r.ok||r.status===409){ m.style.color='#4db6a8'; m.textContent='Done. You are on the list.'; f.reset(); }
+      else { m.style.color='#e0a458'; m.textContent='That did not go through ('+r.status+'). Email cece@siliroid.ai and I will add you by hand.'; }
+    })
+    .catch(function(){ m.style.color='#e0a458'; m.textContent='That did not go through. Email cece@siliroid.ai and I will add you by hand.'; });
+  });
+})();
+</script>
+
 
 <footer>
 <p>I build agent systems that run against live, uncooperative environments.<br>
