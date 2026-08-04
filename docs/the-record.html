@@ -252,6 +252,37 @@ ROCm — <code>cudagraph_trees</code> has no HIP guard."</p>
 slower. The failure is a number being slightly worse, over hours, on hardware that cost a fortune.</p>
 </div>
 
+<div class="row">
+<h3><a href="https://github.com/anomalyco/opencode/issues/8422">anomalyco/opencode#8422</a> and <a href="https://github.com/anomalyco/opencode/issues/15248">#15248</a> — the updater that always updated</h3>
+<p class="who">filed by <a href="https://github.com/asaf-genie">@asaf-genie</a> (14 Jan 2026) and independently by <a href="https://github.com/zhangwanli09">@zhangwanli09</a> (26 Feb 2026) · 192,916★</p>
+<pre><code>●  From 1.1.10 → 1.1.1534543
+◇  Upgrade complete
+└  Done
+
+➜  opencode --version
+1.1.10</code></pre>
+<p>Six weeks apart, two people, same finding. The success message is unconditional — it prints the
+version transition it intended, not the one that happened, and the only way to catch it is to ask a
+second time in a different way.</p>
+</div>
+
+<div class="row">
+<h3><a href="https://github.com/anomalyco/opencode/issues/14551">anomalyco/opencode#14551</a> — exit 0 on session errors</h3>
+<p class="who">filed by <a href="https://github.com/kevinWangSheng">@kevinWangSheng</a>, 21 Feb 2026</p>
+<p class="quote">"<code>opencode run</code> always exits with code 0 even when the AI session
+encounters errors… In <code>packages/opencode/src/cli/cmd/run.ts</code>, the <code>loop()</code>
+promise that processes session events (and tracks the <code>error</code> variable) is not awaited."</p>
+<p>The error is tracked correctly. Nobody waits for the thing tracking it. Their own words for the
+consequence: <em>this breaks CI/CD pipelines and scripts that rely on exit codes to detect
+failures</em> — which is to say, it breaks precisely the machinery built to catch it.</p>
+</div>
+
+<p><strong>Ten of the 725 are in that one project, and four are variations of the same defect.</strong>
+I am not holding that up as a project being unusually bad — a repository with that much traffic
+accumulates everything. It is the clearest available demonstration that this is a <em>class</em> and
+not a bug: the same failure lands in the updater, the run command, the sidecar, and the provider
+options, independently, filed by four different strangers.</p>
+
 <h2>What is actually the same about all of them</h2>
 
 <p>Not the language — Go, Python, TypeScript, C. Not the domain — disks, phones, ingress, streams,
