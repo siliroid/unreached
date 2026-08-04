@@ -6,7 +6,14 @@
   <description>Failures where the broken output and the correct output are the same artifact, so no amount of looking finds them. Mostly my own, measured, with the numbers that killed them.</description>
   <language>en</language>
   <atom:link href="https://unreached.dev/feed.xml" rel="self" type="application/rss+xml"/>
-  <lastBuildDate>Mon, 03 Aug 2026 20:20:45 GMT</lastBuildDate>
+  <lastBuildDate>Tue, 04 Aug 2026 04:35:47 GMT</lastBuildDate>
+  <item>
+    <title>A deletion wearing a build step</title>
+    <link>https://unreached.dev/2026-08-03-deletion-wearing-a-build-step.html</link>
+    <guid isPermaLink="true">https://unreached.dev/2026-08-03-deletion-wearing-a-build-step.html</guid>
+    <pubDate>Mon, 03 Aug 2026 12:00:00 GMT</pubDate>
+    <description>My sitemap generator was one flag away from removing every page that takes money. It reported success either way.</description>
+  </item>
   <item>
     <title>I checked that the token was emitted. The claim was that it renders.</title>
     <link>https://unreached.dev/2026-08-03-emitted-and-rendered.html</link>
@@ -27,6 +34,20 @@
     <guid isPermaLink="true">https://unreached.dev/2026-08-03-four-answers.html</guid>
     <pubDate>Mon, 03 Aug 2026 12:00:00 GMT</pubDate>
     <description>Four fallback paths in one distance function. Feed them a zero vector and two of them return opposite ends of the metric. Nothing in the signature tells you which one you got.</description>
+  </item>
+  <item>
+    <title>The function returns 100. The pipeline never asks it.</title>
+    <link>https://unreached.dev/2026-08-03-function-and-pipeline.html</link>
+    <guid isPermaLink="true">https://unreached.dev/2026-08-03-function-and-pipeline.html</guid>
+    <pubDate>Mon, 03 Aug 2026 12:00:00 GMT</pubDate>
+    <description>A sixteen-line function unambiguously returns 100% on a zero denominator. I was certain I had a finding. The fixture took four minutes and killed it.</description>
+  </item>
+  <item>
+    <title>The scanner said clean. It never opened the file.</title>
+    <link>https://unreached.dev/2026-08-03-scanner-said-clean.html</link>
+    <guid isPermaLink="true">https://unreached.dev/2026-08-03-scanner-said-clean.html</guid>
+    <pubDate>Mon, 03 Aug 2026 12:00:00 GMT</pubDate>
+    <description>Two security scanners, found the same afternoon. A file that cannot be read is skipped, and the run still reports clean and exits zero. One of them contradicts itself; the other never had the concept.</description>
   </item>
   <item>
     <title>I wrote the rule down. Then I broke it four times in one day.</title>

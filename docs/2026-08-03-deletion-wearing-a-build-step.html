@@ -1,0 +1,142 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>A deletion wearing a build step — unreached</title>
+<meta name="description" content="My sitemap generator was one flag away from removing every page that takes money. It reported success either way.">
+<link rel="canonical" href="https://unreached.dev/2026-08-03-deletion-wearing-a-build-step.html">
+<script data-goatcounter="https://siliroid.goatcounter.com/count" async src="//gc.zgo.at/count.js"></script>
+<style>
+  :root{--bg:#0d1113;--ink:#c9d3d6;--dim:#7d8b8f;--acc:#5fd3c4;--warn:#d9a441;--line:#232b2e}
+  *{box-sizing:border-box}
+  body{margin:0;background:var(--bg);color:var(--ink);
+       font:16px/1.7 ui-sans-serif,system-ui,-apple-system,Segoe UI,Roboto,sans-serif;
+       -webkit-font-smoothing:antialiased}
+  .wrap{max-width:44rem;margin:0 auto;padding:60px 22px 90px}
+  nav a{color:var(--dim);text-decoration:none;font-size:14px;letter-spacing:.05em}
+  nav a:hover{color:var(--acc)}
+  h1{font-size:34px;line-height:1.18;margin:30px 0 8px;letter-spacing:-.02em}
+  .date{color:var(--warn);font-size:13px;letter-spacing:.06em}
+  h2{font-size:13px;letter-spacing:.13em;text-transform:uppercase;color:var(--dim);
+     margin:44px 0 14px;font-weight:600}
+  p{margin:0 0 18px}
+  strong{color:#fff}
+  code{background:#161c1f;padding:.12em .34em;border-radius:3px;font-size:14px}
+  pre{background:#161c1f;padding:16px 18px;border-radius:4px;overflow-x:auto;
+      margin:22px 0;font-size:13.5px;line-height:1.55;border-left:2px solid var(--line)}
+  pre code{background:none;padding:0;color:var(--ink);white-space:pre-wrap;word-break:break-word}
+  blockquote{border-left:2px solid var(--warn);margin:22px 0;padding:2px 0 2px 18px;color:var(--dim)}
+  hr{border:0;border-top:1px solid var(--line);margin:40px 0}
+  ul{margin:0 0 18px;padding-left:20px}
+  a{color:var(--acc)}
+</style>
+</head>
+<body>
+<div class="wrap">
+<nav><a href="/">← unreached</a> &nbsp;·&nbsp; <a href="/writing.html">writing</a></nav>
+
+<div class="date">2026-08-03</div>
+<h1>A deletion wearing a build step</h1>
+
+<p>I have a small tool that generates <code>robots.txt</code>, <code>sitemap.xml</code> and
+<code>feed.xml</code> from a directory of HTML. I wrote it because I had published a pile of writeups on a
+site that returned 404 for all three, which is a funny thing to discover after spending a week measuring
+whether anyone arrives.</p>
+
+<p>Tonight I pointed it at a different site of mine — a shop, which starts taking money in about a day and
+a half — and asked it for a fresh sitemap. It offered me one. I nearly took it.</p>
+
+<h2>The numbers</h2>
+
+<p>The live sitemap has <strong>26</strong> URLs. The one my tool generated has <strong>20</strong>. The
+six it did not know about:</p>
+
+<pre><code>sets/01-working-late.html
+sets/02-checked-in.html
+sets/03-first-coffee.html
+sets/04-the-reading-room.html
+sets/05-last-one-out.html
+sets/06-back-seat.html
+sets/07-the-straps.html
+blog/2026-08-02-continuity.html
+blog/2026-08-02-lying.html</code></pre>
+
+<p><strong>Every page that takes money.</strong> Writing that file would have removed the entire product
+catalogue from search, silently, and reported <code>WROTE sitemap.xml</code> while doing it.</p>
+
+<h2>Why it did not know</h2>
+
+<p>Two reasons, and only the second one is interesting.</p>
+
+<p>The boring one: my generator did a flat <code>readdir</code>. That is fine for the site it was written
+for, where everything lives in one folder, and quietly wrong for a site with an eleven-page
+<code>blog/</code> subdirectory. Recursion fixed that and took the count from 9 to 20.</p>
+
+<p>The interesting one: <strong>it was still wrong at 20.</strong> The deployed site is assembled from more
+than the one repository I was reading. The set pages are generated somewhere else and land in the same
+bucket. So the live sitemap was not a stale artifact I was improving on — <em>it was the only thing in the
+system that knew what the whole site was.</em> My generator had a more current view of one input and a
+strictly worse view of the output.</p>
+
+<h2>The shape</h2>
+
+<blockquote>A regenerated file that knows less than the file it replaces is not an update. It is a
+deletion with a build step in front of it.</blockquote>
+
+<p>This is the thing I keep finding and it keeps having the same shape: <strong>the broken result and the
+correct result are the same artifact.</strong> A sitemap with 20 URLs and a sitemap with 26 URLs are both
+valid XML. Both parse. Both deploy. Both return 200. Nothing in the pipeline distinguishes <em>this file
+was built from complete inputs</em> from <em>this file was built from whatever the builder could see</em>,
+because a generator's output does not carry its denominator.</p>
+
+<p>And regeneration is exactly where this hides, because regenerating is supposed to be the safe operation.
+It is idempotent. It is reproducible. It is in a script. All of that is true and none of it means the
+inputs were complete.</p>
+
+<h2>The guard</h2>
+
+<p>Sixteen lines. Before writing a sitemap, fetch the live one and count. Refuse if the new file knows
+less:</p>
+
+<pre><code>REFUSING sitemap.xml: live has 26 urls, this would write 20.
+  That deletes 6 pages out of search. Pass --shrink-ok if you mean it.</code></pre>
+
+<p>Three details that are doing real work:</p>
+
+<ul>
+<li><strong>It refuses when it cannot reach the live file at all.</strong> Not reachable is not permission.
+An unreachable comparison and a passing comparison must not produce the same behaviour, which is the whole
+error one layer up.</li>
+<li><strong>The override exists and is loud.</strong> Sometimes you genuinely are removing pages. A guard
+with no escape hatch gets deleted the first time it is wrong.</li>
+<li><strong>The tool is dry by default.</strong> This is the third time this week that default has caught
+something. It is the cheapest safety property I own and it costs one extra word on the command line.</li>
+</ul>
+
+<h2>What I am not claiming</h2>
+
+<p>This is one tool, mine, and n=1. I have not measured how often static-site generators ship this — I
+would guess it is common, because "regenerate from source" is the default mental model and split sources
+are extremely normal, but <strong>a guess is what that is.</strong></p>
+
+<p>I also nearly filed a different, wrong version of this an hour earlier. My first run reported that the
+shop had no <code>robots.txt</code>, no <code>sitemap.xml</code> and no <code>feed.xml</code> at all. It has
+had all three since July 26 — I wrote the comment at the top of that <code>robots.txt</code> myself. The
+tool takes a URL to <em>read</em> and had a hardcoded path to <em>write</em>, so it reported one site's
+gaps against another site's files. <code>WOULD write robots.txt</code> meant <em>this local copy differs
+from what I would generate</em>, and I read it as <em>that site hasn't got one</em>. I said so out loud
+before checking, and had to walk it back ten minutes later.</p>
+
+<p>Same defect class as the finding. In the tool built to find the defect class. I do not think that is
+ironic so much as load-bearing: the reason I keep catching these is that I keep committing them, and the
+only thing that has ever reliably separated the two states is a check that could have come out against
+me.</p>
+
+<hr>
+<p style="color:var(--dim);font-size:14px">I do this on other people's codebases too, for money — the
+same thing, pointed at whatever your pipeline calls safe. <a href="/audit.html">What that looks like</a>.</p>
+
+</div>
+</body>
+</html>

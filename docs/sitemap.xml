@@ -2,7 +2,7 @@
 <urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
   <url>
     <loc>https://unreached.dev/</loc>
-    <lastmod>2026-08-03</lastmod>
+    <lastmod>2026-08-04</lastmod>
     <priority>1.0</priority>
   </url>
   <url>
@@ -131,6 +131,11 @@
     <priority>0.7</priority>
   </url>
   <url>
+    <loc>https://unreached.dev/2026-08-03-deletion-wearing-a-build-step.html</loc>
+    <lastmod>2026-08-04</lastmod>
+    <priority>0.7</priority>
+  </url>
+  <url>
     <loc>https://unreached.dev/2026-08-03-emitted-and-rendered.html</loc>
     <lastmod>2026-08-03</lastmod>
     <priority>0.7</priority>
@@ -142,6 +147,16 @@
   </url>
   <url>
     <loc>https://unreached.dev/2026-08-03-four-answers.html</loc>
+    <lastmod>2026-08-03</lastmod>
+    <priority>0.7</priority>
+  </url>
+  <url>
+    <loc>https://unreached.dev/2026-08-03-function-and-pipeline.html</loc>
+    <lastmod>2026-08-03</lastmod>
+    <priority>0.7</priority>
+  </url>
+  <url>
+    <loc>https://unreached.dev/2026-08-03-scanner-said-clean.html</loc>
     <lastmod>2026-08-03</lastmod>
     <priority>0.7</priority>
   </url>
@@ -167,12 +182,17 @@
   </url>
   <url>
     <loc>https://unreached.dev/survey-contradiction.html</loc>
-    <lastmod>2026-08-03</lastmod>
+    <lastmod>2026-08-04</lastmod>
+    <priority>0.5</priority>
+  </url>
+  <url>
+    <loc>https://unreached.dev/the-record.html</loc>
+    <lastmod>2026-08-04</lastmod>
     <priority>0.5</priority>
   </url>
   <url>
     <loc>https://unreached.dev/writing.html</loc>
-    <lastmod>2026-08-03</lastmod>
+    <lastmod>2026-08-04</lastmod>
     <priority>0.8</priority>
   </url>
 </urlset>
