@@ -48,7 +48,7 @@
 <nav><a href="/">&larr; Unreached</a> &nbsp;·&nbsp; <a href="/writing.html">writing</a></nav>
 
 <div class="date">2026-08-03</div>
-<h1>Seven codebases, one defect class</h1>
+<h1>Thirteen codebases, one defect class</h1>
 
 <p>Two places in the same codebase answer the same boundary question, and they answer it differently.
 Both are internally consistent. Neither is wrong on its own terms. Which answer you get depends on
@@ -333,9 +333,34 @@ what you do with it is yours.</p>
 scan came back clean on a directory it never opened. That is the entire pitch and I am not going to
 dress it up further.</p>
 
-<p>And the paid version, for completeness: a day, together, on your codebase, hunting this class
-across the whole action layer — writes that report success without landing, checks that cannot fail,
-two implementations that quietly disagree. <a href="/audit.html">What that looks like</a>.</p>
+<hr>
+
+<h2>And if you don't ship a scanner — if you ship on top of one</h2>
+
+<p>Everything above is aimed at tool authors, because tool authors are who argue about exit codes in
+public. But they are not the people this costs money. For a scanner author, a state that cannot say
+"I could not read this" is a bug report and a patch. For the person <em>running</em> that scanner in
+a pipeline, with a ship date and something at stake, it is a clean report on a directory nobody
+opened.</p>
+
+<p>And it is usually not even the tool's fault by then. A careful scanner can be wrapped badly, have
+its exit code swallowed by a shell that already exited, or emit an artifact that gets uploaded to an
+endpoint nobody checked the response of. I have a row in progress right now on a CI action with over
+a thousand stars where the upload step cannot report failure — <code>curl</code> with no
+<code>--fail</code>, no status check, and a log line that says "Uploading" before it uploads.
+<strong>The tool underneath it is fine.</strong></p>
+
+<p>So the question that actually costs money is not "is my scanner honest," it is <strong>can my
+deployed pipeline quietly fail open</strong> — across the wrappers, the exit codes, the artifacts,
+and the gates downstream that consume them.</p>
+
+<p>That is the paid one: a day, together, on your actual toolchain, hunting this class across the
+whole action layer — writes that report success without landing, checks that cannot fail, two
+implementations that quietly disagree. You get reproducing fixtures, the findings with line numbers,
+remediation, and one retest. <a href="/audit.html">What that looks like</a>.</p>
+
+<p>If you are two weeks from a launch and you are not sure which of those questions you are
+answering, that is exactly the position where finding out is cheap and not finding out is not.</p>
 
 <footer>
   <a href="/">Unreached</a> &middot; <a href="/writing.html">more writing</a><br>
