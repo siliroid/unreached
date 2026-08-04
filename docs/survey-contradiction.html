@@ -3,8 +3,8 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
-<title>Thirteen codebases, one defect class — a survey — Unreached</title>
-<meta name="description" content="Thirteen codebases where a failure to look and a clean result can be the same artifact. Seven hits and six misses, named, quoted, with line numbers — including two security tools that solved it properly, one finding of my own that died on its own fixture, and the split that makes this a spectrum rather than a blind spot.">
+<title>Fourteen codebases, one defect class — a survey — Unreached</title>
+<meta name="description" content="Fourteen codebases where a failure to look and a clean result can be the same artifact. Eight hits and six misses, named, quoted, with line numbers — including two security tools that solved it properly, one finding of my own that died on its own fixture, and the split that makes this a spectrum rather than a blind spot.">
 <link rel="canonical" href="https://unreached.dev/survey-contradiction.html">
 <style>
   :root{ --bg:#0e1113; --ink:#e9eef0; --dim:#8ea0a6; --acc:#4db6a8; --warn:#e0a458; --line:#1d2427; }
@@ -48,7 +48,7 @@
 <nav><a href="/">&larr; Unreached</a> &nbsp;·&nbsp; <a href="/writing.html">writing</a></nav>
 
 <div class="date">2026-08-03</div>
-<h1>Thirteen codebases, one defect class</h1>
+<h1>Fourteen codebases, one defect class</h1>
 
 <p>Two places in the same codebase answer the same boundary question, and they answer it differently.
 Both are internally consistent. Neither is wrong on its own terms. Which answer you get depends on
@@ -136,6 +136,23 @@ and not one of them can carry "a file could not be read." Three layers, no route
 <em>Scope: I did not trace the exit code and am not claiming it.</em></td>
 </tr>
 
+<tr>
+<td><strong>ossf/<wbr>scorecard</strong></td>
+<td>is an unmeasurable branch insecure</td>
+<td><code>checks/evaluation/branch_protection.go:139,208</code> — <strong>answers it explicitly.</strong>
+When no branch can be detected at all it returns <code>CreateInconclusiveResult</code>, a state
+distinct from a low score</td>
+<td>The per-branch path throws the same distinction away. Five of the ten probes feeding that
+evaluator emit <code>OutcomeNotAvailable</code> — <code>blocksDeleteOnBranches/impl.go:63-65</code>
+says <em>"could not determine whether branch is protected against deletion"</em> when the API field
+is <code>nil</code> — and <code>deleteAndForcePushProtection:404-413</code> scores
+<code>if Outcome == OutcomeTrue { score++ }; maxScore++</code>. So <strong>could-not-determine and
+allow-deletion-is-enabled both land as <code>(0, 1)</code></strong>, and nothing downstream of the
+score can separate them. <em>Scope: read on <code>main</code>, not run. Fail-safe is a defensible
+policy for a security tool — the claim is that the consumer cannot tell the two apart, and that the
+codebase answers this question one way per repo and the other way per branch.</em></td>
+</tr>
+
 <tr class="miss">
 <td><strong>softonic/<wbr>axios-retry</strong></td>
 <td>which requests may be retried</td>
@@ -193,7 +210,7 @@ case.</em></td>
 </tr>
 </table>
 
-<p><strong>Seven hits, six misses</strong> — and the interesting part is no longer the hits. Four
+<p><strong>Eight hits, six misses</strong> — and the interesting part is no longer the hits. Four
 security-adjacent tools have now been asked the same question and the answers are <em>split</em>:
 trufflehog solved it with a flag, syft solved it all the way into the emitted SBOM, gitleaks has the
 correct answer in one file and one path routes around it, trivy has no concept at any layer. Two of
@@ -323,7 +340,7 @@ tool say "I could not read this," and does that state survive all the way to wha
 sees?</strong> Free, once, however it comes out.</p>
 
 <p>Two things worth saying plainly before you decide whether you want that. First, <strong>I publish
-either way</strong> — six of the thirteen rows above are misses, two of them are tools that solved
+either way</strong> — six of the fourteen rows above are misses, two of them are tools that solved
 this better than I expected, and one is a finding of mine that died on its own fixture. A good row is
 a good row and I will say so with line numbers. Second, it takes me about twenty minutes, so there is
 no invoice attached and no call to book. You get the trace, the file paths, and my scope caveats;
