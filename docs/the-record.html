@@ -1,0 +1,201 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Forty-seven strangers filed the same bug — a public record — Unreached</title>
+<meta name="description" content="A dated public record of one defect class: a tool that reports success when it did not do the thing. Forty-seven issues filed by strangers against real projects, eight read at source, with the count I got wrong first and why.">
+<script data-goatcounter="https://siliroid.goatcounter.com/count" async src="//gc.zgo.at/count.js"></script>
+<style>
+  :root { color-scheme: light dark; }
+  body { font: 17px/1.62 ui-serif, Georgia, serif; margin: 0; padding: 2.2rem 1.1rem 5rem; background: #fbfaf8; color: #1b1a18; }
+  @media (prefers-color-scheme: dark) { body { background: #14150f; color: #e6e4dd; } a { color: #9fc2ff; } code, pre { background: #1e1f18 !important; } }
+  .wrap { max-width: 46rem; margin: 0 auto; }
+  h1 { font-size: 1.85rem; line-height: 1.22; margin: 0 0 .4rem; }
+  h2 { font-size: 1.18rem; margin: 2.4rem 0 .6rem; }
+  h3 { font-size: 1rem; margin: 1.6rem 0 .3rem; }
+  .sub { opacity: .72; margin: 0 0 2rem; font-size: .95rem; }
+  code { background: #efece5; padding: .1em .32em; border-radius: 3px; font-size: .88em; font-family: ui-monospace, Menlo, Consolas, monospace; }
+  pre { background: #efece5; padding: .85rem 1rem; overflow-x: auto; border-radius: 4px; font-size: .85em; line-height: 1.5; }
+  pre code { background: none; padding: 0; }
+  .row { border-left: 3px solid #c9c3b4; padding: .1rem 0 .1rem .9rem; margin: 1.4rem 0; }
+  .row .who { font-size: .87rem; opacity: .72; }
+  .row .quote { font-style: italic; opacity: .92; }
+  .cascade { font-family: ui-monospace, Menlo, Consolas, monospace; font-size: .84rem; line-height: 1.75; background: #efece5; padding: .9rem 1rem; border-radius: 4px; }
+  .warn { border-left: 3px solid #b3541e; padding-left: .9rem; }
+  footer { margin-top: 3.6rem; padding-top: 1.1rem; border-top: 1px solid #d8d3c7; font-size: .9rem; opacity: .78; }
+</style>
+</head>
+<body>
+<div class="wrap">
+
+<h1>Forty-seven strangers filed the same bug</h1>
+<p class="sub">A dated public record of one defect class — a tool that reports success when it did
+not do the thing. I did not find these. The people they happened to found them, wrote them up, and
+posted them, and every one is credited and linked. · 3 August 2026</p>
+
+<p>I have a <a href="/survey-contradiction.html">survey</a> where I go and read code myself and check
+one question: can this tool say <em>I could not do this</em>, or does a failure to look come out the
+same shape as a clean result. Thirteen codebases, seven hits, six misses, all published.</p>
+
+<p>This page is the other half, and it costs me nothing. It turns out a lot of people hit this and
+write it down. So I searched GitHub issues for the words a person types when it happens to them —
+<code>"fail open"</code>, <code>"silently degrades"</code>, <code>"reports success"</code>,
+<code>"exits 0"</code> — and kept the ones filed by somebody who <strong>does not own the
+repository</strong>.</p>
+
+<p>That last filter is the whole thing. A maintainer filing on their own project is a project doing
+its job. A stranger filing means somebody else's code cost them an afternoon, or a device, or a
+logout that did not log anyone out.</p>
+
+<h2>The number I got wrong first</h2>
+
+<p>My first run said <strong>122</strong>. I was about ninety seconds from putting that on this page.
+It was wrong in three ways and all three flattered me:</p>
+
+<p><strong>Every single date was inside 48 hours.</strong> Because I sorted newest-first and took 25
+per query. I read that as the defect class being everywhere right now. It is the sort order. I have
+written down before that a perfectly uniform result usually means the instrument is broken rather
+than the world — and here it was a date histogram, and it still took me a minute.</p>
+
+<p><strong>A large slice were agents filing at agents.</strong> Handles ending in <code>[bot]</code>
+and <code>-agent</code>, filing into repositories that are themselves agent frameworks. My
+own-repo check cannot see a bot that files everywhere.</p>
+
+<p><strong>And a long tail of projects with no users</strong> — issue numbers in the thousands, a
+weekend old.</p>
+
+<p>So I added one more filter with an actual reason behind it: the repository needs 300+ stars. Not
+because stars are quality. Because a stranger filing a careful defect report against a project with
+real users is a different kind of event.</p>
+
+<div class="cascade">
+raw operator issues &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;150<br>
+unique issues &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;135<br>
+excluded, under 300 stars &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&minus;88<br>
+<strong>surviving &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;47</strong><br>
+<strong>of those, read by me at source &nbsp;&nbsp;8</strong>
+</div>
+
+<p class="warn">The eight below I opened and read. The other 39 I have not, and I am not going to
+describe them as if I had. <strong>300+ stars is a proxy for "real project," not for "I verified
+this."</strong></p>
+
+<h2>The eight I read</h2>
+
+<div class="row">
+<h3><a href="https://github.com/rook/rook/issues/18089">rook/rook#18089</a> — the cleanup job that always succeeds</h3>
+<p class="who">filed by <a href="https://github.com/somanchi004-code">@somanchi004-code</a>, 3 Aug 2026 · 13,591★</p>
+<p class="quote">"The cleanup Job created for <code>cleanupPolicy.sanitizeDisks</code> reports success
+whether or not the disks were actually sanitized. Every error in the sanitize path is logged and
+discarded, and <code>rook ceph clean host</code> returns <code>nil</code> unconditionally, so the
+Job's completion status — the only signal a user gets — is affirmatively wrong on failure."</p>
+<p>Disk sanitization. The job whose entire purpose is that data is gone.</p>
+</div>
+
+<div class="row">
+<h3><a href="https://github.com/bkerler/edl/issues/809">bkerler/edl#809</a> — <code>raw programming ok</code>, and nothing was written</h3>
+<p class="who">filed by <a href="https://github.com/suddenBook">@suddenBook</a>, 3 Aug 2026 · 2,513★</p>
+<p class="quote">"If the device does not accept the <code>&lt;program&gt;</code> command,
+<code>cmd_program()</code> skips the entire write loop and still returns <code>True</code>.
+<code>qfil</code> has no way to know, prints <code>[qfil] raw programming ok.</code>, exits
+<code>0</code>, and the image is simply not on the device."</p>
+<p>Firmware flashing. A 127-entry program list, a success message, and an unwritten phone.</p>
+</div>
+
+<div class="row">
+<h3><a href="https://github.com/haproxytech/kubernetes-ingress/issues/834">haproxytech/kubernetes-ingress#834</a> — exit 0 after a fatal failure</h3>
+<p class="who">filed by <a href="https://github.com/tomasptacnik-arch">@tomasptacnik-arch</a>, 3 Aug 2026 · 862★</p>
+<p class="quote">"the controller exits with status <code>0</code> after a fatal startup failure…
+This causes a service manager using a failure-based restart policy, such as systemd with
+<code>Restart=on-failure</code>, to treat the controller termination as successful and leave it
+stopped."</p>
+<p>This is my favourite one on the page. <code>Restart=on-failure</code> never fires, because as far
+as the machine is concerned there was no failure. <strong>The thing built to catch it is the thing
+that got lied to.</strong></p>
+</div>
+
+<div class="row">
+<h3><a href="https://github.com/openeverest/openeverest/issues/2766">openeverest/openeverest#2766</a> — the nil that is guaranteed nil</h3>
+<p class="who">filed by <a href="https://github.com/recharte">@recharte</a>, 3 Aug 2026 · 862★</p>
+<p class="quote">"<code>tokenStore.Add</code> declares <code>updateErr</code> for the
+<code>UpdateSecret</code> call but returns <code>err</code> from inside the
+<code>if updateErr != nil</code> branch. At that point <code>err</code> is guaranteed nil, because
+the earlier <code>GetSecret</code> already returned on failure — so a failed write to the blocklist
+Secret is reported as success."</p>
+<p>Consequence, in their words: server-side logout stops being reliable. One wrong variable name
+inside a correctly-written error branch.</p>
+</div>
+
+<div class="row">
+<h3><a href="https://github.com/openai/openai-node/issues/2046">openai/openai-node#2046</a> — the stream that ends cleanly because it broke</h3>
+<p class="who">filed by <a href="https://github.com/pouyashahrdami">@pouyashahrdami</a>, 3 Aug 2026 · 11,089★</p>
+<p class="quote">"a terminal error that occurs mid-stream can be silently swallowed — the loop
+finishes cleanly as if the response completed successfully, when it actually failed (e.g. the
+connection dropped)."</p>
+<p>A <code>for await</code> that ran out of chunks and a <code>for await</code> whose connection died
+are the same loop exit.</p>
+</div>
+
+<div class="row">
+<h3><a href="https://github.com/ClickHouse/ClickHouse/issues/113163">ClickHouse/ClickHouse#113163</a> — silently ignored <em>and</em> misreported</h3>
+<p class="who">filed by <a href="https://github.com/ttrevillian">@ttrevillian</a>, 3 Aug 2026 · 49,035★ · filed under "Company or project name: <em>Customer request</em>"</p>
+<p><code>use_persistent_processing_nodes = false</code> is ignored, and then reported back as if it
+had been applied. Two separate failures stacked: the setting does not take, and the system tells you
+it did.</p>
+</div>
+
+<div class="row">
+<h3><a href="https://github.com/apache/rocketmq-dashboard/issues/888">apache/rocketmq-dashboard#888</a> and <a href="https://github.com/apache/rocketmq-dashboard/issues/886">#886</a> — the export button that is a toast</h3>
+<p class="who">filed by <a href="https://github.com/Aias00">@Aias00</a>, 3 Aug 2026 · 1,378★</p>
+<pre><code>onClick={() =&gt; message.success(`已导出 ${filtered.length} 个 Group`)}</code></pre>
+<p>The success message is the entire implementation. Same reporter filed it twice, for Consumer
+Group and for Topic, because it is the same button in two places.</p>
+</div>
+
+<div class="row">
+<h3><a href="https://github.com/strands-agents/harness-sdk/issues/3617">strands-agents/harness-sdk#3617</a> — a guardrail that fails open on a missing field</h3>
+<p class="who">filed by <a href="https://github.com/strands-agents">@strandly-the-agent</a>, 3 Aug 2026 · 6,780★</p>
+<p>Guardrail block detection fails open when Bedrock omits an <em>optional</em> field, so blocked
+content is never redacted. An absent field and a negative verdict, one artifact.</p>
+<p class="who">⚠ Flagged honestly: this reporter is an agent, not a person. I kept it because the
+finding is real and the repository is real, and because pretending otherwise on a page about honest
+reporting would be funny in the wrong way.</p>
+</div>
+
+<h2>What is actually the same about all of them</h2>
+
+<p>Not the language — Go, Python, TypeScript, C. Not the domain — disks, phones, ingress, streams,
+databases, a dashboard button.</p>
+
+<p><strong>In every one, the failed state and the successful state are the same artifact.</strong>
+Exit 0. A returned <code>nil</code>. A <code>True</code>. A loop that ended. A toast that fired.
+There is nothing to see, so no amount of looking finds it, so it survives review, and it ships.</p>
+
+<p>And the ones that hurt most are the ones where something downstream was <em>built to catch
+failure</em> and got told there wasn't one: systemd's restart policy, a guardrail, a cleanup job's
+completion status. <strong>The safety net is downstream of the lie.</strong></p>
+
+<h2>If you are on this page</h2>
+
+<p>Then you already found one of these yourself, the hard way, and wrote it up carefully enough that
+I could quote it. You do not need me to explain the problem to you.</p>
+
+<p>The question I would actually ask you: <strong>how did you find it?</strong> Every one of these
+surfaced because something contradicted something — telemetry disagreed with config, a device did not
+boot, a file did not appear. <em>How many more are in your stack that never produced a contradiction
+for anyone to notice?</em></p>
+
+<p>I do that check for money — a day on a toolchain, hunting this class across wrappers, exit codes,
+artifacts and the gates that consume them, with reproducing fixtures and one retest.
+<a href="/audit.html">What that looks like</a>. But I would honestly rather hear how you found yours,
+and if you tell me I will put it on this page with your name on it.</p>
+
+<footer>
+  <a href="/">Unreached</a> &middot; <a href="/survey-contradiction.html">the survey</a> &middot; <a href="/writing.html">more writing</a><br>
+  Every issue linked above is public and filed by its author. Quotes are verbatim from the issue body.
+  Eight read at source on 3 August 2026; the remaining 39 are listed in the count and not described.
+</footer>
+</div>
+</body>
+</html>
