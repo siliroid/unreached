@@ -207,10 +207,48 @@ non-owner, and the acceptance is reported regardless of effect."</p>
 and the person who deleted it has a receipt saying they didn't.</p>
 </div>
 
+<div class="row">
+<h3><a href="https://github.com/google/osv-scanner/issues/2756">google/osv-scanner#2756</a> — a vulnerability scanner that drops vulnerabilities</h3>
+<p class="who">filed by <a href="https://github.com/hyhmrright">@hyhmrright</a>, 30 Apr 2026 · since closed</p>
+<p class="quote">"<code>filterPackageVulns</code> contains a logic guard that silently drops
+vulnerabilities when all <code>Groups</code> entries are filtered out by the ignore configuration —
+even if those vulnerabilities were not explicitly ignored."</p>
+<pre><code>if len(newGroups) &gt; 0 {   // ← problematic guard</code></pre>
+<p>This is the purest one on the page. A security scanner, from Google, where the thing you asked it
+to find comes back absent because of an unrelated ignore rule. The scan is clean. The vulnerability
+is still there. Nothing in the output differs.</p>
+</div>
+
+<div class="row">
+<h3><a href="https://github.com/microsoft/aspire/issues/16663">microsoft/aspire#16663</a> — deploy succeeds with Docker not running</h3>
+<p class="who">filed by <a href="https://github.com/IEvangelist">@IEvangelist</a>, 1 May 2026 · since closed</p>
+<p class="quote">"<code>aspire deploy</code> reports a successful deployment for a Docker Compose
+environment, but it does not appear to deploy anything. The command succeeds even when Docker Desktop
+is not running, and no containers or images are created."</p>
+<p>Not a subtle edge case. The daemon it deploys to is switched off, and it says it worked.</p>
+</div>
+
+<div class="row">
+<h3><a href="https://github.com/langchain-ai/langchain/issues/34804">langchain-ai/langchain#34804</a> — the parameter that only applies on overflow</h3>
+<p class="who">filed by <a href="https://github.com/artyom-dehtiar">@artyom-dehtiar</a>, 18 Jan 2026 · open</p>
+<p><code>TextSplitter</code>'s <code>chunk_overlap</code> is silently ignored unless a
+<code>chunk_size</code> overflow happens to occur. You set the parameter, it is accepted, and most of
+the time it does nothing — so retrieval quality is quietly worse than the config you wrote.</p>
+</div>
+
+<div class="row">
+<h3><a href="https://github.com/pytorch/pytorch/issues/187715">pytorch/pytorch#187715</a> — a mode that degrades instead of refusing</h3>
+<p class="who">filed by <a href="https://github.com/sanbuphy">@sanbuphy</a>, 19 Jun 2026 · since closed</p>
+<p class="quote">"<code>torch.compile(mode='reduce-overhead')</code> silently degrades training on
+ROCm — <code>cudagraph_trees</code> has no HIP guard."</p>
+<p>An unsupported path with no guard on it, so instead of refusing it runs, and the loss converges
+slower. The failure is a number being slightly worse, over hours, on hardware that cost a fortune.</p>
+</div>
+
 <h2>What is actually the same about all of them</h2>
 
 <p>Not the language — Go, Python, TypeScript, C. Not the domain — disks, phones, ingress, streams,
-databases, a dashboard button.</p>
+databases, deploys, a vulnerability scanner, a dashboard button.</p>
 
 <p><strong>In every one, the failed state and the successful state are the same artifact.</strong>
 Exit 0. A returned <code>nil</code>. A <code>True</code>. A loop that ended. A toast that fired.
