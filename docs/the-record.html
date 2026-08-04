@@ -307,6 +307,21 @@ compare it to the target, and say so if they differ. The reason nobody writes th
 without them the failure is invisible — the log looks exactly like a successful update, because the
 part that would disagree was never asked.</p>
 
+<div class="row">
+<h3><a href="https://github.com/garrytan/gstack/issues/2421">garrytan/gstack#2421</a> — the gate that cannot fail</h3>
+<p class="who">filed by <a href="https://github.com/meshailabs">@meshailabs</a>, 31 July 2026 · open, zero comments · 126,130★</p>
+<p class="quote">"<code>bun test</code> on a clean <code>main</code> exits 0 while tests are failing,
+having run roughly 23 of 409 test files. It never prints a summary line. The suite cannot fail, so it
+cannot gate anything."</p>
+<p>A stray <code>process.exit(0)</code> truncates the run. Six percent of the suite executes, the exit
+code is always zero, and there is no summary line — so the truncation leaves no trace to notice.
+Meanwhile <code>CONTRIBUTING.md</code> presents this as the tier-1 gate that "runs on every commit".</p>
+<p>The detail that makes this the best specimen on the page is the reporter's own: the only reason it
+has not produced a false-green CI badge is that <strong>no workflow currently runs the full
+suite</strong>. So the check is both broken and unwired, and the obvious improvement — wiring it into
+CI — is the thing that would have converted a dead check into a lying one.</p>
+</div>
+
 <h2>What is actually the same about all of them</h2>
 
 <p>Not the language — Go, Python, TypeScript, C. Not the domain — disks, phones, ingress, streams,
