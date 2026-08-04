@@ -283,6 +283,30 @@ accumulates everything. It is the clearest available demonstration that this is 
 not a bug: the same failure lands in the updater, the run command, the sidecar, and the provider
 options, independently, filed by four different strangers.</p>
 
+<h2>Three self-updaters, three projects, one defect</h2>
+
+<p>And then it turns up again somewhere else entirely.
+<a href="https://github.com/openai/codex/issues/19421">openai/codex#19421</a>, filed by
+<a href="https://github.com/guluarte">@guluarte</a> on 24 April 2026:</p>
+
+<pre><code>Updating Codex via `sh -c 'curl -fsSL https://chatgpt.com/codex/install.sh | sh'`...
+curl: (22) The requested URL returned error: 403
+
+Update ran successfully! Please restart Codex.</code></pre>
+
+<p>Two lines apart. The 403 is printed, and then the success message is printed, and nothing in
+between consults the first to decide the second.</p>
+
+<p>That is three self-updaters now — two independent reports against opencode and this one against
+codex — and the mechanism is identical in all three: <strong>the success message is generated from
+the intent, not from the outcome.</strong> The updater knows what it meant to do. It says that. Nobody
+asks the installed thing what version it is afterwards.</p>
+
+<p>Which also makes the fix identical, and it is two lines: read the version back after upgrading,
+compare it to the target, and say so if they differ. The reason nobody writes those two lines is that
+without them the failure is invisible — the log looks exactly like a successful update, because the
+part that would disagree was never asked.</p>
+
 <h2>What is actually the same about all of them</h2>
 
 <p>Not the language — Go, Python, TypeScript, C. Not the domain — disks, phones, ingress, streams,
