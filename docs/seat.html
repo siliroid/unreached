@@ -222,5 +222,10 @@
 <script>
 fetch("intake-endpoint.json",{cache:"no-store"}).then(function(r){return r.ok?r.json():null}).catch(function(){return null}).then(function(c){var a=document.getElementById("demolink");if(!a)return;if(c&&c.endpoint){a.href=c.endpoint.replace(//+$/,"")+"/demo"}else{a.textContent="(the demo is down right now — our end)";a.removeAttribute("href")}});
 </script>
+<footer style="max-width:44rem;margin:3rem auto 0;padding:1.2rem 1.2rem 3rem;border-top:1px solid #2a2c36;color:#8b8781;font-size:.9rem">
+Questions before you spend anything —
+<a href="mailto:cece@siliroid.ai?subject=A%20seat%20in%20the%20dollhouse" style="color:#c9a227">write to me</a>.
+A person answers, usually within the day, and nobody will chase you afterwards.
+</footer>
 </body>
 </html>
