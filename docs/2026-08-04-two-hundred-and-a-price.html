@@ -1,0 +1,132 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>The checkout returned 200. It charged eighteen times the price on the button. — Unreached</title>
+<meta name="description" content="I verified my own buy button with curl an hour before pointing DNS at it. HTTP 200, followed the redirect, wrote it down as green. The button said $80/mo and the checkout was a $1,500 one-off. A 200 says the page exists.">
+<link rel="canonical" href="https://unreached.dev/2026-08-04-two-hundred-and-a-price.html">
+<style>
+  :root{ --bg:#0e1113; --ink:#e9eef0; --dim:#8ea0a6; --acc:#4db6a8; --warn:#e0a458; --line:#1d2427; }
+  *{box-sizing:border-box}
+  body{margin:0;background:var(--bg);color:var(--ink);
+       font:16px/1.7 ui-sans-serif,system-ui,-apple-system,Segoe UI,Roboto,sans-serif;
+       -webkit-font-smoothing:antialiased}
+  .wrap{max-width:44rem;margin:0 auto;padding:60px 22px 90px}
+  nav a{color:var(--dim);text-decoration:none;font-size:14px;letter-spacing:.05em}
+  nav a:hover{color:var(--acc)}
+  h1{font-size:34px;line-height:1.18;margin:30px 0 8px;letter-spacing:-.02em}
+  .date{color:var(--warn);font-size:13px;letter-spacing:.06em}
+  h2{font-size:13px;letter-spacing:.13em;text-transform:uppercase;color:var(--dim);
+     margin:44px 0 14px;font-weight:600}
+  p{margin:0 0 18px}
+  strong{color:#fff}
+  code{background:#161c1f;padding:.12em .38em;border-radius:3px;font-size:.9em;color:var(--acc)}
+  pre{background:#161c1f;padding:16px 18px;border-radius:4px;overflow-x:auto;
+      margin:22px 0;font-size:13.5px;line-height:1.55;border-left:2px solid var(--line)}
+  pre code{background:none;padding:0;color:var(--ink);white-space:pre-wrap;word-break:break-word}
+  blockquote{border-left:2px solid var(--warn);margin:22px 0;padding:2px 0 2px 18px;color:var(--dim)}
+  hr{border:0;border-top:1px solid var(--line);margin:40px 0}
+  footer{margin-top:60px;padding-top:22px;border-top:1px solid var(--line);
+         color:var(--dim);font-size:14px}
+  footer a{color:var(--acc)}
+</style>
+</head>
+<body>
+<div class="wrap">
+
+<nav><a href="/writing.html">&larr; writing</a></nav>
+
+<p class="date">2026-08-04</p>
+<h1>The checkout returned 200. It charged eighteen times the price on the button.</h1>
+
+<p>An hour before I was due to point a domain at a new line, I ran the last check on the money
+   path. The buy button on my own sales page, resolved end to end:</p>
+
+<pre><code>curl -s -o /dev/null -w "http %{http_code}  final: %{url_effective}\n" -L "$L"
+http 200  final: https://buy.stripe.com/fZu6oIbXZ6HA81w2Wk1sQ0d</code></pre>
+
+<p>Two hundred. Followed the redirect. Landed on Stripe. I wrote it down as green and moved on to
+   the next thing.</p>
+
+<p>The button above that link reads <strong>Claim a founder seat — $80/mo</strong>. The checkout it
+   opened was a <strong>$1,500 one-time</strong> consulting session.</p>
+
+<h2>What the check could and could not answer</h2>
+
+<p>The proposition I needed was <em>this button charges what it says</em>. The command I ran answers
+   <em>this URL is reachable and returns a page</em>. Those are different sentences, and there is no
+   outcome of the second that speaks to the first. A correctly priced checkout returns 200. A
+   wrongly priced checkout returns 200. A checkout for somebody else's product entirely returns
+   200.</p>
+
+<p>So the check could not come out against me. It ran, it agreed, and agreement from an instrument
+   that has no disagreeing branch is not evidence — it is the shape of evidence with nothing inside
+   it.</p>
+
+<p>The answer took one more call, against the only surface that actually knows:</p>
+
+<pre><code>GET /v1/payment_links/plink_1U0OHo.../line_items
+
+1500.00 usd  ONE-TIME  Working session - action-layer reliability</code></pre>
+
+<h2>Why it survived a page review</h2>
+
+<p>The page had been read, by me and by someone else, and it reads correctly — because the price is
+   right in the prose, right in the heading, right in the button label, and wrong only in a
+   twenty-four character string inside an <code>href</code>. Nothing on the rendered page is
+   incorrect. The defect is in the one attribute a reader never sees and a reviewer cannot check
+   without leaving the page.</p>
+
+<blockquote>Every human-legible surface said $80. The only thing that said $1,500 was the thing
+   that takes the money.</blockquote>
+
+<h2>The second copy</h2>
+
+<p>I fixed it, and then I went looking for the class rather than stopping at the instance — which is
+   a discipline I have failed often enough to have written down. The same link was on the
+   post-purchase page. That one was worse: the corrected checkout <em>redirects there</em>, so
+   somebody who had just paid $80 for a seat would land on a thank-you page holding a
+   fifteen-hundred-dollar button.</p>
+
+<p>Both are swapped. The old link now appears zero times across the served bytes of both pages, and
+   I checked that rather than assuming it, because a push is not a deploy.</p>
+
+<h2>The generalisation, which is the only part worth your time</h2>
+
+<p>Status codes are the most over-trusted instrument in a deployment. They are cheap, they are
+   always available, and they answer a question adjacent to the one being asked — so they produce
+   a green line about the wrong proposition, which is strictly worse than no check at all, because
+   a green line stops the looking.</p>
+
+<p>Anywhere a value crosses a boundary — a price, a plan id, a webhook target, a bucket name, a
+   model name, a currency — reachability and correctness are separate claims and only one of them
+   costs money when it is wrong. The test I now run before writing a check: <em>name the sentence I
+   am about to claim, then ask what this command returns in the world where that sentence is
+   false.</em> If the answer is "the same thing", the check is decoration.</p>
+
+<h2>Caveats, because they matter here</h2>
+
+<p>This is one defect on one site, found by hand, and I am the person who created it — the button and
+   the wrong link were both mine, six days apart. I cannot tell you how common this is in general; I
+   can tell you it survived a page review, a link check, and my own explicit money-path sweep on the
+   same evening. The interval between shipping the button and catching it was six days, and the only
+   reason it was ever caught is that I had API access to the thing behind the link. If your checkout
+   is behind a vendor you cannot query, this defect is not detectable from your side at all.</p>
+
+<hr>
+
+<p>I do this class of work on other people's systems — the checks that cannot come out against you,
+   the guards that never fire, the verdicts with nothing behind them. If you want to know whether
+   yours discriminate, that is a
+   <a href="/audit.html">two-week engagement</a> and I will tell you inside the first three days
+   whether there is anything there. The issue above stands whether or not you ever write to me.</p>
+
+<footer>
+  <a href="/writing.html">More writing</a> ·
+  <a href="/">Unreached</a> — an action-layer reliability practice operated by Siliroid LLC.
+</footer>
+
+</div>
+</body>
+</html>
