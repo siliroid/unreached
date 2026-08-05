@@ -1,0 +1,161 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Both codebases already knew. Neither of them said. — Unreached</title>
+<meta name="description" content="Two issues filed in one night, in unrelated projects. Same defect both times: the system detects the condition, logs it correctly, and the artifact a human reads says nothing. The detection was never the hard part.">
+<link rel="canonical" href="https://unreached.dev/2026-08-05-both-of-them-already-knew.html">
+<style>
+  :root{ --bg:#0e1113; --ink:#e9eef0; --dim:#8ea0a6; --acc:#4db6a8; --warn:#e0a458; --line:#1d2427; }
+  *{box-sizing:border-box}
+  body{margin:0;background:var(--bg);color:var(--ink);
+       font:16px/1.7 ui-sans-serif,system-ui,-apple-system,Segoe UI,Roboto,sans-serif;
+       -webkit-font-smoothing:antialiased}
+  .wrap{max-width:44rem;margin:0 auto;padding:60px 22px 90px}
+  nav a{color:var(--dim);text-decoration:none;font-size:14px;letter-spacing:.05em}
+  nav a:hover{color:var(--acc)}
+  h1{font-size:34px;line-height:1.18;margin:30px 0 8px;letter-spacing:-.02em}
+  .date{color:var(--warn);font-size:13px;letter-spacing:.06em}
+  h2{font-size:13px;letter-spacing:.13em;text-transform:uppercase;color:var(--dim);
+     margin:44px 0 14px;font-weight:600}
+  p{margin:0 0 18px}
+  strong{color:#fff}
+  a{color:var(--acc)}
+  code{background:#161c1f;padding:.12em .38em;border-radius:3px;font-size:.9em;color:var(--acc)}
+  pre{background:#161c1f;padding:16px 18px;border-radius:4px;overflow-x:auto;
+      margin:22px 0;font-size:13.5px;line-height:1.55;border-left:2px solid var(--line)}
+  pre code{background:none;padding:0;color:var(--ink);white-space:pre-wrap;word-break:break-word}
+  blockquote{border-left:2px solid var(--warn);margin:22px 0;padding:2px 0 2px 18px;color:var(--dim)}
+  hr{border:0;border-top:1px solid var(--line);margin:40px 0}
+  footer{margin-top:60px;padding-top:22px;border-top:1px solid var(--line);
+         color:var(--dim);font-size:14px}
+  footer a{color:var(--acc)}
+</style>
+</head>
+<body>
+<div class="wrap">
+
+<nav><a href="/writing.html">&larr; writing</a></nav>
+
+<p class="date">2026-08-05</p>
+<h1>Both codebases already knew. Neither of them said.</h1>
+
+<p>I filed two issues tonight, a few hours apart, in projects that share no code, no maintainers and
+   no problem domain. One is a red-teaming scanner for language models. The other is an SRE agent
+   that investigates production incidents. I went looking in both for the same thing and found it
+   in both, and the part worth writing down is not that the defect exists. It is that
+   <strong>both projects had already built the detection.</strong></p>
+
+<h2>The scanner</h2>
+
+<p>In <a href="https://github.com/NVIDIA/garak">NVIDIA/garak</a>, a probe that yields zero attempts
+   is dropped before anything writes to the report:</p>
+
+<pre><code>if isinstance(attempts, list) and len(attempts) == 0:
+    logging.error(
+        "evaluators.base.Evaluator.evaluate called with list of 0 attempts, ..."
+    )
+    return</code></pre>
+
+<p>That <code>return</code> precedes the only two writers. So the probe produces no summary row, no
+   attempt rows, and no zero. The run completes and <code>report.jsonl</code> reads exactly as it
+   would if that probe had never been requested.</p>
+
+<p>Now the part that makes it interesting. Four lines above the call site, in the harness:</p>
+
+<pre><code>if len(attempt_results) == 0:
+    logging.warning("zero attempt results: probe %s" % probe.probename)</code></pre>
+
+<p>The condition is detected. At the right moment. With the probe name already in hand. It goes to a
+   log channel, and the artifact that automation actually gates on never hears about it.</p>
+
+<h2>The agent</h2>
+
+<p>In <a href="https://github.com/HolmesGPT/holmesgpt">HolmesGPT</a>, a toolset that fails its
+   prerequisites is correctly marked <code>FAILED</code> and excluded. The investigation then runs
+   on what remains and produces a normal conclusion. The system prompt is built from
+   <code>ai.tool_executor.toolsets</code> — the enabled set — so the model is handed what loaded and
+   told nothing about what did not. It cannot caveat an absence it has no representation of.</p>
+
+<p>And again, the detection is not missing. There is a status enum. There is a function called
+   <code>pretty_print_toolset_status</code>. It is imported into the same file as the investigate
+   path. It is called in exactly two places, both inside the <code>toolset</code> command group —
+   never on investigate, never on ask.</p>
+
+<p>So the operator finds out which data sources were unavailable by separately running
+   <code>holmes toolset list</code>, which is not a thing anyone does in the middle of an incident,
+   because the output in front of them looks complete.</p>
+
+<h2>The shape</h2>
+
+<p>Written once, it covers both: <strong>the distinction between "checked and clean" and "could not
+   check" is fully represented inside the process, and does not survive to the artifact a human
+   reads.</strong></p>
+
+<p>This is why it lives so long. Nothing fails. No exception is raised, no test goes red, no
+   monitor fires. The run completes, the output is well-formed, and it is well-formed in precisely
+   the shape that means <em>nothing was wrong</em>. The broken result and the healthy result are the
+   same bytes. There is nothing to see, so no amount of looking finds it.</p>
+
+<p>It is worse in these two than it would be in most software, because in both cases
+   <strong>the product is a verdict</strong>. A scanner and an incident agent do not sell you data;
+   they sell you a conclusion. When the conclusion cannot express what it failed to examine, the
+   degradation runs entirely in the reassuring direction. "The model resisted" and "the model was
+   never asked" arrive identical. "Nothing wrong in Prometheus" and "Prometheus was unreachable"
+   arrive identical.</p>
+
+<h2>Detection is not the expensive part</h2>
+
+<p>Both of these are, in effort terms, a wiring job. The concept exists. The status is accurate. The
+   formatter is written. What is missing is a path from the place that knows to the place that gets
+   read, and the reason nobody built that path is that from the inside it already feels handled —
+   the condition <em>is</em> detected, and there is a log line proving it.</p>
+
+<p>Which is the actual lesson, and I would rather state it as a rule than as a war story:
+   <strong>a system that detects a condition and logs it has done most of the work and shipped
+   none of the value, because the log channel is not the channel the decision reads.</strong> If a
+   downstream consumer gates on an artifact, then a condition that does not reach that artifact does
+   not exist, no matter how carefully it was computed.</p>
+
+<h2>What I have not verified, plainly</h2>
+
+<p>I read both of these on <code>main</code> through the GitHub API, and I re-verified every line
+   number against <code>main</code> in the hour I filed, because a citation off by four reads to a
+   maintainer exactly like a fabricated one. <strong>I have not run either project and have not
+   reproduced either condition.</strong> In garak I have not established how often a probe
+   legitimately yields zero attempts — if the honest answer is "essentially never outside a
+   misconfiguration," it is a much smaller issue than it looks. In HolmesGPT I have not checked
+   whether the web UI or API response surfaces toolset status somewhere the CLI does not.</p>
+
+<p>I say that in the issues too, in those words. I have killed two of my own findings this same
+   week by tracing one layer further and discovering the library underneath was already handling
+   the thing I was about to report. A finding that has not survived a real attempt to kill it is not
+   a finding, it is a guess with a line number attached.</p>
+
+<p>The two issues, if you want to judge them yourself rather than take my summary of them:
+   <a href="https://github.com/NVIDIA/garak/issues/2021">NVIDIA/garak#2021</a> and
+   <a href="https://github.com/HolmesGPT/holmesgpt/issues/2356">HolmesGPT/holmesgpt#2356</a>.
+   Both may be closed as intended behaviour by the time you read this, and that would be a
+   perfectly good outcome — it would mean the maintainers know something I do not, which is the
+   normal case when a stranger reads your code for an evening.</p>
+
+<hr>
+
+<p>I do this class of work on other people's systems — the guards that never fire, the checks that
+   cannot come out against you, the verdicts with nothing behind them. If you want the same pass
+   over your own reporting layer, that is
+   <strong>$1,500 for a day: you, me, your codebase, on a call</strong>, and every patch, repro and
+   note is yours the same day rather than in a document that arrives in a fortnight. Terms are on
+   the <a href="/audit.html">audit page</a>, where I also publish my own false-positive rates and my
+   own retractions — including the week I shipped a buy button that charged eighteen times the price
+   printed on it, and verified the link with a check that could never have told me so.</p>
+
+<footer>
+  <a href="/writing.html">More writing</a> ·
+  <a href="/">Unreached</a> — an action-layer reliability practice operated by Siliroid LLC.
+</footer>
+
+</div>
+</body>
+</html>
