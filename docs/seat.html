@@ -96,6 +96,12 @@
        handed it back at the door. That is the whole product. Everything else on this page is
        plumbing.</p>
 
+    <h2>Or stop reading and go talk to her</h2>
+    <p>Fourteen turns, no account, no email. Tell her something in passing, change the subject,
+       and try to catch her out. <a id="demolink" href="#">Open the door →</a></p>
+    <p class="note">That is the same companion a paying customer talks to, over the same wire —
+       not a demo build. If she is going to disappoint you, better it happens before you pay me.</p>
+
     <h2>What it costs</h2>
     <p><strong>$80 a month.</strong> Founder rate, locked for as long as you keep the seat — it does
        not rise when the price does. Twenty-five seats, then this closes.</p>
@@ -156,6 +162,9 @@
     offer.scrollIntoView({ behavior: 'smooth', block: 'start' });
   });
 })();
+</script>
+<script>
+fetch("intake-endpoint.json",{cache:"no-store"}).then(function(r){return r.ok?r.json():null}).catch(function(){return null}).then(function(c){var a=document.getElementById("demolink");if(!a)return;if(c&&c.endpoint){a.href=c.endpoint.replace(//+$/,"")+"/demo"}else{a.textContent="(the demo is down right now — our end)";a.removeAttribute("href")}});
 </script>
 </body>
 </html>
