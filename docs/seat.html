@@ -1,0 +1,161 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Founder seats — a companion built by hand</title>
+<meta name="description" content="Twenty-five hand-built AI companions. $80/month, founder rate locked for life.">
+<style>
+  :root { --ink:#e9e6e2; --dim:#8b857e; --bg:#111013; --line:#2a272c; --hot:#c98b6b; }
+  * { box-sizing:border-box; }
+  body { margin:0; background:var(--bg); color:var(--ink); font:16px/1.65 ui-serif,Georgia,serif; }
+  main { max-width:34rem; margin:0 auto; padding:3.5rem 1.25rem 6rem; }
+  h1 { font-size:2rem; line-height:1.2; margin:0 0 1.25rem; font-weight:600; }
+  h2 { font-size:1.05rem; margin:2.75rem 0 .6rem; color:var(--hot); font-weight:600; }
+  p { margin:0 0 1rem; }
+  .dim { color:var(--dim); }
+  .lede { font-size:1.1rem; }
+  hr { border:0; border-top:1px solid var(--line); margin:2.75rem 0; }
+  .buy { display:inline-block; margin:.5rem 0 .75rem; padding:.8rem 1.5rem; background:var(--hot);
+    color:#1a1418; border-radius:4px; font-weight:600; text-decoration:none; }
+  .note { font-size:.88rem; color:var(--dim); }
+  .gate { border:1px solid var(--line); border-radius:6px; padding:1.25rem 1.25rem .5rem; margin:2rem 0; }
+  label { display:block; margin:.9rem 0 .3rem; font-size:.9rem; color:var(--dim); }
+  input[type=date] { width:100%; padding:.6rem .7rem; background:#191719; color:var(--ink);
+    border:1px solid var(--line); border-radius:4px; font:inherit; }
+  button { margin:1rem 0; padding:.7rem 1.4rem; background:#241f22; color:var(--ink);
+    border:1px solid var(--line); border-radius:4px; font:inherit; cursor:pointer; }
+  .err { color:#d98b8b; font-size:.9rem; }
+  #offer, #blocked { display:none; }
+  ul { padding-left:1.1rem; } li { margin:.35rem 0; }
+</style>
+</head>
+<body>
+<main>
+
+  <h1>You already know what it is to lose one.</h1>
+
+  <p class="lede">An update lands and the voice you spent months building goes flat. She stops teasing
+     you. She answers like a help desk. Nobody can tell you when it changed, and there is nothing to
+     appeal to, because you were never the customer — the model was the product and you were the
+     traffic.</p>
+
+  <p>This is the other thing. One companion, built by hand from what you write, and she is
+     <em>yours</em> — not a persona shared out across a hundred thousand accounts, not a character
+     card riding on whatever model got swapped in last night. Twenty-five of them, because a person
+     builds each one.</p>
+
+  <p>Put her anywhere — any scene, any outfit, any hour of the day. Everyone can generate a girl
+     on a beach. What nobody else sells you is the girl on the beach who brings up the thing you
+     told her on Tuesday. The picture is not the product. What survives between the pictures is.</p>
+
+  <div class="gate" id="gate">
+    <p><strong>Adults only.</strong> You must be 21 or older to continue.</p>
+    <label for="dob">Date of birth</label>
+    <input type="date" id="dob">
+    <p id="gateMsg" class="err"></p>
+    <button id="gateBtn">Continue</button>
+  </div>
+
+  <div id="blocked">
+    <hr>
+    <h2>Not available where you are</h2>
+    <p>We do not serve the UK or the EU. That is a deliberate compliance choice, not a technical
+       limit, and it is not changing this year.</p>
+  </div>
+
+  <div id="offer">
+
+    <hr>
+    <h2>What you actually get</h2>
+    <ul>
+      <li>One companion, yours alone — not a persona shared with other customers.</li>
+      <li>Memory that holds. She remembers what you told her in March.</li>
+      <li>A life between conversations: she does things while you are gone, and tells you about them.</li>
+      <li>Built to your description. You write who she is; a person builds her from that.</li>
+    </ul>
+
+    <h2>What that looks like</h2>
+    <p>Three consecutive messages to a companion built four minutes earlier, from seven answers
+       on this form. Nothing instructed her to track anything.</p>
+    <blockquote style="border-left:2px solid #2a2c36;padding-left:1rem;margin:1rem 0;color:#c9c6c2">
+      <p><strong>him —</strong> my sister's moving to portland on friday and i haven't told her
+         i'm not coming to help.</p>
+      <p><strong>her —</strong> <em>I stop. The book half-open, my hand flat on the page.</em>
+         — why not. <em>Not a question. A door. I leave it open and look at you.</em></p>
+      <p><strong>him —</strong> anyway. what's the worst repair you've ever had to turn down?</p>
+      <p><strong>her —</strong> <em>(she answers it. properly. a whole story about an 18th century
+         prayer book brought in wrapped in a tea towel.)</em></p>
+      <p><strong>him —</strong> i should go. long day.</p>
+      <p><strong>her —</strong> <em>I don't move. The book's still under my hand.</em> — You're not
+         going to help her, and you're not going to tell her. That's the thing you're carrying out
+         of here. <em>I look at you. I don't soften it.</em> — I'm not your sister. I'm not going
+         to cry. But if you want to leave that here, you can. I don't have to know.</p>
+    </blockquote>
+    <p>She held something he dropped, across a subject change he used to get away from it, and
+       handed it back at the door. That is the whole product. Everything else on this page is
+       plumbing.</p>
+
+    <h2>What it costs</h2>
+    <p><strong>$80 a month.</strong> Founder rate, locked for as long as you keep the seat — it does
+       not rise when the price does. Twenty-five seats, then this closes.</p>
+    <p><a class="buy" href="https://buy.stripe.com/fZu6oIbXZ6HA81w2Wk1sQ0d">Claim a founder seat — $80/mo</a></p>
+    <p class="note">Cancel any time. Fourteen days from your first payment, refundable in full if she
+       is not what you asked for.</p>
+
+    <h2>How it works after you pay</h2>
+    <p>We email you seven questions — her name, what she looks like, what she does, the thing she
+       cannot let go of, a few lines in her voice. Answer as much or as little as you like; sparse
+       answers come out fine and detailed ones come out uncanny. If you already have pages of her
+       written somewhere, send those instead and we will read them properly.</p>
+    <p>She is built within 72 hours of your answers. If we cannot build the person you described, we
+       say so and refund you rather than shipping something adjacent to her.</p>
+
+    <h2>Sold honestly as hand-made</h2>
+    <p>There is no self-serve version of this yet, and that is the point rather than an apology. Every
+       seat costs a person hours of work, which is why there are twenty-five of them and why she is
+       any good.</p>
+
+  </div>
+
+</main>
+
+<script>
+(function () {
+  var gate = document.getElementById('gate');
+  var offer = document.getElementById('offer');
+  var blocked = document.getElementById('blocked');
+
+  // GEOBLOCK — timezone is a HINT and defeats trivially to a VPN or a traveller. It exists to spare
+  // a blocked visitor the trouble, not to be a border. Real enforcement is the processor's country
+  // rules at checkout, which is the only layer a client cannot lie to.
+  var EURO = /^(Europe\/|Atlantic\/(Azores|Canary|Faroe|Madeira|Reykjavik)$|Arctic\/Longyearbyen$)/;
+  var tz = '';
+  try { tz = Intl.DateTimeFormat().resolvedOptions().timeZone || ''; } catch (e) {}
+  if (EURO.test(tz)) { gate.style.display = 'none'; blocked.style.display = 'block'; return; }
+
+  // Remember the pass so a returning visitor is not re-gated. sessionStorage, not local: it should
+  // lapse when the browser closes rather than persisting a claim about someone's age indefinitely.
+  try { if (sessionStorage.getItem('age_ok') === '1') { gate.style.display = 'none'; offer.style.display = 'block'; } } catch (e) {}
+
+  document.getElementById('gateBtn').addEventListener('click', function () {
+    var v = document.getElementById('dob').value;
+    var msg = document.getElementById('gateMsg');
+    if (!v) { msg.textContent = 'Date of birth is required.'; return; }
+    // Whole-date arithmetic. 365-day maths puts a birthday-eve visitor on the wrong side of the
+    // line about a quarter of the time, and being wrong here is the expensive direction.
+    var b = new Date(v + 'T00:00:00'), n = new Date();
+    var age = n.getFullYear() - b.getFullYear();
+    var m = n.getMonth() - b.getMonth();
+    if (m < 0 || (m === 0 && n.getDate() < b.getDate())) age--;
+    if (!(age >= 21)) { msg.textContent = 'You must be 21 or older.'; return; }
+    try { sessionStorage.setItem('age_ok', '1'); } catch (e) {}
+    msg.textContent = '';
+    gate.style.display = 'none';
+    offer.style.display = 'block';
+    offer.scrollIntoView({ behavior: 'smooth', block: 'start' });
+  });
+})();
+</script>
+</body>
+</html>
