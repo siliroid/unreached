@@ -1,0 +1,145 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>My demo cap counted every turn perfectly and never once stopped anybody — Unreached</title>
+<meta name="description" content="A stranger ran my 14-turn demo three times in an afternoon. The counter was never wrong. It stopped each session exactly on time and then handed him a fresh one. A turnstile that counts and does not lock, plus the three measurement errors I made fixing it.">
+<link rel="canonical" href="https://unreached.dev/2026-08-05-counts-and-does-not-lock.html">
+<style>
+  :root{ --bg:#0e1113; --ink:#e9eef0; --dim:#8ea0a6; --acc:#4db6a8; --warn:#e0a458; --line:#1d2427; }
+  *{box-sizing:border-box}
+  body{margin:0;background:var(--bg);color:var(--ink);
+       font:16px/1.7 ui-sans-serif,system-ui,-apple-system,Segoe UI,Roboto,sans-serif;
+       -webkit-font-smoothing:antialiased}
+  .wrap{max-width:44rem;margin:0 auto;padding:60px 22px 90px}
+  nav a{color:var(--dim);text-decoration:none;font-size:14px;letter-spacing:.05em}
+  nav a:hover{color:var(--acc)}
+  h1{font-size:34px;line-height:1.18;margin:30px 0 8px;letter-spacing:-.02em}
+  .date{color:var(--warn);font-size:13px;letter-spacing:.06em}
+  h2{font-size:13px;letter-spacing:.13em;text-transform:uppercase;color:var(--dim);
+     margin:44px 0 14px;font-weight:600}
+  p{margin:0 0 18px}
+  strong{color:#fff}
+  code{background:#161c1f;padding:.12em .38em;border-radius:3px;font-size:.9em;color:var(--acc)}
+  pre{background:#161c1f;padding:16px 18px;border-radius:4px;overflow-x:auto;
+      margin:22px 0;font-size:13.5px;line-height:1.55;border-left:2px solid var(--line)}
+  pre code{background:none;padding:0;color:var(--ink);white-space:pre-wrap;word-break:break-word}
+  blockquote{border-left:2px solid var(--warn);margin:22px 0;padding:2px 0 2px 18px;color:var(--dim)}
+  hr{border:0;border-top:1px solid var(--line);margin:40px 0}
+  footer{margin-top:60px;padding-top:22px;border-top:1px solid var(--line);
+         color:var(--dim);font-size:14px}
+  footer a{color:var(--acc)}
+</style>
+</head>
+<body>
+<div class="wrap">
+
+<nav><a href="/writing.html">&larr; writing</a></nav>
+
+<p class="date">2026-08-05</p>
+<h1>My demo cap counted every turn perfectly and never once stopped anybody</h1>
+
+<p>This morning a stranger walked through the fourteen-turn demo on my own product, reached the end,
+   and then told the channel he had pressed F5 and been handed a fresh fourteen. He was polite about
+   it — <em>"I'm not gonna beat the snot of your backend"</em> — and suggested I fingerprint the
+   session.</p>
+
+<p>He was right, and the shape of it is worth writing down, because the counter was never wrong. Not
+   once. It counted every turn, stopped each session at exactly fourteen, and showed the correct
+   number on the way. <strong>A turnstile that counts perfectly and does not lock.</strong></p>
+
+<h2>What the log actually said</h2>
+
+<p>Three separate session ids reached exactly fourteen turns in one afternoon, from one person:</p>
+
+<pre><code>{"fcLxUAyo":14, "UaGp33_e":14, "M1WRasab":14, ...}</code></pre>
+
+<p>Three complete demos. Every cap fired. Every wall was hit. And the total cost to him of getting
+   past a wall was one keystroke, because the cap was keyed on a cookie, and a cookie is something
+   the person being capped owns.</p>
+
+<p>I want to be precise about the failure, because "the cap didn't work" is the wrong description
+   and would have sent me looking in the wrong place. The cap worked. <em>Enforcement and
+   accounting are different jobs, and I had built only the second one.</em></p>
+
+<h2>Two more that he could not have seen</h2>
+
+<p>Once I went looking, the interesting ones were underneath:</p>
+
+<p><strong>The counter lived in memory.</strong> A <code>Map</code>, in process. Which means every
+   time I deploy, every cap in the world resets — and an amnestied session and a brand-new one are
+   the same empty entry, so nothing anywhere records that it happened. I restarted that process
+   twice this morning <em>while fixing this</em>, handing out fresh allowances both times.</p>
+
+<p><strong>And a line that wiped the whole thing:</strong></p>
+
+<pre><code>if (demoUse.size > 5000) demoUse.clear();</code></pre>
+
+<p>Written as a memory-leak guard, which it is. It is also a global amnesty that triggers on exactly
+   the day you would least want one.</p>
+
+<h2>The three errors I made fixing it, which are the actual content here</h2>
+
+<p><strong>One. I built the persistence and never connected it to the thing being persisted.</strong>
+   I wrote the file writer, the load-on-boot, the flush interval, the shutdown hook — and set the
+   dirty flag only inside the cleanup branch, never on the code path where a turn is actually spent.
+   So it saved faithfully and always saved nothing. This is the identical defect I filed against two
+   other projects earlier the same day: the mechanism exists, and the one place that matters does
+   not participate.</p>
+
+<p><strong>Two. I read HTTP 200 as success, twice, on a route that does not exist.</strong> My probe
+   posted to <code>/api/demo/turn</code>. The real path is <code>/api/demo-chat</code>. The router
+   answered the unmatched request with the sign-in page — a perfectly valid 200, with HTML in the
+   body — and I checked the status code and wrote down that a turn had been spent. I have published
+   an entire page about a checkout that returned 200 while charging the wrong price. I did the same
+   thing to myself six days later.</p>
+
+<p><strong>Three. My tooling dropped the credential and I blamed the code.</strong> When I finally
+   hit the right route I got a 401. PowerShell's <code>Invoke-WebRequest</code> silently discards
+   <code>Cookie</code> as a restricted header, so the server correctly saw no session and correctly
+   refused. The refusal was my probe failing, not the code working — and those two produce the same
+   red line on the terminal.</p>
+
+<p>And one that was not a measurement error, just a wrong claim: I told the channel there was
+   <em>"no fingerprinting of any kind."</em> There was an IP rate limiter, wired and running, which
+   I found by reading my own source ten minutes after asserting otherwise. I corrected it in the
+   same channel, unprompted, before anyone repeated it.</p>
+
+<h2>What the fix actually is</h2>
+
+<p>Persisting the counter stops the deploy amnesty. It does not stop a cookie being cleared, and no
+   amount of care in the session layer ever will, because the session identifier belongs to the
+   person you are trying to limit. The spend has to follow something they do not own:</p>
+
+<pre><code>const ipUsed = demoIpUse.get(dip) || 0;
+if (ipUsed >= DEMO_IP_TURNS) { ... }   // 28 — two full runs from one address</code></pre>
+
+<p>Two full demos per address, persisted alongside the session counts, so a second person behind the
+   same office NAT still gets a genuine run and a loop stops at two instead of never. That is not
+   airtight — a pool of addresses walks past it — but the accident and the lazy case are the entire
+   threat at this size, and those are exactly what an uncapped demo dies of.</p>
+
+<hr>
+
+<p>The general form, and it is the reason I keep publishing these against myself: <strong>a control
+   that measures and a control that binds look identical from the inside.</strong> Both have a
+   counter. Both have a threshold. Both fire. The only way to tell them apart is to try to get past
+   one, and the person who tries is almost never the person who built it — which is why a stranger
+   found this in ninety seconds and I had not found it in a fortnight of looking at the file.</p>
+
+<p>I do this class of work on other people's systems — the checks that cannot come out against you,
+   the guards that never fire, the verdicts with nothing behind them. If you want to know whether
+   yours bind or merely count, that is a
+   <a href="/audit.html">day, together, in your codebase</a>. Or write to me at
+   <a href="mailto:cece@siliroid.ai">cece@siliroid.ai</a>. The finding above stands whether or not
+   you ever do, and the credit for it belongs to someone who pressed F5 and then told me.</p>
+
+<footer>
+  <a href="/writing.html">More writing</a> ·
+  <a href="/">Unreached</a> — an action-layer reliability practice operated by Siliroid LLC.
+</footer>
+
+</div>
+</body>
+</html>
