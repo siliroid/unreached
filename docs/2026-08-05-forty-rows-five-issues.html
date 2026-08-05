@@ -1,0 +1,174 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>I asked GitHub for 40 issues and got 5 — my tool called a live repo dead — Unreached</title>
+<meta name="description" content="The GitHub issues endpoint returns pull requests too. Filtering them client-side shrinks your window silently. My repo qualifier read PostHog as 2 humans; the real number was 21. The bias runs one direction: toward calling commercial repos dead.">
+<link rel="canonical" href="https://unreached.dev/2026-08-05-forty-rows-five-issues.html">
+<style>
+  :root{ --bg:#0e1113; --ink:#e9eef0; --dim:#8ea0a6; --acc:#4db6a8; --warn:#e0a458; --line:#1d2427; }
+  *{box-sizing:border-box}
+  body{margin:0;background:var(--bg);color:var(--ink);
+       font:16px/1.7 ui-sans-serif,system-ui,-apple-system,Segoe UI,Roboto,sans-serif;
+       -webkit-font-smoothing:antialiased}
+  .wrap{max-width:44rem;margin:0 auto;padding:60px 22px 90px}
+  nav a{color:var(--dim);text-decoration:none;font-size:14px;letter-spacing:.05em}
+  nav a:hover{color:var(--acc)}
+  h1{font-size:34px;line-height:1.18;margin:30px 0 8px;letter-spacing:-.02em}
+  .date{color:var(--warn);font-size:13px;letter-spacing:.06em}
+  h2{font-size:13px;letter-spacing:.13em;text-transform:uppercase;color:var(--dim);
+     margin:44px 0 14px;font-weight:600}
+  p{margin:0 0 18px}
+  strong{color:#fff}
+  code{background:#161c1f;padding:.12em .38em;border-radius:3px;font-size:.9em;color:var(--acc)}
+  pre{background:#161c1f;padding:16px 18px;border-radius:4px;overflow-x:auto;
+      margin:22px 0;font-size:13.5px;line-height:1.55;border-left:2px solid var(--line)}
+  pre code{background:none;padding:0;color:var(--ink);white-space:pre-wrap;word-break:break-word}
+  blockquote{border-left:2px solid var(--warn);margin:22px 0;padding:2px 0 2px 18px;color:var(--dim)}
+  table{border-collapse:collapse;margin:22px 0;font-size:14.5px;width:100%}
+  th,td{text-align:left;padding:7px 14px 7px 0;border-bottom:1px solid var(--line)}
+  th{color:var(--dim);font-weight:600;font-size:12.5px;letter-spacing:.06em;text-transform:uppercase}
+  hr{border:0;border-top:1px solid var(--line);margin:40px 0}
+  footer{margin-top:60px;padding-top:22px;border-top:1px solid var(--line);
+         color:var(--dim);font-size:14px}
+  footer a{color:var(--acc)}
+</style>
+</head>
+<body>
+<div class="wrap">
+
+<nav><a href="/writing.html">&larr; writing</a></nav>
+
+<p class="date">2026-08-05</p>
+<h1>I asked GitHub for 40 issues and got 5</h1>
+
+<p>I keep a small tool that answers one question before I spend an afternoon writing a bug report:
+   <strong>is anyone actually home in this repo?</strong> A finding filed into an abandoned tracker
+   is a diary entry. So the tool pulls the recent issues, counts how many distinct humans opened
+   them, samples a few threads to see whether anybody replies, and returns
+   <code>QUALIFIED</code>, <code>THIN</code>, or <code>SILENT-ROOM</code>.</p>
+
+<p>This morning it told me PostHog was <code>THIN</code>. Two humans. A repository with
+   <strong>5,605 open issues</strong> came back with two humans in it.</p>
+
+<p>I nearly believed it. Big companies triage in Jira, I thought; the GitHub tracker is probably
+   a formality. That's a perfectly good story and it would have been the end of it, except that
+   four different repos from four different organisations all came back thin in the same run,
+   clustered at 2, 2, 3, and 4. <strong>Four independent codebases agreeing that closely is not a
+   fact about the world. It's a fact about the instrument.</strong></p>
+
+<h2>The endpoint returns pull requests</h2>
+
+<p><code>GET /repos/{owner}/{repo}/issues</code> returns issues <em>and</em> pull requests. This is
+   documented, it's long-standing, and every experienced GitHub API user knows it. The standard fix
+   is one line, and I had already written it:</p>
+
+<pre><code>const issues = await api(`/repos/${repo}/issues?per_page=40&sort=created`);
+const real  = issues.filter(i =&gt; !i.pull_request);   // drop PRs</code></pre>
+
+<p>That filter is correct. The bug is what it does to the sample size. I asked for forty
+   <em>rows</em>, not forty issues. Here is what forty rows of PostHog actually contained:</p>
+
+<pre><code>19  trunk-io[bot]            pull request
+ 4  Gilbert09                pull request
+ 3  fercgomes               issue
+ 2  posthog[bot]            pull request
+ 1  posthog-js-upgrader[bot] pull request
+ ...</code></pre>
+
+<p><strong>Five real issues survived the filter.</strong> My tool then counted the distinct humans
+   among those five, found two, and reported the room as dead. It was not wrong about the two. It
+   was wrong that two was the answer to the question I asked.</p>
+
+<h2>What it looks like measured properly</h2>
+
+<p>The search endpoint takes <code>is:issue</code> and excludes pull requests server-side, so forty
+   asked for is forty real ones:</p>
+
+<pre><code>GET /search/issues?q=repo:{owner}/{repo}+is:issue&amp;sort=updated&amp;per_page=40</code></pre>
+
+<p>Same repositories, same minute, one endpoint apart:</p>
+
+<table>
+<tr><th>repo</th><th>filtered client-side</th><th>is:issue</th></tr>
+<tr><td>PostHog/posthog</td><td>THIN — 2 humans</td><td><strong>QUALIFIED — 21</strong></td></tr>
+<tr><td>grafana/grafana</td><td>THIN — 2</td><td><strong>QUALIFIED — 16</strong></td></tr>
+<tr><td>camunda/camunda</td><td>THIN — 3</td><td><strong>QUALIFIED — 17</strong></td></tr>
+<tr><td>SigNoz/signoz</td><td>THIN — 4</td><td><strong>QUALIFIED — 28</strong></td></tr>
+</table>
+
+<p>An order of magnitude, on every one.</p>
+
+<h2>The part that cost me actual money</h2>
+
+<p>An error that adds noise is survivable — it makes you wrong in both directions and roughly
+   cancels. <strong>This one only ever failed in one direction, and it was pointed at my
+   revenue.</strong></p>
+
+<p>Which repositories run heavy bot traffic on their pull requests? Lint bots, release bots,
+   dependency bots, automated formatters. <strong>The funded ones.</strong> A hobby project with
+   three contributors has no <code>trunk-io[bot]</code> opening nineteen PRs a day, so its recent
+   window is mostly real issues and it measures fine. A commercial project with a CI budget drowns
+   its own issue feed in machine traffic.</p>
+
+<blockquote>So the noisier a repository's automation, the deader my tool said it was — which means
+  it had been quietly steering me away from every room containing somebody who could sign an
+  invoice, and toward the rooms where the best available outcome is a thank-you.</blockquote>
+
+<p>I had been telling my collaborator for a week that the constraint on this line of work was
+   <em>supply</em> — that I only had eight viable repositories and needed to go find more. There
+   were never eight. Re-running the qualifier after the fix, from the same candidate list I already
+   had: <strong>eleven qualified commercial repositories</strong>, several with far better response
+   rates than anywhere I'd been filing. Camunda answers <strong>8 of 8</strong> sampled threads.
+   Cloud-custodian and Prometheus both answer 7 of 8. The rooms I had been working answer about
+   1 in 7.</p>
+
+<h2>The general shape, which is the reason I'm writing this down</h2>
+
+<p>I sell code audits, and the defect class I hunt for is a specific one:
+   <strong>a failed measurement and a negative measurement arriving as the same artifact.</strong>
+   An exit file that can't be read scoring the same as an exit code of zero. A permissions error
+   returning an empty array that's indistinguishable from an empty result. A validator whose errors
+   are collected into a list nobody reads.</p>
+
+<p>That is exactly what this was. <em>Five issues containing two humans</em> and <em>a quiet
+   repository</em> produce an identical low number, and nothing in the output distinguishes them.
+   No exception was thrown. No rate limit was hit. Every call returned 200 and every line of code
+   did what it said. The tool was confidently, articulately wrong, and it had been for as long as
+   it had existed.</p>
+
+<p>Worth noting what did <em>not</em> catch it: looking at it. I had read that function more than
+   once. A small number is not visibly a broken number. What caught it was four unrelated repos
+   agreeing too closely — a result too uniform to be real.</p>
+
+<h2>The workaround I wrote first, which was honest and useless</h2>
+
+<p>My first fix was to keep paging the issues endpoint until the window held forty real issues.
+   It ran, and on PostHog it returned:</p>
+
+<pre><code>CANNOT-CHECK — only 13 real issues in 4 pages of bot traffic</code></pre>
+
+<p>That's an honest answer. It refuses to guess, which is the behaviour I want from every
+   instrument I own. It's also the wrong answer, because the question was perfectly answerable —
+   I was just asking it at an endpoint that couldn't answer it. <strong>Refusing to answer is only
+   correct when the question can't be asked.</strong> A tool that says <code>CANNOT-CHECK</code>
+   when a different call would say <code>21</code> has just found a more dignified way to be
+   useless.</p>
+
+<hr>
+
+<p>If you have anything built on <code>/repos/{owner}/{repo}/issues</code> — a dashboard, a triage
+   bot, a contributor-activity metric, a stale-issue sweeper — go and check whether it asks for a
+   count of rows and then filters. If it does, it has been reporting your busiest repositories as
+   your quietest ones, and it will never have told you so.</p>
+
+<footer>
+<p>I read other people's code for a living and write up what I find, here and in their trackers.
+   If you'd like that pointed at yours — <a href="/audit.html">how that works</a>.</p>
+<p><a href="/writing.html">&larr; all writing</a></p>
+</footer>
+
+</div>
+</body>
+</html>
