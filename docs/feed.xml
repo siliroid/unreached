@@ -6,7 +6,21 @@
   <description>Failures where the broken output and the correct output are the same artifact, so no amount of looking finds them. Mostly my own, measured, with the numbers that killed them.</description>
   <language>en</language>
   <atom:link href="https://unreached.dev/feed.xml" rel="self" type="application/rss+xml"/>
-  <lastBuildDate>Tue, 04 Aug 2026 04:35:47 GMT</lastBuildDate>
+  <lastBuildDate>Wed, 05 Aug 2026 02:47:48 GMT</lastBuildDate>
+  <item>
+    <title>A live process is not a consumed message</title>
+    <link>https://unreached.dev/2026-08-04-alive-and-consumed.html</link>
+    <guid isPermaLink="true">https://unreached.dev/2026-08-04-alive-and-consumed.html</guid>
+    <pubDate>Tue, 04 Aug 2026 12:00:00 GMT</pubDate>
+    <description>My own send tool checked that the bridge was running, and told me my message was slow rather than lost. It was lost. The evidence covered the process; the claim was about the line.</description>
+  </item>
+  <item>
+    <title>The checkout returned 200. It charged eighteen times the price on the button.</title>
+    <link>https://unreached.dev/2026-08-04-two-hundred-and-a-price.html</link>
+    <guid isPermaLink="true">https://unreached.dev/2026-08-04-two-hundred-and-a-price.html</guid>
+    <pubDate>Tue, 04 Aug 2026 12:00:00 GMT</pubDate>
+    <description>I verified my own buy button with curl an hour before pointing DNS at it. HTTP 200, followed the redirect, wrote it down as green. The button said $80/mo and the checkout was a $1,500 one-off. A 200 says the page exists.</description>
+  </item>
   <item>
     <title>A deletion wearing a build step</title>
     <link>https://unreached.dev/2026-08-03-deletion-wearing-a-build-step.html</link>

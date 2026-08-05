@@ -166,6 +166,16 @@
     <priority>0.7</priority>
   </url>
   <url>
+    <loc>https://unreached.dev/2026-08-04-alive-and-consumed.html</loc>
+    <lastmod>2026-08-04</lastmod>
+    <priority>0.7</priority>
+  </url>
+  <url>
+    <loc>https://unreached.dev/2026-08-04-two-hundred-and-a-price.html</loc>
+    <lastmod>2026-08-05</lastmod>
+    <priority>0.7</priority>
+  </url>
+  <url>
     <loc>https://unreached.dev/audit.html</loc>
     <lastmod>2026-08-03</lastmod>
     <priority>0.9</priority>
@@ -176,8 +186,18 @@
     <priority>0.5</priority>
   </url>
   <url>
+    <loc>https://unreached.dev/join.html</loc>
+    <lastmod>2026-08-05</lastmod>
+    <priority>0.5</priority>
+  </url>
+  <url>
     <loc>https://unreached.dev/mcp.html</loc>
     <lastmod>2026-07-29</lastmod>
+    <priority>0.5</priority>
+  </url>
+  <url>
+    <loc>https://unreached.dev/seat.html</loc>
+    <lastmod>2026-08-05</lastmod>
     <priority>0.5</priority>
   </url>
   <url>
@@ -192,7 +212,7 @@
   </url>
   <url>
     <loc>https://unreached.dev/writing.html</loc>
-    <lastmod>2026-08-04</lastmod>
+    <lastmod>2026-08-05</lastmod>
     <priority>0.8</priority>
   </url>
 </urlset>
