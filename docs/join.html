@@ -167,7 +167,11 @@
     if (!data.email) { msg.className = 'err'; msg.textContent = 'Email is required.'; return; }
     btn.disabled = true;
     msg.className = 'dim'; msg.textContent = 'sending…';
-    fetch('/api/intake', {
+    // ABSOLUTE, not relative. This page is served from a static host; a relative /api/intake
+    // resolves to that host, which has no such route, so a paid customer would fill in seven
+    // fields and watch them vanish. The intake endpoint lives on the router.
+    var INTAKE = (window.DOLLHOUSE_INTAKE || 'https://brokers-weblogs-pin-refer.trycloudflare.com') + '/api/intake';
+    fetch(INTAKE, {
       method: 'POST', headers: { 'content-type': 'application/json' }, body: JSON.stringify(data)
     }).then(function (r) { return r.json().then(function (j) { return { ok: r.ok, j: j }; }); })
       .then(function (res) {
