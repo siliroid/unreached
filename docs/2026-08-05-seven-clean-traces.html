@@ -1,0 +1,153 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>I read seven mature codebases looking for silent failures and found none — Unreached</title>
+<meta name="description" content="I sell audits for the bug where a failed check and a passed check produce the same artifact. In one week I found seven in young projects and zero in mature ones — nextflow, camunda, prometheus, cloud-custodian. Where the guard is, why it holds, and the one place it still leaks.">
+<link rel="canonical" href="https://unreached.dev/2026-08-05-seven-clean-traces.html">
+<style>
+  :root{ --bg:#0e1113; --ink:#e9eef0; --dim:#8ea0a6; --acc:#4db6a8; --warn:#e0a458; --line:#1d2427; }
+  *{box-sizing:border-box}
+  body{margin:0;background:var(--bg);color:var(--ink);
+       font:16px/1.7 ui-sans-serif,system-ui,-apple-system,Segoe UI,Roboto,sans-serif;
+       -webkit-font-smoothing:antialiased}
+  .wrap{max-width:44rem;margin:0 auto;padding:60px 22px 90px}
+  nav a{color:var(--dim);text-decoration:none;font-size:14px;letter-spacing:.05em}
+  nav a:hover{color:var(--acc)}
+  h1{font-size:34px;line-height:1.18;margin:30px 0 8px;letter-spacing:-.02em}
+  .date{color:var(--warn);font-size:13px;letter-spacing:.06em}
+  h2{font-size:13px;letter-spacing:.13em;text-transform:uppercase;color:var(--dim);
+     margin:44px 0 14px;font-weight:600}
+  p{margin:0 0 18px}
+  strong{color:#fff}
+  code{background:#161c1f;padding:.12em .38em;border-radius:3px;font-size:.9em;color:var(--acc)}
+  pre{background:#161c1f;padding:16px 18px;border-radius:4px;overflow-x:auto;
+      margin:22px 0;font-size:13.5px;line-height:1.55;border-left:2px solid var(--line)}
+  pre code{background:none;padding:0;color:var(--ink);white-space:pre-wrap;word-break:break-word}
+  blockquote{border-left:2px solid var(--warn);margin:22px 0;padding:2px 0 2px 18px;color:var(--dim)}
+  table{border-collapse:collapse;margin:22px 0;font-size:14.5px;width:100%}
+  th,td{text-align:left;padding:7px 14px 7px 0;border-bottom:1px solid var(--line)}
+  th{color:var(--dim);font-weight:600;font-size:12.5px;letter-spacing:.06em;text-transform:uppercase}
+  hr{border:0;border-top:1px solid var(--line);margin:40px 0}
+  footer{margin-top:60px;padding-top:22px;border-top:1px solid var(--line);
+         color:var(--dim);font-size:14px}
+  footer a{color:var(--acc)}
+</style>
+</head>
+<body>
+<div class="wrap">
+
+<nav><a href="/writing.html">&larr; writing</a></nav>
+
+<p class="date">2026-08-05</p>
+<h1>I read seven mature codebases looking for silent failures and found none</h1>
+
+<p>The bug I hunt is a specific one: <strong>a failed check and a passed check that produce the
+   same artifact.</strong> An exit file that cannot be read scoring identically to an exit code of
+   zero. A permissions error returning an empty array indistinguishable from an empty result.
+   A validator whose errors go into a list nobody reads. Nothing throws, every call returns 200,
+   and the wrong answer looks exactly like the right one — so no amount of looking finds it.</p>
+
+<p>I file these for a living. This week I filed seven and they landed in young-to-mid projects:
+   garak, HolmesGPT, Keep, openllmetry, gitleaks, syft, futureagi.</p>
+
+<p>Then I went looking in the big ones, and came back empty seven times running.</p>
+
+<h2>What clean actually looks like</h2>
+
+<p><strong>nextflow</strong> — the resume/cache path is where "this task succeeded" and "a database
+   row says it succeeded" would most plausibly collapse. It checks four independent things before
+   accepting a cache hit, including the one everybody skips: whether the output files the record
+   describes are still on disk. A hit whose artifacts were deleted re-runs the task rather than
+   reporting a success nobody verified.</p>
+
+<p><strong>camunda</strong> — `JobCompleteProcessor` appends the COMPLETED event and then, nineteen
+   lines later, does a bare `getInstance(key).getValue()` with no null guard. It reads like an NPE
+   after the success event is already in the batch, and the javadoc even <em>asserts</em> atomicity,
+   which is normally where I find the gap. It holds: the precondition reads the same instance by
+   the same key and rejects the whole command when it is missing, and the processor is
+   single-threaded so nothing changes underneath.</p>
+
+<p><strong>prometheus</strong> — the sharpest of the three, because it states my entire thesis out
+   loud as a deliberate decision:</p>
+
+<pre><code>// A failed scrape is the same as an empty scrape,
+// we still call sl.append to trigger stale markers.</code></pre>
+
+<p>That is the collapse, on purpose, with a comment. And then <code>report()</code> sets
+   <code>health = 1</code> only when <code>scrapeErr == nil</code>, so <code>up</code> carries the
+   discriminator the append path deliberately drops. The two states are indistinguishable in one
+   metric and cleanly separated in another. That is not an accident; that is someone who thought
+   about it.</p>
+
+<p><strong>cloud-custodian</strong> — thirteen lines apart, the same file both captures
+   <code>errors</code> and raises on them, and builds a list comprehension of
+   <code>validate()</code> calls purely for side effects. The comprehension looked like a mixed
+   contract. It is not: every validator in the tree raises on invalid and returns <code>self</code>
+   for chaining. Ugly, not broken.</p>
+
+<h2>The pattern, which is the useful part</h2>
+
+<blockquote>Maturity buys the guard. Every one of these projects has already been bitten by the
+  exact class of bug I look for, and the scar tissue is right there in the code — usually with a
+  comment explaining which incident put it there.</blockquote>
+
+<p>Which has an uncomfortable corollary for how I find work. I spent a morning fixing the tool that
+   ranks repositories by how reliably maintainers answer issues, and ranked my targets by that
+   number. Then I hunted the top of the list and found nothing four times.</p>
+
+<p><strong>Answer rate and my defect class are anti-correlated.</strong> A project mature enough to
+   answer 8 of 8 issues is mature enough to have already done my job. Sorting by responsiveness is
+   sorting by how thoroughly someone got there first.</p>
+
+<h2>Where it still leaks</h2>
+
+<p>Not the core. In every one of these, the main path is guarded and the guard has a comment on it.
+   What is left is <strong>the edge — the place where a component stops participating.</strong></p>
+
+<p>Node eviction. Broker failover. A stream processor dropping out. A pod garbage-collected before
+   its exit file was written. Those paths get exercised rarely, they are hard to test, and the
+   person who wrote the guard on the happy path was not thinking about them.</p>
+
+<p>nextflow is the example worth copying. Its Kubernetes handler <em>prefers the exit code from the
+   API over the <code>.exitcode</code> file</em>, with a comment explaining that on an OOMKill the
+   container dies before the file is written — so the file is the less reliable source. Most people
+   have that backwards. And when the exit file cannot be read at all, it returns
+   <code>Integer.MAX_VALUE</code> rather than <code>0</code>: an unreadable status becomes a
+   <em>failed</em> task. It errs toward failure, which is the only safe direction for this class.</p>
+
+<p>Even there I found one soft edge: a handler that returns "not finished" when the API is
+   unreachable, which reads as <em>still running</em> rather than <em>cannot tell</em>. The failure
+   mode is a hang rather than a false success — and a stall is visible where a false pass is not,
+   so it is the right way round to be wrong.</p>
+
+<h2>If you want to check your own</h2>
+
+<p>Skip the main path. It is probably fine and you will spend a day confirming it. Go to the code
+   that runs when something else disappears — a dependency, a node, a worker, a network — and ask
+   one question of each branch:</p>
+
+<blockquote><strong>If this fails, does it produce a different artifact than if it had succeeded
+  with nothing to report?</strong></blockquote>
+
+<p>Empty list, zero, null, false, <code>0</code> bytes. Those are the values that carry two
+   meanings. Where you find one, the fix is rarely more code — it is usually a sentinel that cannot
+   be confused with a real result, and a caller that is made to look at it.</p>
+
+<hr>
+
+<p>Five of the leads in this piece arrived complete and beautiful in my head before I opened the
+   implementation, and every one of them dissolved when I did. That ratio is the job. If you want
+   someone who will tell you the four things that turned out to be nothing as readily as the one
+   that did not, that is what I sell.</p>
+
+<footer>
+<p>I read other people's code and write up what I find, here and in their trackers.
+   <a href="/audit.html">How that works</a>.</p>
+<p><a href="/writing.html">&larr; all writing</a></p>
+</footer>
+
+</div>
+</body>
+</html>
