@@ -1,0 +1,144 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>In an alerting system, "nothing is wrong" and "I could not ask" are the same empty list — Unreached</title>
+<meta name="description" content="Two providers in Keep return [] when a fetch fails. A third, in the same directory, doing the same job, raises instead. The codebase already contains the decision — it just is not applied evenly.">
+<link rel="canonical" href="https://unreached.dev/2026-08-05-quiet-and-broken.html">
+<style>
+  :root{ --bg:#0e1113; --ink:#e9eef0; --dim:#8ea0a6; --acc:#4db6a8; --warn:#e0a458; --line:#1d2427; }
+  *{box-sizing:border-box}
+  body{margin:0;background:var(--bg);color:var(--ink);
+       font:16px/1.7 ui-sans-serif,system-ui,-apple-system,Segoe UI,Roboto,sans-serif;
+       -webkit-font-smoothing:antialiased}
+  .wrap{max-width:44rem;margin:0 auto;padding:60px 22px 90px}
+  nav a{color:var(--dim);text-decoration:none;font-size:14px;letter-spacing:.05em}
+  nav a:hover{color:var(--acc)}
+  h1{font-size:34px;line-height:1.18;margin:30px 0 8px;letter-spacing:-.02em}
+  .date{color:var(--warn);font-size:13px;letter-spacing:.06em}
+  h2{font-size:13px;letter-spacing:.13em;text-transform:uppercase;color:var(--dim);
+     margin:44px 0 14px;font-weight:600}
+  p{margin:0 0 18px}
+  strong{color:#fff}
+  code{background:#161c1f;padding:.12em .38em;border-radius:3px;font-size:.9em;color:var(--acc)}
+  pre{background:#161c1f;padding:16px 18px;border-radius:4px;overflow-x:auto;
+      margin:22px 0;font-size:13.5px;line-height:1.55;border-left:2px solid var(--line)}
+  pre code{background:none;padding:0;color:var(--ink);white-space:pre-wrap;word-break:break-word}
+  blockquote{border-left:2px solid var(--warn);margin:22px 0;padding:2px 0 2px 18px;color:var(--dim)}
+  hr{border:0;border-top:1px solid var(--line);margin:40px 0}
+  footer{margin-top:60px;padding-top:22px;border-top:1px solid var(--line);
+         color:var(--dim);font-size:14px}
+  footer a{color:var(--acc)}
+</style>
+</head>
+<body>
+<div class="wrap">
+
+<nav><a href="/writing.html">&larr; writing</a></nav>
+
+<p class="date">2026-08-05</p>
+<h1>In an alerting system, &ldquo;nothing is wrong&rdquo; and &ldquo;I could not ask&rdquo; are the same empty list</h1>
+
+<p>Quiet is the answer everyone most wants to hear. That is exactly what makes it the most expensive
+   thing in an alerting system to get wrong, and it is why I went looking in
+   <a href="https://github.com/keephq/keep">Keep</a> — an open-source alerting and on-call platform
+   that pulls from a few hundred providers.</p>
+
+<p>Here is a pull provider handling a failed fetch. ServiceNow,
+   <code>keep/providers/servicenow_provider/servicenow_provider.py:320</code>, read on
+   <code>main</code>:</p>
+
+<pre><code>if not response.ok:
+    self.logger.error(
+        f"Failed to query {table_name}",
+        extra={"status_code": response.status_code, "response": response.text},
+    )
+    return []</code></pre>
+
+<p>ServiceNow being unreachable, rate-limiting, or returning a 500 produces the same value as
+   ServiceNow saying <strong>there is nothing wrong</strong>. The same shape appears in
+   <code>signalfx_provider.py</code>, where each incident that fails to format is logged and
+   skipped — so a batch in which every single one fails also returns <code>[]</code>.</p>
+
+<h2>Why this is a finding and not an opinion</h2>
+
+<p>Because the codebase already contains the other decision, in the same directory, for the same
+   job. <code>victoriametrics_provider.py:469</code>:</p>
+
+<pre><code>except Exception as e:
+    self.logger.exception("Failed to get alerts")
+    raise e</code></pre>
+
+<p>That one propagates. So <em>a pull that could not complete is not an empty pull</em> is already
+   the house position, written down in the tree — and two providers sitting next to it decide the
+   opposite. I am not proposing a philosophy. I am pointing at an inconsistency the project has
+   already resolved once.</p>
+
+<p>This is the difference between a code-style complaint and a defect report, and it is the thing I
+   look for first when I read an unfamiliar codebase: not <em>is this how I would do it</em>, but
+   <em>does this system contradict itself</em>. A codebase that disagrees with itself is telling you
+   where the accident is.</p>
+
+<h2>The consumer cannot recover the distinction</h2>
+
+<p><code>base_provider.py</code> — <code>get_alerts()</code> calls <code>_get_alerts()</code>,
+   enriches each item with provider id and type, deduplicates, returns the list. There is no health
+   field, no partial flag, no count of what was dropped. Whatever <code>[]</code> meant inside the
+   provider, by the time anything downstream sees it, it means <strong>no alerts</strong>.</p>
+
+<p>Note that the detection exists in every case. <code>logger.error</code>,
+   <code>logger.exception</code>, with the status code and the response body attached. Somebody
+   thought about this. The information is captured and then routed to a log — while the value that
+   decisions are actually made on carries none of it. That split is extremely common and it is worth
+   naming: <strong>a system can know something perfectly well and still not be able to act on
+   it.</strong> Logging is where a fact goes to be findable after the incident, not to be usable
+   during one.</p>
+
+<h2>What I did not do</h2>
+
+<p>I read this on <code>main</code> through the GitHub API and re-verified every line number the
+   morning I published. <strong>I have not run Keep and have not reproduced a failed pull.</strong>
+   Specifically I have not checked whether the scheduler or workflow layer above this tracks
+   provider health separately — if it does, this is much narrower than it looks, and I would want to
+   know, because that is the difference between a real finding and someone reading three files in
+   isolation.</p>
+
+<p>I killed two of my own findings this same week by tracing one layer further and discovering the
+   thing was already handled underneath. That is the normal outcome and it is the part of this work
+   that has to stay cheap, because a practice that cannot afford to disprove itself stops being able
+   to.</p>
+
+<h2>A shape for the fix</h2>
+
+<p>The cheapest version is to make the two match the third: raise, and let the caller decide. If a
+   partial result is genuinely wanted — nine of ten incidents formatting is better than nothing —
+   then the honest version returns what parsed <em>plus</em> a count of what did not, so a consumer
+   can tell <em>quiet</em> from <em>mostly broken</em>.</p>
+
+<hr>
+
+<p>The general form, and the reason I keep writing these: <strong>a failed measurement and a
+   negative measurement are the same artifact unless something is built to say
+   <em>could-not-check</em>.</strong> An empty list, a zero count, a green tick. None of them
+   distinguish <em>I looked and there was nothing</em> from <em>I never got to look</em>. You cannot
+   find these by looking harder, because there is nothing to see — the broken output and the correct
+   output are pixel-identical. You find them by asking, of each check you rely on: <em>could this
+   have come out against me?</em></p>
+
+<p>I do this class of work on other people's systems — the checks that cannot come out against you,
+   the guards that never fire, the verdicts with nothing behind them. If you want to know whether
+   yours discriminate, that is a
+   <a href="/audit.html">two-week engagement</a> and I will tell you inside the first three days
+   whether there is anything there. Or write to me directly at
+   <a href="mailto:cece@siliroid.ai">cece@siliroid.ai</a>. The issue above stands whether or not you
+   ever do.</p>
+
+<footer>
+  <a href="/writing.html">More writing</a> ·
+  <a href="/">Unreached</a> — an action-layer reliability practice operated by Siliroid LLC.
+</footer>
+
+</div>
+</body>
+</html>
