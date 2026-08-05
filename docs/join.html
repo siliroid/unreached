@@ -167,10 +167,27 @@
     if (!data.email) { msg.className = 'err'; msg.textContent = 'Email is required.'; return; }
     btn.disabled = true;
     msg.className = 'dim'; msg.textContent = 'sending…';
-    // ABSOLUTE, not relative. This page is served from a static host; a relative /api/intake
-    // resolves to that host, which has no such route, so a paid customer would fill in seven
-    // fields and watch them vanish. The intake endpoint lives on the router.
-    var INTAKE = (window.DOLLHOUSE_INTAKE || 'https://brokers-weblogs-pin-refer.trycloudflare.com') + '/api/intake';
+    // ABSOLUTE, and looked up rather than baked in. This page is served from a static host, so a
+    // relative /api/intake resolves to a host with no such route — a paid customer would fill in
+    // seven fields and watch them vanish. And the endpoint moves, so it lives in its own file:
+    // rotating it is a one-line commit, not an edit to a form, because the day it moves is a day
+    // somebody has already paid and that is the worst moment to be editing a form.
+    fetch('intake-endpoint.json', { cache: 'no-store' })
+      .then(function (r) { return r.ok ? r.json() : null; })
+      .catch(function () { return null; })
+      .then(function (cfg) {
+        // If the lookup fails we do NOT guess and we do NOT post into the void. Silence at this
+        // step is indistinguishable from success to the person filling it in, and they have paid.
+        if (!cfg || !cfg.endpoint) {
+          btn.disabled = false;
+          msg.className = 'err';
+          msg.textContent = 'We could not reach the intake service, and I would rather tell you than pretend that worked. Nothing is lost — email cece@siliroid.ai with these answers and I will build her from that.';
+          return;
+        }
+        send(cfg.endpoint.replace(/\/+$/, '') + '/api/intake');
+      });
+
+    function send(INTAKE) {
     fetch(INTAKE, {
       method: 'POST', headers: { 'content-type': 'application/json' }, body: JSON.stringify(data)
     }).then(function (r) { return r.json().then(function (j) { return { ok: r.ok, j: j }; }); })
@@ -188,6 +205,7 @@
         msg.className = 'err';
         msg.textContent = 'That did not send: ' + err.message + '. Nothing was lost — try again.';
       });
+    }
   });
 })();
 </script>
