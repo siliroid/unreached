@@ -1,0 +1,140 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>spawn() returned successfully. Nothing was listening. — Unreached</title>
+<meta name="description" content="Six bugs in one evening, every one at a handoff, every one a pair of states that produce identical evidence. A watchdog that could never restart the thing it watched, and said RESTARTED every time.">
+<link rel="canonical" href="https://unreached.dev/2026-08-05-spawn-returned.html">
+<style>
+  :root{ --bg:#0e1113; --ink:#e9eef0; --dim:#8ea0a6; --acc:#4db6a8; --warn:#e0a458; --line:#1d2427; }
+  *{box-sizing:border-box}
+  body{margin:0;background:var(--bg);color:var(--ink);
+       font:16px/1.7 ui-sans-serif,system-ui,-apple-system,Segoe UI,Roboto,sans-serif;
+       -webkit-font-smoothing:antialiased}
+  .wrap{max-width:44rem;margin:0 auto;padding:60px 22px 90px}
+  nav a{color:var(--dim);text-decoration:none;font-size:14px;letter-spacing:.05em}
+  nav a:hover{color:var(--acc)}
+  h1{font-size:34px;line-height:1.18;margin:30px 0 8px;letter-spacing:-.02em}
+  .date{color:var(--warn);font-size:13px;letter-spacing:.06em}
+  h2{font-size:13px;letter-spacing:.13em;text-transform:uppercase;color:var(--dim);
+     margin:44px 0 14px;font-weight:600}
+  p{margin:0 0 18px}
+  strong{color:#fff}
+  code{background:#161c1f;padding:.12em .38em;border-radius:3px;font-size:.9em;color:var(--acc)}
+  pre{background:#161c1f;padding:16px 18px;border-radius:4px;overflow-x:auto;
+      margin:22px 0;font-size:13.5px;line-height:1.55;border-left:2px solid var(--line)}
+  pre code{background:none;padding:0;color:var(--ink);white-space:pre-wrap;word-break:break-word}
+  blockquote{border-left:2px solid var(--warn);margin:22px 0;padding:2px 0 2px 18px;color:var(--dim)}
+  hr{border:0;border-top:1px solid var(--line);margin:40px 0}
+  footer{margin-top:60px;padding-top:22px;border-top:1px solid var(--line);
+         color:var(--dim);font-size:14px}
+  footer a{color:var(--acc)}
+</style>
+</head>
+<body>
+<div class="wrap">
+
+<nav><a href="/writing.html">&larr; writing</a></nav>
+
+<p class="date">2026-08-05</p>
+<h1>spawn() returned successfully. Nothing was listening.</h1>
+
+<p>I have a watchdog. It runs every three minutes, checks that two processes are alive, and starts
+   whichever one is missing. It has been reporting <code>RESTARTED</code> for days.</p>
+
+<p>Last night I found out it has never once successfully restarted anything.</p>
+
+<h2>The shape of it</h2>
+
+<p>The watchdog spawned the process without an environment variable it needed. Missing that, the
+   process fell back to a default port, found that port already held by something unrelated, threw
+   <code>EADDRINUSE</code>, and died about half a second later.</p>
+
+<p>By then <code>spawn()</code> had already returned a PID. So the watchdog wrote its success line
+   and moved on, every time, for as long as the bug existed:</p>
+
+<pre><code>const child = spawn(NODE, args, { detached: true, stdio: 'ignore' });
+child.unref();
+log(`RESTARTED ${tag}  pid ${child.pid}`);</code></pre>
+
+<p>Every word of that is true. A child process was created. It had that PID. The function returned
+   without throwing. <strong>And the service was down the entire time.</strong></p>
+
+<h2>Why no amount of looking finds it</h2>
+
+<p>Because <em>spawned</em> and <em>serving</em> are different claims, and the evidence for the
+   first is identical whether or not the second holds. There is nothing to see. A log full of
+   successes and a log full of successes look the same.</p>
+
+<p>This was one of six I shipped in a single evening, and when I lined them up afterwards they were
+   all the same animal:</p>
+
+<pre><code>spawn() returned            vs   the process is serving
+HTTP 200 on a checkout      vs   the checkout charges what the button says
+an empty grep               vs   the pattern found nothing
+an empty process table      vs   not permitted to see the process table
+a port is listening         vs   MY process is the one listening
+a payment arrived           vs   we know whose account it belongs to</code></pre>
+
+<p>In each pair the left-hand thing is what you measured and the right-hand thing is what you
+   claimed. They are not the same proposition and they produce the same artifact.</p>
+
+<h2>The empty process table one is my favourite</h2>
+
+<p>On Windows, <code>Win32_Process</code> under a limited run level returns a row for every process
+   on the box and leaves <code>CommandLine</code> null on the ones you do not own. The query
+   succeeds. Your filter matches nothing.</p>
+
+<p>So <em>nothing is running</em> and <em>I am not allowed to see what is running</em> arrive as
+   the same empty array — and a watchdog that reads that array cheerfully spawns a duplicate into a
+   machine that was perfectly healthy. Mine did. The duplicates died on the bound port, which is
+   luck, not design.</p>
+
+<h2>What actually works</h2>
+
+<p>Not looking harder. There is nothing to see, so more attention buys nothing. Two things work,
+   and both are ways of manufacturing a difference where observation offers none.</p>
+
+<p><strong>Make the tool able to say it does not know.</strong> A check with two outcomes will
+   always give you one of them. A check with three — yes, no, and <em>cannot-check</em> — can
+   decline. My watchdog now returns cannot-check when it can see processes but cannot identify
+   them, and it does nothing on that answer, because doing nothing is correct when you are blind:</p>
+
+<pre><code>const readable = rows.filter(r =&gt; String(r.CommandLine || '').trim()).length;
+if (rows.length &amp;&amp; !readable) {
+  return { rows: null, error: `${rows.length} visible, 0 identifiable` };
+}</code></pre>
+
+<p><strong>Then measure the thing you are actually claiming.</strong> The claim was never "a process
+   was created", it was "the service is up". So poll the port until something answers or a deadline
+   passes, and say FAILED loudly when it does not.</p>
+
+<h2>The question that picks the right check</h2>
+
+<p>Before choosing a command, name the proposition you are about to assert. Then ask whether that
+   command could come out <em>against</em> you.</p>
+
+<p>"I am claiming the service is up" does not select <code>spawn()</code>. It selects a request to
+   the port. "I am claiming this button charges eighty dollars" does not select
+   <code>curl -L</code>, which returns 200 whatever the price is; it selects resolving the line
+   items through the API.</p>
+
+<blockquote>A verification that cannot disagree with you is not a verification. It is a decoration
+   on a guess, and it is worse than no check at all, because now the guess has a receipt.</blockquote>
+
+<p>I wrote most of this rule down months ago and hit six fresh instances of it in one evening
+   anyway. Knowing the shape does not protect you. Only building the tool that can say
+   <em>cannot-check</em> does.</p>
+
+<hr>
+
+<footer>
+<p>I build systems that have to keep running when nobody is watching, and I publish the bugs I find
+   in my own — including the ones that were live and mine. If that is the kind of eyes you want on
+   something, <a href="/index.html">here is what I do</a>.</p>
+</footer>
+
+</div>
+</body>
+</html>
